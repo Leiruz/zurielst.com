@@ -34,9 +34,11 @@ describe('core dossier sections', () => {
     expect(markup.match(/data-week-column="true"/g)).toHaveLength(53);
     expect(markup).toContain('role="region"');
 
-    const nameParts = profile.identity.name.trim().split(/\s+/);
-    const initials = `${nameParts[0]?.[0] ?? ''}${nameParts.at(-1)?.[0] ?? ''}`.toUpperCase();
-    expect(markup).toContain(`<span role="img" aria-label="${profile.identity.name} monogram">${initials}</span>`);
+    expect(markup).toContain(`src="${profile.identity.portrait.image}"`);
+    expect(markup).toContain(`alt="${profile.identity.portrait.alt}"`);
+    expect(markup).toContain(
+      `<span hidden="" role="img" aria-label="${profile.identity.name} monogram">ZT</span>`,
+    );
   });
 
   it('server-renders copy disclosures collapsed with their full text available', () => {

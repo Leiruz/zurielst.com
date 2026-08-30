@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { hasSeenIntro, IntroOverlay } from './intro-gate';
 import {
+  INTRO_HELLO_SIZE_CLASS,
   IntroCover,
   IntroFirstPaintHead,
   stampInitialIntro,
@@ -229,9 +230,25 @@ describe('first-paint intro state', () => {
     expect(markup).toContain('<noscript>');
     expect(markup).toContain('#intro-cover{display:none!important}');
   });
+
+  it('uses the shared capped hello size for the first-paint SVG', () => {
+    const markup = renderToStaticMarkup(createElement(IntroCover));
+
+    expect(INTRO_HELLO_SIZE_CLASS).toBe(
+      'h-auto w-[clamp(200px,32vw,420px)]',
+    );
+    expect(markup).toContain(INTRO_HELLO_SIZE_CLASS);
+  });
 });
 
 describe('IntroOverlay', () => {
+  it('uses the shared capped hello size for the hydrated SVG', () => {
+    const overlay = IntroOverlay({ leaving: false, onDismiss: () => {} });
+    const [animation] = overlay.props.children;
+
+    expect(animation.props.className).toContain(INTRO_HELLO_SIZE_CLASS);
+  });
+
   it('uses explicit white styling independent of the page theme', () => {
     const overlay = IntroOverlay({ leaving: false, onDismiss: () => {} });
     const [animation, skipButton] = overlay.props.children;

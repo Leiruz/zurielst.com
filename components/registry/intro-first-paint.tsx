@@ -2,6 +2,7 @@ import { Fragment } from 'react';
 
 export const INTRO_COVER_ID = 'intro-cover';
 export const INTRO_SEEN_KEY = 'zst-hello-seen';
+export const INTRO_HELLO_SIZE_CLASS = 'h-auto w-[clamp(200px,32vw,420px)]';
 export const INTRO_REDUCED_MOTION_QUERY =
   '(prefers-reduced-motion: reduce)';
 
@@ -89,7 +90,7 @@ export function IntroCover() {
       {/* Static first-paint twin of ncdai's MIT apple-hello-effect. */}
       <svg
         data-intro-static-hello="true"
-        className="intro-static-hello h-16 text-white sm:h-20"
+        className={`intro-static-hello ${INTRO_HELLO_SIZE_CLASS} text-white`}
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 638 200"
         fill="none"

@@ -28,14 +28,13 @@ const COPY_DISCLOSURE_STATE_SCRIPT = `(() => {
 export default function Home() {
   const profile = profileJson as Profile;
   const contributions = contributionJson as ContributionSnapshot;
-  const portraitAvailable = hasPublicMedia(profile.identity.portrait.image);
   const resumeAvailable = hasPublicMedia('/media/resume.pdf');
 
   return (
     <div className="bp-grid min-h-screen overflow-x-clip">
       <SiteNav />
       <main>
-        <IdentityHeader profile={profile} portraitAvailable={portraitAvailable} />
+        <IdentityHeader profile={profile} />
         <ContributionHeatmap data={contributions} />
         <CapabilityActs profile={profile} />
         <SelectedWork profile={profile} />
