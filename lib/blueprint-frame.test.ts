@@ -74,6 +74,14 @@ describe('blueprint frame', () => {
     expect(styles).toMatch(/\.not-found-redactions\s*\{[\s\S]*repeating-linear-gradient/);
     expect(styles).toMatch(/\.not-found-redactions\s*\{[\s\S]*var\(--text-1\)/);
   });
+
+  it('defines dossier selection, six-pixel scrollbars, and CSS heatmap tooltips', () => {
+    expect(styles).toMatch(/::selection\s*\{[\s\S]*background:\s*var\(--ring\)[\s\S]*color:\s*var\(--canvas\)/);
+    expect(styles).toMatch(/scrollbar-width:\s*thin/);
+    expect(styles).toMatch(/::-webkit-scrollbar\s*\{[\s\S]*width:\s*6px[\s\S]*height:\s*6px/);
+    expect(styles).toMatch(/::-webkit-scrollbar-thumb\s*\{[\s\S]*var\(--text-3\)/);
+    expect(styles).toMatch(/\.heatmap-cell::after\s*\{[\s\S]*content:\s*attr\(data-tooltip\)/);
+  });
 });
 
 describe('hairline grids', () => {

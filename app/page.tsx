@@ -21,6 +21,7 @@ import { ProofWall } from '@/components/sections/proof-wall';
 import { Products } from '@/components/sections/products';
 import { Faq } from '@/components/sections/faq';
 import { hasPublicMedia } from '@/lib/media';
+import { withSiteUtm } from '@/lib/outbound-links';
 
 const COPY_DISCLOSURE_STATE_SCRIPT = `(() => {
   document.querySelectorAll("details[data-copy-disclosure]").forEach((details) => {
@@ -102,8 +103,8 @@ export default function Home() {
   const profile = profileJson as Profile;
   const contributions = contributionJson as ContributionSnapshot;
   const resumeAvailable = hasPublicMedia('/media/resume.pdf');
-  const githubUrl = profile.identity.socials.find((social) => social.platform === 'GitHub')?.url ?? profile.identity.github.url;
-  const linkedInUrl = profile.identity.socials.find((social) => social.platform === 'LinkedIn')?.url ?? '';
+  const githubUrl = withSiteUtm(profile.identity.socials.find((social) => social.platform === 'GitHub')?.url ?? profile.identity.github.url);
+  const linkedInUrl = withSiteUtm(profile.identity.socials.find((social) => social.platform === 'LinkedIn')?.url ?? '');
   const taglineKeywords = profile.identity.tagline.split('.').map((word) => word.trim()).filter(Boolean);
 
   return (

@@ -1,27 +1,63 @@
-'use client';
-
-import type { MouseEvent } from 'react';
-
-export const TERMINAL_OPEN_EVENT = 'dossier:terminal-open';
+import { FooterTerminalTrigger } from '@/components/footer-terminal-trigger';
+import { BUILD_DATE, BUILD_SHA } from '@/lib/build-info';
 
 interface FooterProps {
+  buildDate?: string;
+  buildSha?: string;
   name: string;
 }
 
-export function Footer({ name }: FooterProps) {
-  function openTerminal(event: MouseEvent<HTMLButtonElement>) {
-    window.dispatchEvent(
-      new CustomEvent(TERMINAL_OPEN_EVENT, { detail: event.currentTarget }),
-    );
-  }
+const linkClassName = 'underline decoration-line-strong underline-offset-4 transition-colors duration-150 hover:text-text-1';
+
+export function Footer({
+  buildDate = BUILD_DATE,
+  buildSha = BUILD_SHA,
+  name,
+}: FooterProps) {
+  const buildDay = buildDate.slice(0, 10);
+  const buildYear = buildDay.slice(0, 4);
+  const commitUrl = `https://github.com/Leiruz/zurielst.com/commit/${buildSha}`;
 
   return (
-    <footer className="border-t border-line bg-canvas py-8">
-      <div className="dossier-shell space-y-2 font-mono text-xs text-text-3">
-        <p>© {new Date().getFullYear()} {name}. <button type="button" onClick={openTerminal} className="rounded-sm underline decoration-line-strong underline-offset-4 transition-colors duration-150 hover:text-text-1">zurielst.com</button></p>
-        <p><a href="/media/resume.pdf" className="underline decoration-line-strong underline-offset-4 transition-colors duration-150 hover:text-text-1">Resume</a></p>
-        <p>Built with components from <a href="https://chanhdai.com" target="_blank" rel="noopener noreferrer" className="underline decoration-line-strong underline-offset-4 transition-colors duration-150 hover:text-text-1">ncdai&apos;s registry (MIT)</a></p>
-        <p><a href="https://github.com/Leiruz/zurielst.com" target="_blank" rel="noopener noreferrer" className="underline decoration-line-strong underline-offset-4 transition-colors duration-150 hover:text-text-1">View source</a></p>
+    <footer className="border-t border-line bg-canvas py-10">
+      <div className="dossier-shell grid gap-8 font-mono text-xs text-text-3 md:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)]">
+        <div className="space-y-2">
+          <p>© {buildYear} {name}. <FooterTerminalTrigger /></p>
+          <p><a href="/media/resume.pdf" className={linkClassName}>Resume</a></p>
+          <p>Built with components from <a href="https://chanhdai.com" target="_blank" rel="noopener noreferrer" className={linkClassName}>ncdai&apos;s registry (MIT)</a></p>
+        </div>
+
+        <div>
+          <p className="dossier-eyebrow">DOCUMENT CONTROL</p>
+          <dl className="mt-3 border-t border-line">
+            <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-3 border-b border-line py-2.5">
+              <dt>BUILD</dt>
+              <dd className="min-w-0 text-text-1">
+                <a href={commitUrl} target="_blank" rel="noopener noreferrer" className={linkClassName}>{buildSha.slice(0, 7)}</a>
+              </dd>
+            </div>
+            <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-3 border-b border-line py-2.5">
+              <dt>DATE</dt>
+              <dd className="min-w-0 text-text-1"><time dateTime={buildDay}>{buildDay}</time></dd>
+            </div>
+            <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-3 border-b border-line py-2.5">
+              <dt>DEPLOYED ON</dt>
+              <dd className="min-w-0 text-text-1">Cloudflare Workers</dd>
+            </div>
+            <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-3 border-b border-line py-2.5">
+              <dt>SOURCE</dt>
+              <dd className="min-w-0 text-text-1"><a href="https://github.com/Leiruz/zurielst.com" target="_blank" rel="noopener noreferrer" className={linkClassName}>GitHub</a></dd>
+            </div>
+            <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-3 border-b border-line py-2.5">
+              <dt>LICENSE</dt>
+              <dd className="min-w-0 text-text-1">MIT</dd>
+            </div>
+            <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-3 border-b border-line py-2.5">
+              <dt>TYPEFACES</dt>
+              <dd className="min-w-0 text-text-1">Geist and Geist Mono</dd>
+            </div>
+          </dl>
+        </div>
       </div>
     </footer>
   );

@@ -1,5 +1,6 @@
 import { SectionAnchor } from '@/components/dossier/section-anchor';
 import type { Social } from '@/content/schema';
+import { withSiteUtm } from '@/lib/outbound-links';
 
 export function ContactAssistantButton() {
   return (
@@ -57,7 +58,7 @@ export function Contact({ email, socials }: ContactProps) {
           {socials.map((social) => (
             <a
               key={social.platform}
-              href={social.url}
+              href={withSiteUtm(social.url)}
               target="_blank"
               rel="noopener noreferrer"
               className="contact-social-link"

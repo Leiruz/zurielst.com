@@ -3,10 +3,11 @@ import { createElement, isValidElement, type ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { Footer, TERMINAL_OPEN_EVENT } from '@/components/footer';
+import { FooterTerminalTrigger } from '@/components/footer-terminal-trigger';
 import { SiteNav } from '@/components/site-nav';
 import * as siteNavModule from '@/components/site-nav';
 import * as terminalModule from '@/components/terminal';
+import { TERMINAL_OPEN_EVENT } from '@/lib/terminal-events';
 
 interface FocusTarget {
   isConnected?: boolean;
@@ -225,15 +226,8 @@ describe('Footer terminal opener', () => {
     vi.stubGlobal('CustomEvent', TestEvent);
     vi.stubGlobal('window', { dispatchEvent });
 
-    const footer = Footer({ name: 'Test Person' });
-    const container = footer.props.children as ReactElement<{ children: unknown }>;
-    const paragraphs = container.props.children as ReactElement<{ children: unknown }>[];
-    const firstParagraphChildren = paragraphs[0]?.props.children as unknown[];
-    const button = firstParagraphChildren.at(-1);
+    const button = FooterTerminalTrigger();
     const opener = { focus: vi.fn() };
-
-    expect(isValidElement(button)).toBe(true);
-    if (!isValidElement<{ onClick(event: { currentTarget: unknown }): void }>(button)) return;
 
     button.props.onClick({ currentTarget: opener });
 

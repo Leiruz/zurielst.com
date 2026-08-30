@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { TERMINAL_OPEN_EVENT } from '@/components/footer';
+import { TERMINAL_OPEN_EVENT } from '@/lib/terminal-events';
 import {
   drainPendingOpenRequests,
   takePendingOpenRequest,

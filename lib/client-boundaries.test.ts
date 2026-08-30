@@ -9,6 +9,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import Home from '@/app/page';
 import { ChatAssistant } from '@/components/chat/chat-assistant';
+import { CommandPaletteLoader } from '@/components/command-palette-loader';
 import { Contact } from '@/components/sections/contact';
 import { Terminal } from '@/components/terminal';
 import profileJson from '@/content/profile.json';
@@ -78,5 +79,17 @@ describe('page client boundaries', () => {
     expect(source).toContain('dossier:command-palette-open');
     expect(source).toContain('dossier:terminal-open');
     expect(source).toContain('.chat-launcher[aria-expanded=');
+  });
+
+  it('passes tracked social profiles and untracked internal resources to the palette', () => {
+    const page = Home();
+    const shell = childWithType(page.props.children, 'div');
+    const palette = childWithType(shell?.props.children, CommandPaletteLoader);
+
+    expect(palette?.props.githubUrl).toBe('https://github.com/Leiruz?utm_source=zurielst.com');
+    expect(palette?.props.linkedInUrl).toBe(
+      'https://www.linkedin.com/in/zuriel-shanley/?utm_source=zurielst.com',
+    );
+    expect(palette?.props.sourceUrl).toBe('https://github.com/Leiruz/zurielst.com');
   });
 });

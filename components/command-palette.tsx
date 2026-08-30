@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
 import { useTheme } from 'next-themes';
 
-import { TERMINAL_OPEN_EVENT } from '@/components/footer';
+import { TERMINAL_OPEN_EVENT } from '@/lib/terminal-events';
 import {
   activateCommandPaletteAction,
   createCommandPaletteActions,
