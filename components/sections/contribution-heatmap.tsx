@@ -36,7 +36,7 @@ export function ContributionHeatmap({ data }: ContributionHeatmapProps) {
           <h2 id="contributions-title" className="sr-only">Contributions</h2>
           <p className="sr-only">{summary}</p>
 
-          <div className="mt-6 max-w-full overflow-x-auto pb-3" tabIndex={0} aria-label="Contribution calendar, horizontally scrollable">
+          <div className="mt-6 max-w-full overflow-x-auto pb-3" role="region" tabIndex={0} aria-label="Contribution calendar, horizontally scrollable">
             <div className="flex w-max gap-[2px]" aria-hidden="true">
               {data.weeks.map((week, weekIndex) => (
                 <div key={weekIndex} data-week-column="true" className="grid grid-rows-7 gap-[2px]">

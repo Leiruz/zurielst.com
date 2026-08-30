@@ -2,18 +2,29 @@ import { describe, expect, it } from 'vitest';
 import * as dossier from './dossier';
 import { contributionHeatBucket, parseMetric } from './dossier';
 
-describe('formatSingaporeClock', () => {
-  it('returns matching visible and machine-readable Singapore time', () => {
-    const formatter = Reflect.get(dossier, 'formatSingaporeClock') as unknown;
+describe('formatLocationClock', () => {
+  it('derives matching visible and machine-readable time from location data', () => {
+    const formatter = Reflect.get(dossier, 'formatLocationClock') as unknown;
 
     expect(formatter).toBeTypeOf('function');
     if (typeof formatter !== 'function') return;
 
-    expect(formatter(new Date('2026-08-30T01:02:03.000Z'))).toEqual({
-      display: '09:02:03 +08',
-      dateTime: '2026-08-30T09:02:03+08:00',
-      accessibleLabel: 'Current time in Singapore: 09:02:03 +08',
+    expect(formatter(new Date('2026-08-30T10:02:03.000Z'), { city: 'Test City', timezone: 'UTC-5' })).toEqual({
+      display: '05:02:03 -05',
+      dateTime: '2026-08-30T05:02:03-05:00',
+      accessibleLabel: 'Current time in Test City: 05:02:03 -05',
     });
+  });
+});
+
+describe('deriveInitials', () => {
+  it('uses the first and last words from a profile name', () => {
+    const deriveInitials = Reflect.get(dossier, 'deriveInitials') as unknown;
+
+    expect(deriveInitials).toBeTypeOf('function');
+    if (typeof deriveInitials !== 'function') return;
+
+    expect(deriveInitials('Ada Byron Lovelace')).toBe('AL');
   });
 });
 

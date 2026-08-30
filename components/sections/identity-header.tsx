@@ -3,6 +3,7 @@ import type { Profile } from '@/content/schema';
 import { CountUpMetric } from '@/components/dossier/count-up-metric';
 import { LiveClock } from '@/components/dossier/live-clock';
 import { RoleRotator } from '@/components/dossier/role-rotator';
+import { deriveInitials } from '@/lib/dossier';
 
 interface IdentityHeaderProps {
   profile: Profile;
@@ -14,7 +15,8 @@ export function IdentityHeader({ profile, portraitAvailable }: IdentityHeaderPro
   const currentRole = profile.timeline.find((entry) => entry.type === 'role' && entry.org === identity.employer);
   const founderRecord = profile.timeline.find((entry) => entry.type === 'role' && entry.title === 'Founder');
   const education = profile.timeline.find((entry) => entry.type === 'education' && entry.org.includes('University'));
-  const award = profile.proof_wall.awards.find((entry) => entry.title.includes('Fearless Find'));
+  const award = profile.proof_wall.awards[0];
+  const monogram = deriveInitials(identity.name);
 
   return (
     <section id="identity" className="relative overflow-hidden py-[clamp(4rem,9vw,8rem)]" aria-labelledby="identity-title">
@@ -29,7 +31,7 @@ export function IdentityHeader({ profile, portraitAvailable }: IdentityHeaderPro
               {portraitAvailable ? (
                 <Image src={identity.portrait.image} alt={identity.portrait.alt} width={192} height={192} priority className="size-full object-cover" />
               ) : (
-                <span aria-label={`${identity.name} monogram`}>ZT</span>
+                <span role="img" aria-label={`${identity.name} monogram`}>{monogram}</span>
               )}
             </div>
 
@@ -60,7 +62,7 @@ export function IdentityHeader({ profile, portraitAvailable }: IdentityHeaderPro
             <div className="grid min-w-0 grid-cols-[6.5rem_minmax(0,1fr)] gap-3 border-b border-line py-3 font-mono">
               <dt className="text-text-3">Location</dt>
               <dd className="min-w-0 text-text-1">
-                {identity.location.city} {identity.location.timezone} <LiveClock className="ml-1 text-text-3" />
+                {identity.location.city} {identity.location.timezone} <LiveClock location={identity.location} className="ml-1 text-text-3" />
               </dd>
             </div>
             {education && <DossierRow label="Education" value={`${education.title}, ${education.org}`} />}

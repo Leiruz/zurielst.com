@@ -8,25 +8,70 @@ export interface ParsedMetric {
 }
 
 const METRIC_PATTERN = /^(.*?)(\d+(?:\.(\d+))?)(.*)$/;
-const SINGAPORE_OFFSET_MS = 8 * 60 * 60 * 1000;
+const UTC_OFFSET_PATTERN = /^UTC([+-])(\d{1,2})$/;
+const HOUR_MS = 60 * 60 * 1000;
 
-export interface SingaporeClock {
+export interface ClockLocation {
+  city: string;
+  timezone: string;
+}
+
+export interface LocationClock {
   display: string;
   dateTime: string;
   accessibleLabel: string;
 }
 
-export function formatSingaporeClock(date: Date): SingaporeClock {
-  const singaporeIso = new Date(date.getTime() + SINGAPORE_OFFSET_MS).toISOString();
-  const singaporeDate = singaporeIso.slice(0, 10);
-  const time = singaporeIso.slice(11, 19);
-  const display = `${time} +08`;
+interface UtcOffset {
+  hours: number;
+  label: string;
+}
+
+function parseUtcOffset(timezone: string): UtcOffset {
+  const match = timezone.match(UTC_OFFSET_PATTERN);
+
+  if (!match) throw new Error(`Unsupported UTC offset: ${timezone}`);
+
+  const [, sign, rawHours] = match;
+  const absoluteHours = Number(rawHours);
+  if (absoluteHours > 23) throw new Error(`Unsupported UTC offset: ${timezone}`);
+
+  return {
+    hours: (sign === '-' ? -1 : 1) * absoluteHours,
+    label: `${sign}${rawHours.padStart(2, '0')}`,
+  };
+}
+
+export function formatLocationClock(date: Date, location: ClockLocation): LocationClock {
+  const offset = parseUtcOffset(location.timezone);
+  const localIso = new Date(date.getTime() + offset.hours * HOUR_MS).toISOString();
+  const localDate = localIso.slice(0, 10);
+  const time = localIso.slice(11, 19);
+  const display = `${time} ${offset.label}`;
 
   return {
     display,
-    dateTime: `${singaporeDate}T${time}+08:00`,
-    accessibleLabel: `Current time in Singapore: ${display}`,
+    dateTime: `${localDate}T${time}${offset.label}:00`,
+    accessibleLabel: `Current time in ${location.city}: ${display}`,
   };
+}
+
+export function createLocationClockFallback(location: ClockLocation) {
+  const { label } = parseUtcOffset(location.timezone);
+  const display = `--:--:-- ${label}`;
+
+  return {
+    display,
+    accessibleLabel: `Current time in ${location.city}: ${display}`,
+  };
+}
+
+export function deriveInitials(name: string): string {
+  const nameParts = name.trim().split(/\s+/).filter(Boolean);
+  const firstInitial = nameParts[0]?.[0] ?? '';
+  const lastInitial = nameParts.length > 1 ? nameParts.at(-1)?.[0] ?? '' : '';
+
+  return `${firstInitial}${lastInitial}`.toUpperCase();
 }
 
 export function parseMetric(metric: string): ParsedMetric | null {

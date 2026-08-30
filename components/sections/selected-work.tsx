@@ -41,7 +41,7 @@ function WorkCard({ workCase }: { workCase: WorkCase }) {
           <h3 className="min-w-0 text-xl font-semibold tracking-tight text-text-1">{workCase.title}</h3>
           <p className="shrink-0 font-mono text-xs text-text-3">{workCase.period}</p>
         </div>
-        <p className="mt-5 text-base leading-[1.65] text-text-2">{workCase.summary}</p>
+        <p className="mt-5 max-w-prose text-base leading-[1.65] text-text-2">{workCase.summary}</p>
 
         {workCase.stack.length > 0 && (
           <ul className="mt-6 flex flex-wrap gap-2">

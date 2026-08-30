@@ -71,7 +71,8 @@ export function CountUpMetric({ value, className }: CountUpMetricProps) {
   const display = `${parsedMetric.prefix}${displayedValue.toFixed(parsedMetric.fractionDigits)}${parsedMetric.suffix}`;
 
   return (
-    <span ref={elementRef} className={cn('tabular-nums', className)} aria-label={value}>
+    <span ref={elementRef} className={cn('tabular-nums', className)}>
+      <span className="sr-only">{value}</span>
       <span className="dossier-count-up-static" aria-hidden="true" data-count-up-static>
         {value}
       </span>

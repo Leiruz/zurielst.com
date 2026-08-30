@@ -15,21 +15,24 @@ describe('Reveal', () => {
 });
 
 describe('CountUpMetric', () => {
-  it('server-renders a static final value beside a zero animation start', () => {
+  it('server-renders an accessible final value beside a hidden zero animation start', () => {
     const markup = renderToStaticMarkup(createElement(CountUpMetric, { value: '99.9%' }));
 
-    expect(markup).toContain('aria-label="99.9%"');
+    expect(markup).toContain('<span class="sr-only">99.9%</span>');
+    expect(markup).not.toContain('aria-label="99.9%"');
     expect(markup).toContain('data-count-up-static="true">99.9%');
     expect(markup).toContain('data-count-up-animated="true">0.0%');
   });
 });
 
 describe('LiveClock', () => {
-  it('gives its server fallback the same accessible and visible time', () => {
-    const markup = renderToStaticMarkup(createElement(LiveClock));
+  it('derives its server fallback label from location data', () => {
+    const markup = renderToStaticMarkup(createElement(LiveClock, {
+      location: { city: 'Test City', timezone: 'UTC-5' },
+    }));
 
-    expect(markup).toContain('aria-label="Current time in Singapore: --:--:-- +08"');
-    expect(markup).toContain('>--:--:-- +08</time>');
+    expect(markup).toContain('aria-label="Current time in Test City: --:--:-- -05"');
+    expect(markup).toContain('>--:--:-- -05</time>');
     expect(markup).not.toContain('datetime=');
   });
 });
