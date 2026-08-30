@@ -7,7 +7,13 @@ export interface ParsedMetric {
   fractionDigits: number;
 }
 
+export interface DisclosureCopySplit {
+  teaser: string;
+  remainder: string;
+}
+
 const METRIC_PATTERN = /^(.*?)(\d+(?:\.(\d+))?)(.*)$/;
+const SENTENCE_BOUNDARY_PATTERN = /[.!?](?:["')\]]+)?(?=\s|$)/g;
 const UTC_OFFSET_PATTERN = /^UTC([+-])(\d{1,2})$/;
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -86,6 +92,30 @@ export function parseMetric(metric: string): ParsedMetric | null {
     prefix,
     suffix,
     fractionDigits: fraction.length,
+  };
+}
+
+export function splitDisclosureCopy(text: string, approximateLimit: number): DisclosureCopySplit {
+  if (text.length <= approximateLimit) {
+    return { teaser: text, remainder: '' };
+  }
+
+  const firstTwoBoundaries = Array.from(text.matchAll(SENTENCE_BOUNDARY_PATTERN), (match) => (
+    (match.index ?? 0) + match[0].length
+  )).slice(0, 2);
+  const lastBoundaryWithinLimit = firstTwoBoundaries
+    .filter((boundary) => boundary <= approximateLimit)
+    .at(-1);
+  const splitAt = lastBoundaryWithinLimit
+    ?? firstTwoBoundaries.find((boundary) => boundary > approximateLimit);
+
+  if (splitAt === undefined) {
+    return { teaser: text, remainder: '' };
+  }
+
+  return {
+    teaser: text.slice(0, splitAt).trimEnd(),
+    remainder: text.slice(splitAt).trimStart(),
   };
 }
 

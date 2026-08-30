@@ -1,5 +1,7 @@
+import { CopyDisclosure } from '@/components/dossier/copy-disclosure';
 import { Reveal } from '@/components/dossier/reveal';
 import type { MediaRef, Profile, WorkCase } from '@/content/schema';
+import { splitDisclosureCopy } from '@/lib/dossier';
 import { hasPublicMedia } from '@/lib/media';
 
 interface SelectedWorkProps {
@@ -30,6 +32,8 @@ export function SelectedWork({ profile }: SelectedWorkProps) {
 function WorkCard({ workCase }: { workCase: WorkCase }) {
   const evidence = workCase.evidence.filter((item) => hasPublicMedia(item.media));
   const notes = [workCase.note, ...workCase.links.map((link) => link.note)].filter((note): note is string => Boolean(note));
+  const summary = splitDisclosureCopy(workCase.summary, 200);
+  const shouldCollapseSummary = workCase.summary.length > 200 && summary.remainder.length > 0;
 
   return (
     <article className="dossier-card flex h-full min-w-0 flex-col overflow-hidden bg-surface">
@@ -40,7 +44,19 @@ function WorkCard({ workCase }: { workCase: WorkCase }) {
           <h3 className="min-w-0 text-xl font-semibold tracking-tight text-text-1">{workCase.title}</h3>
           <p className="shrink-0 font-mono text-xs text-text-3">{workCase.period}</p>
         </div>
-        <p className="mt-5 max-w-prose text-base leading-[1.65] text-text-2">{workCase.summary}</p>
+        {shouldCollapseSummary ? (
+          <>
+            <p className="mt-5 max-w-prose text-base leading-[1.65] text-text-2">{summary.teaser}</p>
+            <CopyDisclosure
+              id={workCase.id}
+              kind="work"
+              paragraphClassName="max-w-prose pt-2 text-base leading-[1.65] text-text-2"
+              text={summary.remainder}
+            />
+          </>
+        ) : (
+          <p className="mt-5 max-w-prose text-base leading-[1.65] text-text-2">{workCase.summary}</p>
+        )}
 
         {workCase.stack.length > 0 && (
           <ul className="mt-6 flex flex-wrap gap-2">

@@ -1,3 +1,4 @@
+import { CopyDisclosure } from '@/components/dossier/copy-disclosure';
 import { Reveal } from '@/components/dossier/reveal';
 import type { Profile, TimelineEntry } from '@/content/schema';
 
@@ -36,7 +37,12 @@ export function Timeline({ profile }: TimelineProps) {
                     </div>
                     <p className="font-mono text-xs text-text-3 sm:text-right">{entry.period}</p>
                   </div>
-                  <p className="dossier-prose mt-3 text-sm text-text-2">{entry.summary}</p>
+                  <CopyDisclosure
+                    id={entry.id}
+                    kind="timeline"
+                    paragraphClassName="dossier-prose pt-2 text-sm text-text-2"
+                    text={entry.summary}
+                  />
                 </article>
               </Reveal>
             </li>

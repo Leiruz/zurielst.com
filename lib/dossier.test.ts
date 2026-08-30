@@ -76,3 +76,59 @@ describe('contributionHeatBucket', () => {
     expect(contributionHeatBucket(count)).toBe(expectedBucket);
   });
 });
+
+describe('splitDisclosureCopy', () => {
+  type CopySplit = { teaser: string; remainder: string };
+  type CopySplitter = (text: string, approximateLimit: number) => CopySplit;
+
+  const getSplitter = () => {
+    const splitter = Reflect.get(dossier, 'splitDisclosureCopy') as unknown;
+    expect(splitter).toBeTypeOf('function');
+    return typeof splitter === 'function' ? splitter as CopySplitter : undefined;
+  };
+
+  it('leaves copy within the preferred limit intact', () => {
+    const splitter = getSplitter();
+    if (!splitter) return;
+
+    expect(splitter('Short copy stays visible.', 160)).toEqual({
+      teaser: 'Short copy stays visible.',
+      remainder: '',
+    });
+  });
+
+  it('uses the last complete sentence within the preferred limit', () => {
+    const splitter = getSplitter();
+    if (!splitter) return;
+    const text = 'First sentence. Second sentence also fits. Third sentence becomes the remainder.';
+
+    expect(splitter(text, 45)).toEqual({
+      teaser: 'First sentence. Second sentence also fits.',
+      remainder: 'Third sentence becomes the remainder.',
+    });
+  });
+
+  it('falls forward to the first sentence boundary instead of cutting a word', () => {
+    const splitter = getSplitter();
+    if (!splitter) return;
+    const text = 'This deliberately long opening sentence crosses the preferred threshold before reaching its natural ending. The rest stays hidden.';
+    const result = splitter(text, 55);
+
+    expect(result.teaser).toBe('This deliberately long opening sentence crosses the preferred threshold before reaching its natural ending.');
+    expect(result.remainder).toBe('The rest stays hidden.');
+    expect(`${result.teaser} ${result.remainder}`).toBe(text);
+    expect(result.teaser).toMatch(/[.!?]$/);
+    expect(result.remainder).toMatch(/^\S/);
+  });
+
+  it('keeps the teaser to at most two complete sentences', () => {
+    const splitter = getSplitter();
+    if (!splitter) return;
+    const text = 'One short sentence. Two stays concise. Three would also fit. A final sentence pushes the copy beyond the preferred limit.';
+
+    expect(splitter(text, 70)).toEqual({
+      teaser: 'One short sentence. Two stays concise.',
+      remainder: 'Three would also fit. A final sentence pushes the copy beyond the preferred limit.',
+    });
+  });
+});

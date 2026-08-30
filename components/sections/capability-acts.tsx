@@ -1,5 +1,7 @@
+import { CopyDisclosure } from '@/components/dossier/copy-disclosure';
 import { Reveal } from '@/components/dossier/reveal';
 import type { Profile, Skill } from '@/content/schema';
+import { splitDisclosureCopy } from '@/lib/dossier';
 
 interface CapabilityActsProps {
   profile: Profile;
@@ -15,26 +17,38 @@ export function CapabilityActs({ profile }: CapabilityActsProps) {
         </Reveal>
       </div>
 
-      {profile.capabilities.acts.map((act, index) => (
-        <div key={act.id} className={`border-t border-line ${index % 2 === 0 ? 'bg-canvas' : 'bg-canvas-raised'}`}>
-          <div className="dossier-shell py-[clamp(3rem,6vw,5rem)]">
-            <Reveal delayIndex={index}>
-              <div className="grid min-w-0 gap-8 lg:grid-cols-[9rem_minmax(0,1fr)]">
-                <p className="font-mono text-[clamp(4.5rem,12vw,8rem)] font-semibold leading-none text-text-1 opacity-[0.08]" aria-hidden="true">
-                  {String(act.act).padStart(2, '0')}
-                </p>
-                <div className="min-w-0">
-                  <h3 className="dossier-title text-text-1">{act.title}</h3>
-                  <p className="dossier-prose mt-5 text-text-2">{act.narrative}</p>
-                  <ul className="mt-8 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                    {act.skills.map((skill) => <SkillChip key={skill.name} skill={skill} />)}
-                  </ul>
+      {profile.capabilities.acts.map((act, index) => {
+        const { teaser, remainder } = splitDisclosureCopy(act.narrative, 160);
+
+        return (
+          <div key={act.id} className={`border-t border-line ${index % 2 === 0 ? 'bg-canvas' : 'bg-canvas-raised'}`}>
+            <div className="dossier-shell py-[clamp(3rem,6vw,5rem)]">
+              <Reveal delayIndex={index}>
+                <div className="grid min-w-0 gap-8 lg:grid-cols-[9rem_minmax(0,1fr)]">
+                  <p className="font-mono text-[clamp(4.5rem,12vw,8rem)] font-semibold leading-none text-text-1 opacity-[0.08]" aria-hidden="true">
+                    {String(act.act).padStart(2, '0')}
+                  </p>
+                  <div className="min-w-0">
+                    <h3 className="dossier-title text-text-1">{act.title}</h3>
+                    <p className="dossier-prose mt-5 text-text-2">{teaser}</p>
+                    {remainder && (
+                      <CopyDisclosure
+                        id={act.id}
+                        kind="capability"
+                        paragraphClassName="dossier-prose pt-2 text-text-2"
+                        text={remainder}
+                      />
+                    )}
+                    <ul data-skill-grid={act.id} className="mt-8 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                      {act.skills.map((skill) => <SkillChip key={skill.name} skill={skill} />)}
+                    </ul>
+                  </div>
                 </div>
-              </div>
-            </Reveal>
+              </Reveal>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </section>
   );
 }
