@@ -10,3 +10,5 @@ dist/
 .tri/state.json
 .tri/run.lock/
 .tri/
+
+tsconfig.tsbuildinfo

@@ -1,33 +1,18 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:is(.dark *));
+
 /*
-  Engineered Dossier tokens. Dark is the primary theme; light is a first-class
-  sibling, both defined here from day one. Values trace to the approved design
-  research (Linear grey ramp, GitHub heatmap greens, one blue verification accent).
+  Engineered Dossier tokens. Dark is the design-primary theme; light is a
+  first-class sibling. Theme switching uses next-themes with the class
+  strategy (html.dark), the shadcn v4 convention, so vendored registry
+  components (bg-background, text-muted-foreground, ring, ...) work unchanged.
+  Values trace to the approved design research: Linear grey ramp, GitHub
+  heatmap greens, one blue verification accent.
 */
 
 :root {
-  /* dark (default) */
-  --canvas: #09090a;
-  --canvas-raised: #0c0d10;
-  --surface: #131417;
-  --surface-hover: #1a1b1f;
-  --text-1: #f7f8f8;
-  --text-2: #d0d6e0;
-  --text-3: #8a8f98;
-  --line: rgba(255, 255, 255, 0.06);
-  --line-strong: rgba(255, 255, 255, 0.12);
-  --blueprint: rgba(255, 255, 255, 0.045);
-  --hatch: rgba(255, 255, 255, 0.05);
-  --accent: #4b7bff;
-  --heat-0: #151619;
-  --heat-1: #0e4429;
-  --heat-2: #006d32;
-  --heat-3: #26a641;
-  --heat-4: #39d353;
-}
-
-:root[data-theme='light'] {
+  /* dossier: light */
   --canvas: #fafafa;
   --canvas-raised: #f4f4f5;
   --surface: #ffffff;
@@ -39,15 +24,94 @@
   --line-strong: rgba(0, 0, 0, 0.16);
   --blueprint: rgba(0, 0, 0, 0.05);
   --hatch: rgba(0, 0, 0, 0.06);
-  --accent: #2f5fe0;
   --heat-0: #ebedf0;
   --heat-1: #9be9a8;
   --heat-2: #40c463;
   --heat-3: #30a14e;
   --heat-4: #216e39;
+
+  /* shadcn bridge: light */
+  --background: var(--canvas);
+  --foreground: var(--text-1);
+  --popover: var(--surface);
+  --popover-foreground: var(--text-1);
+  --card: var(--surface);
+  --card-foreground: var(--text-1);
+  --primary: #101114;
+  --primary-foreground: #fafafa;
+  --secondary: var(--surface-hover);
+  --secondary-foreground: var(--text-2);
+  --muted: var(--canvas-raised);
+  --muted-foreground: var(--text-3);
+  --accent: var(--surface-hover);
+  --accent-foreground: var(--text-1);
+  --destructive: #d92d20;
+  --border: var(--line-strong);
+  --input: rgba(0, 0, 0, 0.2);
+  --ring: #2f5fe0;
+  --radius: 0.625rem;
+}
+
+.dark {
+  /* dossier: dark (design primary) */
+  --canvas: #09090a;
+  --canvas-raised: #0c0d10;
+  --surface: #131417;
+  --surface-hover: #1a1b1f;
+  --text-1: #f7f8f8;
+  --text-2: #d0d6e0;
+  --text-3: #8a8f98;
+  --line: rgba(255, 255, 255, 0.06);
+  --line-strong: rgba(255, 255, 255, 0.12);
+  --blueprint: rgba(255, 255, 255, 0.045);
+  --hatch: rgba(255, 255, 255, 0.05);
+  --heat-0: #151619;
+  --heat-1: #0e4429;
+  --heat-2: #006d32;
+  --heat-3: #26a641;
+  --heat-4: #39d353;
+
+  /* shadcn bridge: dark */
+  --background: var(--canvas);
+  --foreground: var(--text-1);
+  --popover: var(--surface);
+  --popover-foreground: var(--text-1);
+  --card: var(--surface);
+  --card-foreground: var(--text-1);
+  --primary: #f7f8f8;
+  --primary-foreground: #09090a;
+  --secondary: var(--surface-hover);
+  --secondary-foreground: var(--text-2);
+  --muted: var(--surface);
+  --muted-foreground: var(--text-3);
+  --accent: var(--surface-hover);
+  --accent-foreground: var(--text-1);
+  --destructive: #ff5c5c;
+  --border: var(--line-strong);
+  --input: rgba(255, 255, 255, 0.16);
+  --ring: #4b7bff;
 }
 
 @theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
   --color-canvas: var(--canvas);
   --color-canvas-raised: var(--canvas-raised);
   --color-surface: var(--surface);
@@ -55,22 +119,38 @@
   --color-text-1: var(--text-1);
   --color-text-2: var(--text-2);
   --color-text-3: var(--text-3);
-  --color-accent: var(--accent);
-  --font-sans: 'Geist', 'Geist Fallback', system-ui, sans-serif;
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback', ui-monospace, monospace;
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-heat-0: var(--heat-0);
+  --color-heat-1: var(--heat-1);
+  --color-heat-2: var(--heat-2);
+  --color-heat-3: var(--heat-3);
+  --color-heat-4: var(--heat-4);
+
+  --font-sans: 'Geist', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
 html {
-  background: var(--canvas);
-  color: var(--text-1);
+  background: var(--background);
+  color: var(--foreground);
   -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--canvas);
-  color: var(--text-1);
+  background: var(--background);
+  color: var(--foreground);
   font-family: var(--font-sans);
   line-height: 1.6;
+}
+
+* {
+  border-color: var(--border);
 }
 
 /* Blueprint linework primitives */

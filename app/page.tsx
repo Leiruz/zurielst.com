@@ -1,7 +1,13 @@
+import { ThemeSwitcher } from '@/components/registry/theme-switcher';
+
 export default function Home() {
   return (
     <main className="bp-grid min-h-screen">
-      <section className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6">
+      <header className="mx-auto flex max-w-3xl items-center justify-between px-6 pt-6">
+        <span className="fig-label">zurielst.com</span>
+        <ThemeSwitcher />
+      </header>
+      <section className="mx-auto flex max-w-3xl flex-col justify-center px-6 pt-[26vh]">
         <p className="fig-label">Fig. 0. Scaffold</p>
         <h1 className="mt-3 text-4xl font-semibold tracking-tight text-text-1">
           Zuriel Shanley Tanyory
