@@ -12,6 +12,7 @@ export default defineWorkersConfig({
       'workers/chat-api/test/**/*.test.ts',
       'components/registry/**/*.test.ts',
       'components/registry/**/*.test.tsx',
+      'content/**/*.test.ts',
     ],
     poolOptions: {
       workers: {
