@@ -127,8 +127,8 @@
   --color-heat-3: var(--heat-3);
   --color-heat-4: var(--heat-4);
 
-  --font-sans: 'Geist', system-ui, sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, monospace;
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -139,6 +139,9 @@
 html {
   background: var(--background);
   color: var(--foreground);
+  max-width: 100%;
+  overflow-x: clip;
+  scroll-behavior: auto;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -147,10 +150,109 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   line-height: 1.6;
+  margin: 0;
+  min-height: 100vh;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 * {
   border-color: var(--border);
+  box-sizing: border-box;
+}
+
+img,
+svg,
+video,
+canvas {
+  height: auto;
+  max-width: 100%;
+}
+
+:where(a, button, input, select, summary, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+/* Shared dossier layout and type primitives */
+.dossier-shell {
+  width: min(100%, 80rem);
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 3vw, 2rem);
+}
+
+.dossier-section {
+  position: relative;
+  padding-block: clamp(4rem, 8vw, 7rem);
+  border-top: 1px solid var(--line);
+}
+
+.dossier-display {
+  font-size: clamp(2.6rem, 1.6rem + 4vw, 4.5rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+
+.dossier-title {
+  font-size: clamp(1.5rem, 1.1rem + 1.8vw, 2.25rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.dossier-body,
+.dossier-prose {
+  max-width: 65ch;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.dossier-eyebrow {
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.dossier-card {
+  border: 1px solid var(--line);
+  border-radius: 0.875rem;
+  transition:
+    border-color 150ms cubic-bezier(.32, .72, 0, 1),
+    transform 150ms cubic-bezier(.32, .72, 0, 1);
+}
+
+@media (hover: hover) {
+  .dossier-card:hover {
+    border-color: var(--line-strong);
+    transform: translateY(-2px);
+  }
+}
+
+.dossier-reveal {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 600ms cubic-bezier(.32, .72, 0, 1),
+    transform 600ms cubic-bezier(.32, .72, 0, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.dossier-reveal[data-reveal-state='hidden'] {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.dossier-count-up-static {
+  display: none;
+}
+
+.dossier-count-up-animated {
+  display: inline;
 }
 
 /* Blueprint linework primitives */
@@ -207,6 +309,19 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .dossier-reveal[data-reveal-state='hidden'] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .dossier-count-up-static {
+    display: inline;
+  }
+
+  .dossier-count-up-animated {
+    display: none;
   }
 }
 

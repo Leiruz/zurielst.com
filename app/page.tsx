@@ -1,22 +1,52 @@
-import { DeferredThemeSwitcher } from '@/components/registry/client-enhancements';
+import profileJson from '@/content/profile.json';
+import contributionJson from '@/content/github-contributions.json';
+import type { Profile } from '@/content/schema';
+import { Footer } from '@/components/footer';
+import { SiteNav } from '@/components/site-nav';
+import { Terminal } from '@/components/terminal';
+import { Contact } from '@/components/sections/contact';
+import { IdentityHeader } from '@/components/sections/identity-header';
+import { CapabilityActs } from '@/components/sections/capability-acts';
+import { ContributionHeatmap, type ContributionSnapshot } from '@/components/sections/contribution-heatmap';
+import { SelectedWork } from '@/components/sections/selected-work';
+import { Timeline } from '@/components/sections/timeline';
+import { ProofWall } from '@/components/sections/proof-wall';
+import { Products } from '@/components/sections/products';
+import { Faq } from '@/components/sections/faq';
+import { hasPublicMedia } from '@/lib/media';
 
 export default function Home() {
+  const profile = profileJson as Profile;
+  const contributions = contributionJson as ContributionSnapshot;
+  const portraitAvailable = hasPublicMedia(profile.identity.portrait.image);
+  const resumeAvailable = hasPublicMedia('/media/resume.pdf');
+
   return (
-    <main className="bp-grid min-h-screen">
-      <header className="mx-auto flex max-w-3xl items-center justify-between px-6 pt-6">
-        <span className="fig-label">zurielst.com</span>
-        <DeferredThemeSwitcher />
-      </header>
-      <section className="mx-auto flex max-w-3xl flex-col justify-center px-6 pt-[26vh]">
-        <p className="fig-label">Fig. 0. Scaffold</p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight text-text-1">
-          Zuriel Shanley Tanyory
-        </h1>
-        <p className="mt-2 max-w-prose text-text-2">
-          Engineered Dossier under construction. Content arrives with the M1 profile;
-          sections, motion, and the assistant follow milestone by milestone.
-        </p>
-      </section>
-    </main>
+    <div className="bp-grid min-h-screen overflow-x-clip">
+      <SiteNav />
+      <main>
+        <IdentityHeader profile={profile} portraitAvailable={portraitAvailable} />
+        <ContributionHeatmap data={contributions} />
+        <CapabilityActs profile={profile} />
+        <SelectedWork profile={profile} />
+        <Timeline profile={profile} />
+        <ProofWall profile={profile} />
+        <Products profile={profile} />
+        <Faq profile={profile} />
+        <Contact
+          email={profile.identity.email}
+          socials={profile.identity.socials}
+          disclaimer={profile.chat.disclaimer}
+        />
+      </main>
+      <Footer name={profile.identity.name} />
+      <Terminal
+        commands={profile.easter_eggs.terminal.commands}
+        source={profile.easter_eggs.terminal.source}
+        email={profile.identity.email}
+        gamesUrl={profile.easter_eggs.towerblock.url}
+        resumeAvailable={resumeAvailable}
+      />
+    </div>
   );
 }
