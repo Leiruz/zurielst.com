@@ -13,7 +13,7 @@ import type { ChatFocusTarget } from '@/components/chat/chat-store';
 import { usePrefersReducedMotion } from '@/components/dossier/use-prefers-reduced-motion';
 
 type ChatPanelComponent = ComponentType<ChatProps>;
-type ChatPanelLoadState = 'idle' | 'loading' | 'error';
+type ChatPanelLoadState = boolean | null;
 
 interface ChatLauncherProps {
   open: boolean;
@@ -22,7 +22,7 @@ interface ChatLauncherProps {
 }
 
 interface ChatPanelLoadStatusProps {
-  failed: boolean;
+  failed: ChatPanelLoadState;
   onRetry(): void;
 }
 
@@ -165,14 +165,13 @@ export function ChatAssistant({
   const prefersReducedMotion = usePrefersReducedMotion();
   const reducedMotion = reducedMotionOverride ?? prefersReducedMotion;
   const [ChatPanel, setChatPanel] = useState<ChatPanelComponent | null>(null);
-  const [loadState, setLoadState] = useState<ChatPanelLoadState>('idle');
+  const [loadState, setLoadState] = useState<ChatPanelLoadState>(null);
 
   function openAssistant(opener: ChatFocusTarget) {
     updateChatAssistantState(openerRef, setOpen, opener);
   }
 
   function closeAssistant() {
-    if (!open) return;
     updateChatAssistantState(openerRef, setOpen, null);
   }
 
@@ -192,32 +191,52 @@ export function ChatAssistant({
   }
 
   async function loadPanel() {
-    setLoadState('loading');
+    setLoadState(false);
     try {
       const LoadedPanel = await import('@/components/chat/chat')
         .then((module) => module.Chat);
       setChatPanel(() => LoadedPanel);
     } catch {
-      setLoadState('error');
+      setLoadState(true);
     }
   }
 
   useEffect(() => {
-    if (open && ChatPanel === null && loadState === 'idle') {
+    if (open && !ChatPanel && loadState === null) {
       void loadPanel();
     }
   }, [ChatPanel, loadState, open]);
 
-  useEffect(() => listenForChatAssistantOpen(
-    window as unknown as ChatAssistantOpenEventTarget,
-    openAssistant,
-  ), []);
-
   useEffect(() => {
-    if (open && ChatPanel === null) {
-      panelRef.current?.focus({ preventScroll: true });
+    const stopListeningForOpen = listenForChatAssistantOpen(
+      window as unknown as ChatAssistantOpenEventTarget,
+      openAssistant,
+    );
+    function onFocusIn(event: FocusEvent) {
+      const panel = panelRef.current!;
+      if (
+        openerRef.current
+        && !panel.parentElement!.contains(event.target as Node | null)
+      ) panel.focus();
     }
-  }, [ChatPanel, loadState, open]);
+
+    document.addEventListener('focusin', onFocusIn);
+    return () => {
+      stopListeningForOpen();
+      document.removeEventListener('focusin', onFocusIn);
+    };
+  }, []);
+
+  // Follow open only so resolving the deferred panel cannot reapply the lock.
+  useEffect(() => {
+    if (open) {
+      if (!ChatPanel) panelRef.current?.focus({ preventScroll: true });
+      document.body.dataset.chat = '';
+      return () => {
+        delete document.body.dataset.chat;
+      };
+    }
+  }, [open]);
 
   return (
     <div>
@@ -226,7 +245,7 @@ export function ChatAssistant({
         id="dossier-chat-dialog"
         role="dialog"
         aria-labelledby="assistant-title"
-        aria-describedby={ChatPanel === null ? 'assistant-load-message' : 'assistant-disclaimer'}
+        aria-describedby={ChatPanel ? 'assistant-disclaimer' : 'assistant-load-message'}
         aria-hidden={!open}
         inert={!open}
         tabIndex={-1}
@@ -234,7 +253,7 @@ export function ChatAssistant({
         onKeyDown={handlePanelKeyDown}
         className={`chat-panel-frame${reducedMotion ? '' : ' chat-panel-motion'}`}
       >
-        {ChatPanel !== null && (
+        {ChatPanel && (
           <ChatPanel
             open={open}
             onClose={closeAssistant}
@@ -242,9 +261,9 @@ export function ChatAssistant({
             disclaimer={disclaimer}
           />
         )}
-        {ChatPanel === null && (open || loadState !== 'idle') && (
+        {!ChatPanel && (open || loadState !== null) && (
           <ChatPanelLoadStatus
-            failed={loadState === 'error'}
+            failed={loadState}
             onRetry={() => void loadPanel()}
           />
         )}

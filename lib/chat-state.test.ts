@@ -10,8 +10,6 @@ import {
   containChatShortcut,
   focusChatInput,
   listenForChatEscape,
-  listenForMobileSheetScroll,
-  lockMobileSheetScroll,
   shouldSendChatOnKeyDown,
   shouldSettleChatStreaming,
   shouldStickToTranscript,
@@ -285,50 +283,6 @@ describe('chat state', () => {
     expect(transcriptScrollDestination(0, true, 400)).toBe(0);
     expect(transcriptScrollDestination(1, true, 400)).toBe(400);
     expect(transcriptScrollDestination(1, false, 400)).toBeNull();
-  });
-
-  it('locks body scroll for the mobile sheet only and restores the prior value', () => {
-    const desktopBody = { dataset: {}, style: { overflow: 'scroll' } };
-    const mobileBody = { dataset: {}, style: { overflow: 'auto' } };
-
-    const unlockDesktop = lockMobileSheetScroll(desktopBody, false);
-    const unlockMobile = lockMobileSheetScroll(mobileBody, true);
-    expect(desktopBody).toEqual({ dataset: {}, style: { overflow: 'scroll' } });
-    expect(mobileBody).toEqual({
-      dataset: { chatOpen: 'true' },
-      style: { overflow: 'hidden' },
-    });
-
-    unlockDesktop();
-    unlockMobile();
-    expect(desktopBody).toEqual({ dataset: {}, style: { overflow: 'scroll' } });
-    expect(mobileBody).toEqual({ dataset: {}, style: { overflow: 'auto' } });
-  });
-
-  it('updates the body lock when an open sheet crosses the mobile breakpoint', () => {
-    const body = { dataset: {}, style: { overflow: 'auto' } };
-    let listener: (() => void) | undefined;
-    const media = {
-      matches: false,
-      addEventListener: vi.fn((_type: 'change', next: () => void) => {
-        listener = next;
-      }),
-      removeEventListener: vi.fn(),
-    };
-
-    const cleanup = listenForMobileSheetScroll(body, media);
-    expect(body.style.overflow).toBe('auto');
-
-    media.matches = true;
-    listener?.();
-    expect(body.style.overflow).toBe('hidden');
-
-    media.matches = false;
-    listener?.();
-    expect(body.style.overflow).toBe('auto');
-
-    cleanup();
-    expect(media.removeEventListener).toHaveBeenCalledOnce();
   });
 
   it('claims one launcher attention pulse per session and skips reduced motion', () => {

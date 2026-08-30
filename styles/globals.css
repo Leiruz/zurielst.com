@@ -727,8 +727,7 @@ canvas {
   50% { opacity: 1; transform: scale(1); }
 }
 
-.chat-status[data-chat-status='streaming'] .chat-status-dot,
-.chat-status-dot-loading {
+.chat-status[data-chat-status='streaming'] .chat-status-dot {
   animation: chat-status-pulse 1s ease-in-out infinite;
 }
 
@@ -784,7 +783,7 @@ canvas {
 }
 
 @media (max-width: 47.999rem) {
-  body[data-chat-open='true'] {
+  body[data-chat] {
     overflow-y: hidden;
   }
 }

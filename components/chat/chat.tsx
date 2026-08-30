@@ -84,17 +84,6 @@ interface TranscriptScrollPosition {
   clientHeight: number;
 }
 
-interface MobileScrollTarget {
-  dataset: { chatOpen?: string };
-  style: { overflow: string };
-}
-
-interface MobileSheetMediaTarget {
-  matches: boolean;
-  addEventListener(type: 'change', listener: () => void): void;
-  removeEventListener(type: 'change', listener: () => void): void;
-}
-
 type TimerHandle = ReturnType<typeof globalThis.setInterval>;
 type ScheduleInterval = (callback: () => void, milliseconds: number) => TimerHandle;
 type CancelInterval = (handle: TimerHandle) => void;
@@ -157,42 +146,6 @@ export function transcriptScrollDestination(
 ): number | null {
   if (messageCount === 0) return 0;
   return stickToBottom ? scrollHeight : null;
-}
-
-export function lockMobileSheetScroll(
-  target: MobileScrollTarget,
-  mobile: boolean,
-) {
-  if (!mobile) return () => {};
-
-  const previousMarker = target.dataset.chatOpen;
-  const previousOverflow = target.style.overflow;
-  target.dataset.chatOpen = 'true';
-  target.style.overflow = 'hidden';
-
-  return () => {
-    if (previousMarker === undefined) delete target.dataset.chatOpen;
-    else target.dataset.chatOpen = previousMarker;
-    target.style.overflow = previousOverflow;
-  };
-}
-
-export function listenForMobileSheetScroll(
-  target: MobileScrollTarget,
-  media: MobileSheetMediaTarget,
-) {
-  let unlock = lockMobileSheetScroll(target, media.matches);
-
-  function syncLock() {
-    unlock();
-    unlock = lockMobileSheetScroll(target, media.matches);
-  }
-
-  media.addEventListener('change', syncLock);
-  return () => {
-    media.removeEventListener('change', syncLock);
-    unlock();
-  };
 }
 
 export function trimTranscript(
@@ -625,14 +578,6 @@ export function Chat({
     );
     return listenForChatEscape(document, close);
   }, [open, onClose]);
-
-  useEffect(() => {
-    if (!open) return;
-    return listenForMobileSheetScroll(
-      document.body,
-      window.matchMedia('(max-width: 47.999rem)'),
-    );
-  }, [open]);
 
   function beginRetryCountdown(seconds: number) {
     countdownCleanupRef.current?.();
