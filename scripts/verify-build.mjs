@@ -4,6 +4,52 @@ import { fileURLToPath } from "node:url";
 
 const PRODUCTION_ORIGIN = new URL("https://zurielst.com");
 const PREVIEW_RULE = "https://:version.:subdomain.workers.dev/*";
+const LANDING_SECTION_IDS = [
+  "identity",
+  "intro",
+  "contributions",
+  "capabilities",
+  "stack",
+  "work",
+  "timeline",
+  "education",
+  "proof",
+  "products",
+  "brands",
+  "faq",
+  "contact",
+];
+const LANDING_SECTION_CAPTIONS = [
+  "Identity",
+  "Introduction",
+  "Contributions",
+  "Capabilities",
+  "Stack",
+  "Selected work",
+  "Timeline",
+  "Education",
+  "Accolades",
+  "Products",
+  "Worked with",
+  "FAQ",
+  "Contact",
+];
+const VOID_ELEMENTS = new Set([
+  "area",
+  "base",
+  "br",
+  "col",
+  "embed",
+  "hr",
+  "img",
+  "input",
+  "link",
+  "meta",
+  "param",
+  "source",
+  "track",
+  "wbr",
+]);
 
 const requiredHeaders = new Map([
   ["x-content-type-options", "nosniff"],
@@ -686,6 +732,103 @@ async function findStaticFiles(directory) {
   return nestedFiles.flat().sort();
 }
 
+function topLevelSections(html) {
+  const mainOpeningTag = /<main\b[^>]*>/i.exec(html);
+  if (!mainOpeningTag) return [];
+  const mainContentStart = mainOpeningTag.index + mainOpeningTag[0].length;
+  const mainContentEnd = html.indexOf("</main>", mainContentStart);
+  if (mainContentEnd === -1) return [];
+
+  const stack = [];
+  const sections = [];
+  const tagPattern = /<\/?([a-z][\w:-]*)\b[^>]*>/gi;
+  const mainContent = html.slice(mainContentStart, mainContentEnd);
+  for (const match of mainContent.matchAll(tagPattern)) {
+    const tag = match[0];
+    const name = match[1].toLowerCase();
+    if (tag.startsWith("</")) {
+      let openingIndex = -1;
+      for (let index = stack.length - 1; index >= 0; index -= 1) {
+        if (stack[index].name === name) {
+          openingIndex = index;
+          break;
+        }
+      }
+      if (openingIndex === -1) continue;
+      const openingTag = stack[openingIndex];
+      if (name === "section" && openingIndex === 0 && openingTag.id) {
+        sections.push({
+          id: openingTag.id,
+          markup: mainContent.slice(openingTag.start, match.index + tag.length),
+        });
+      }
+      stack.length = openingIndex;
+      continue;
+    }
+
+    if (name === "section" && stack.length === 0) {
+      const id = /\bid=(["'])([^"']+)\1/i.exec(tag)?.[2];
+      stack.push({ id, name, start: match.index });
+      continue;
+    }
+    if (!VOID_ELEMENTS.has(name) && !/\/\s*>$/.test(tag)) stack.push({ name });
+  }
+  return sections;
+}
+
+function topLevelSectionIds(html) {
+  return topLevelSections(html).map((section) => section.id);
+}
+
+export function validateLandingPageContract(html) {
+  const sections = topLevelSections(html);
+  const sectionIds = sections.map((section) => section.id);
+  if (JSON.stringify(sectionIds) !== JSON.stringify(LANDING_SECTION_IDS)) {
+    throw new Error(
+      `Landing-page section IDs must be ${LANDING_SECTION_IDS.join(", ")} in order; found ${sectionIds.join(", ")}`,
+    );
+  }
+
+  const referencesSvgFavicon = extractTags(html).some((tag) => {
+    if (tag.name !== "link") return false;
+    const relations = new Set(
+      (tag.attributes.get("rel") ?? "").toLowerCase().split(/\s+/),
+    );
+    if (!relations.has("icon")) return false;
+    if ((tag.attributes.get("type") ?? "").toLowerCase() !== "image/svg+xml") {
+      return false;
+    }
+
+    try {
+      return new URL(
+        tag.attributes.get("href") ?? "",
+        PRODUCTION_ORIGIN,
+      ).pathname === "/favicon.svg";
+    } catch {
+      return false;
+    }
+  });
+  if (!referencesSvgFavicon) {
+    throw new Error("Landing-page HTML must reference /favicon.svg as an SVG favicon");
+  }
+
+  for (const [index, section] of sections.entries()) {
+    const expectedLabel = `Fig. ${index + 1}. ${LANDING_SECTION_CAPTIONS[index]}`;
+    const figureLabels = [...section.markup.matchAll(
+      /<[^>]*\bclass=(["'])[^"']*\bfig-label\b[^"']*\1[^>]*>\s*([^<]+?)\s*<\/[^>]+>/gi,
+    )].map((match) => match[2]);
+    if (figureLabels.length !== 1 || figureLabels[0] !== expectedLabel) {
+      throw new Error(
+        `Landing-page figure labels must contain exactly "${expectedLabel}" in section ${section.id}; found ${figureLabels.join(", ") || "none"}`,
+      );
+    }
+  }
+
+  if (html.includes("\u2014")) {
+    throw new Error("Landing-page HTML must not contain an em dash");
+  }
+}
+
 export async function verifyBuildOutput(outputDirectory = path.resolve("out")) {
   const resolvedOutputDirectory = path.resolve(outputDirectory);
   const headersPath = path.join(resolvedOutputDirectory, "_headers");
@@ -737,6 +880,20 @@ export async function verifyBuildOutput(outputDirectory = path.resolve("out")) {
   if (violations.length > 0) {
     throw new Error(`CSP compatibility check failed:\n${violations.join("\n")}`);
   }
+
+  validateLandingPageContract(await readFile(indexPath, "utf8"));
+
+  const resumePath = path.join(resolvedOutputDirectory, "media", "resume.pdf");
+  let resumeStatus;
+  try {
+    resumeStatus = await stat(resumePath);
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      throw new Error(`${resumePath} is missing`);
+    }
+    throw error;
+  }
+  if (!resumeStatus.isFile()) throw new Error(`${resumePath} is not a file`);
 
   return { cssFileCount: cssFiles.length, htmlFileCount: htmlFiles.length, headersPath };
 }

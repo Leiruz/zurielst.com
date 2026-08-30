@@ -12,8 +12,10 @@ vi.mock('@/lib/media', () => ({ hasPublicMedia: (mediaPath: string | undefined) 
 const sourceProfile = profileJson as Profile;
 
 describe('ProofWall media', () => {
-  it('top-aligns every available proof image', () => {
+  it('top-aligns retained accolade images and never renders extras', () => {
     const sourceExtra = sourceProfile.proof_wall.extras[0];
+    expect(sourceExtra).toBeDefined();
+    if (!sourceExtra) return;
     const profile: Profile = {
       ...sourceProfile,
       proof_wall: {
@@ -27,11 +29,13 @@ describe('ProofWall media', () => {
       ...profile.proof_wall.certifications,
       ...profile.proof_wall.awards,
       ...profile.proof_wall.ctf_results,
-    ].filter((item) => item.image).length + profile.proof_wall.extras.filter((item) => item.type === 'image').length;
+    ].filter((item) => item.image).length;
 
     const markup = renderToStaticMarkup(createElement(ProofWall, { profile }));
 
     expect(expectedImageCount).toBeGreaterThan(0);
     expect(markup.match(/object-cover object-top/g) ?? []).toHaveLength(expectedImageCount);
+    expect(markup).not.toContain(sourceExtra.title);
+    expect(markup).not.toContain(`src="${sourceExtra.media}"`);
   });
 });

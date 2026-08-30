@@ -4,7 +4,6 @@ import type {
   Certification,
   CtfResult,
   Profile,
-  ProofExtra,
   Publication,
 } from '@/content/schema';
 import { hasPublicMedia } from '@/lib/media';
@@ -20,8 +19,8 @@ export function ProofWall({ profile }: ProofWallProps) {
     <section id="proof" className="dossier-section bg-canvas-raised" aria-labelledby="proof-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
-          <p className="fig-label">Fig. 6. Proof wall</p>
-          <h2 id="proof-title" className="dossier-title mt-4 text-text-1">Proof wall</h2>
+          <p className="fig-label">Fig. 9. Accolades</p>
+          <h2 id="proof-title" className="dossier-title mt-4 text-text-1">Accolades</h2>
         </Reveal>
 
         <ProofGroup title="Certifications">
@@ -56,15 +55,6 @@ export function ProofWall({ profile }: ProofWallProps) {
           ))}
         </ProofGroup>
 
-        {proof.extras.length > 0 && (
-          <ProofGroup title="Artifacts">
-            {proof.extras.map((item, index) => (
-              <Reveal key={item.id} delayIndex={index} className="h-full">
-                <ExtraTile item={item} />
-              </Reveal>
-            ))}
-          </ProofGroup>
-        )}
       </div>
     </section>
   );
@@ -147,26 +137,6 @@ function PublicationTile({ item }: { item: Publication }) {
         <a href={item.link} target="_blank" rel="noopener noreferrer" className="mt-auto pt-6 font-mono text-xs text-text-2 underline decoration-line-strong underline-offset-4 transition-colors duration-150 hover:text-text-1">
           Open publication ↗
         </a>
-      </div>
-    </ProofTile>
-  );
-}
-
-function ExtraTile({ item }: { item: ProofExtra }) {
-  const mediaAvailable = hasPublicMedia(item.media);
-
-  return (
-    <ProofTile>
-      {mediaAvailable && item.type === 'video' && (
-        <video src={item.media} aria-label={`${item.title} video`} controls preload="metadata" className="aspect-video w-full object-cover" />
-      )}
-      {mediaAvailable && item.type === 'image' && (
-        <img src={item.media} alt={`${item.title} artifact`} width={720} height={405} loading="lazy" decoding="async" className="aspect-video w-full object-cover object-top" />
-      )}
-      <div className="flex flex-1 flex-col p-5">
-        <p className="dossier-eyebrow">{item.type === 'video' ? 'Video artifact' : 'Image artifact'}</p>
-        <h4 className="mt-3 text-base font-semibold leading-snug text-text-1">{item.title}</h4>
-        {item.caption && <p className="mt-4 text-sm leading-6 text-text-2">{item.caption}</p>}
       </div>
     </ProofTile>
   );

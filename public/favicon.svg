@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#737780" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+  <g transform="translate(7 39) skewY(-30)">
+    <g opacity="0.45" transform="translate(3 3)">
+      <path d="M0 0h12L0 18h12" />
+      <path d="M28 0H16v9h12v9H16" />
+      <path d="M32 0h18M41 0v18" />
+    </g>
+    <path d="M0 0h12L0 18h12" />
+    <path d="M28 0H16v9h12v9H16" />
+    <path d="M32 0h18M41 0v18" />
+    <path d="M0 0 3 3M12 0l3 3M0 18l3 3M12 18l3 3" opacity="0.65" />
+    <path d="M16 0l3 3M28 0l3 3M16 9l3 3M28 9l3 3M16 18l3 3M28 18l3 3" opacity="0.65" />
+    <path d="M32 0l3 3M41 0l3 3M50 0l3 3M41 18l3 3" opacity="0.65" />
+  </g>
+</svg>

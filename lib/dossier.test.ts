@@ -77,6 +77,23 @@ describe('contributionHeatBucket', () => {
   });
 });
 
+describe('greetingForHour', () => {
+  it.each([
+    [0, 'Good morning'],
+    [11, 'Good morning'],
+    [12, 'Good afternoon'],
+    [17, 'Good afternoon'],
+    [18, 'Good evening'],
+    [23, 'Good evening'],
+  ])('maps local hour %i to %s', (hour, expectedGreeting) => {
+    const greetingForHour = Reflect.get(dossier, 'greetingForHour') as unknown;
+    expect(greetingForHour).toBeTypeOf('function');
+    if (typeof greetingForHour !== 'function') return;
+
+    expect(greetingForHour(hour)).toBe(expectedGreeting);
+  });
+});
+
 describe('splitDisclosureCopy', () => {
   type CopySplit = { teaser: string; remainder: string };
   type CopySplitter = (text: string, approximateLimit: number) => CopySplit;

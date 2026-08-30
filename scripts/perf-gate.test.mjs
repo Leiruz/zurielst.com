@@ -91,9 +91,12 @@ test("median returns the middle value for an odd-sized sample", () => {
 });
 
 test("landing-route controls avoid the Motion and icon runtimes", async () => {
-  const [appleHelloSource, themeSwitcherSource] = await Promise.all(
+  const [appleHelloSource, globalStyles, roleRotatorSource, siteNavSource, themeSwitcherSource] = await Promise.all(
     [
       "../components/registry/apple-hello-effect-english.tsx",
+      "../styles/globals.css",
+      "../components/dossier/role-rotator.tsx",
+      "../components/site-nav.tsx",
       "../components/registry/theme-switcher.tsx",
     ].map((relativePath) => readFile(new URL(relativePath, import.meta.url), "utf8")),
   );
@@ -103,6 +106,12 @@ test("landing-route controls avoid the Motion and icon runtimes", async () => {
   }
   assert.doesNotMatch(appleHelloSource, /from ["']@\/lib\/utils["']/);
   assert.doesNotMatch(themeSwitcherSource, /from ["']lucide-react["']/);
+  assert.doesNotMatch(roleRotatorSource, /^["']use client["'];?/m);
+  assert.doesNotMatch(roleRotatorSource, /use(?:Effect|State|PrefersReducedMotion)/);
+  assert.match(globalStyles, /\.role-rotator-viewport\s*{[^}]*--role-step:\s*3\.5rem;[^}]*width:\s*100%;/s);
+  assert.match(globalStyles, /\.role-rotator-item\s*{[^}]*white-space:\s*normal;/s);
+  assert.doesNotMatch(siteNavSource, /^["']use client["'];?/m);
+  assert.match(siteNavSource, /site-nav-enhancement/);
 });
 
 test("consent dialog code loads only when Customize opens the automatic banner", async () => {
@@ -141,6 +150,39 @@ test("consent dialog code loads only when Customize opens the automatic banner",
   assert.match(bannerSource, /onReject/);
   assert.match(bannerSource, /onCustomize/);
   assert.match(bannerSource, /onAccept/);
+});
+
+test("command palette code loads only from an explicit open interaction", async () => {
+  const [loaderSource, enhancementsSource, modelSource] = await Promise.all(
+    [
+      "../components/command-palette-loader.tsx",
+      "../components/registry/client-enhancements.tsx",
+      "../lib/command-palette.ts",
+    ].map((relativePath) => readFile(new URL(relativePath, import.meta.url), "utf8")),
+  );
+
+  const importExpression = "import('@/components/command-palette')";
+  const openHandlerStart = loaderSource.indexOf("async function openCommandPalette");
+  const effectsStart = loaderSource.indexOf("useEffect(", openHandlerStart);
+  const openHandlerSource = loaderSource.slice(openHandlerStart, effectsStart);
+  const modelImportLines = loaderSource
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.includes("@/lib/command-palette"));
+
+  assert.ok(openHandlerStart >= 0, "the loader must define an explicit open handler");
+  assert.equal(loaderSource.split(importExpression).length - 1, 1);
+  assert.match(openHandlerSource, /import\(['"]@\/components\/command-palette['"]\)/);
+  assert.doesNotMatch(loaderSource, /from ['"]@\/components\/command-palette['"]/);
+  assert.doesNotMatch(loaderSource, /scheduleAfterPaint/);
+  assert.doesNotMatch(enhancementsSource, /command-palette/);
+  assert.deepEqual(
+    modelImportLines,
+    ["import type { CommandPaletteConfig } from '@/lib/command-palette';"],
+    "the always-loaded listener must not import the palette runtime model",
+  );
+  assert.doesNotMatch(`${loaderSource}\n${modelSource}`, /toLocaleLowerCase/);
+  assert.match(`${loaderSource}\n${modelSource}`, /toLowerCase/);
 });
 
 test(

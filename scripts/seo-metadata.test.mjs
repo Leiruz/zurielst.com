@@ -6,6 +6,13 @@ const layoutSource = await readFile(
   new URL("../app/layout.tsx", import.meta.url),
   "utf8",
 );
+const faviconSource = await readFile(
+  new URL("../public/favicon.svg", import.meta.url),
+  "utf8",
+).catch((error) => {
+  if (error?.code === "ENOENT") return "";
+  throw error;
+});
 
 test("uses the production canonical URL and profile description", () => {
   assert.match(layoutSource, /description: profile\.meta\.description/);
@@ -27,4 +34,24 @@ test("publishes a summary Twitter card from profile metadata", () => {
   assert.match(layoutSource, /card: 'summary'/);
   assert.match(layoutSource, /title: profile\.meta\.og\.title/);
   assert.match(layoutSource, /description: profile\.meta\.og\.description/);
+});
+
+test("wires the SVG favicon through Next metadata", () => {
+  assert.match(
+    layoutSource,
+    /icons:\s*\{\s*icon:\s*\[\s*\{\s*url:\s*['"]\/favicon\.svg['"],\s*type:\s*['"]image\/svg\+xml['"]\s*\}\s*\],?\s*\}/,
+  );
+});
+
+test("ships a transparent fixed-grey ZST line-art favicon", () => {
+  assert.match(faviconSource, /<svg\b/);
+  assert.match(faviconSource, /viewBox="0 0 64 64"/);
+  assert.match(faviconSource, /fill="none"/);
+  assert.match(faviconSource, /stroke="#737780"/i);
+  assert.doesNotMatch(faviconSource, /currentColor/i);
+  assert.doesNotMatch(faviconSource, /<rect\b/i);
+  assert.ok(
+    [...faviconSource.matchAll(/<path\b/g)].length >= 3,
+    "favicon must use hand-authored ZST paths",
+  );
 });

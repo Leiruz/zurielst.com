@@ -341,13 +341,52 @@ const MetaSchema = z
   .strict();
 
 // ---------------------------------------------------------------------------
+// Stack brands (vendors and products worked with; nominative use only)
+// ---------------------------------------------------------------------------
+
+const StackBrandSchema = z
+  .object({
+    name: z.string().min(1).max(40),
+    context: z.string().min(1).max(120),
+  })
+  .strict();
+
+const StackBrandsSchema = z
+  .object({
+    disclaimer: z.string().min(20).max(240),
+    brands: z.array(StackBrandSchema).min(4).max(16),
+  })
+  .strict();
+
+// ---------------------------------------------------------------------------
 // Root schema
 // ---------------------------------------------------------------------------
+
+const IntroSchema = z
+  .object({
+    bullets: z.array(z.string().min(20).max(240)).min(2).max(4),
+  })
+  .strict();
+
+const StackCategorySchema = z
+  .object({
+    name: z.string().min(2).max(40),
+    items: z.array(z.string().min(1).max(40)).min(2).max(12),
+  })
+  .strict();
+
+const StackSchema = z
+  .object({
+    categories: z.array(StackCategorySchema).min(3).max(8),
+  })
+  .strict();
 
 const ProfileObjectSchema = z
   .object({
     identity: IdentitySchema,
+    intro: IntroSchema,
     capabilities: CapabilitiesSchema,
+    stack: StackSchema,
     work_cases: z.array(WorkCaseSchema).min(3).max(4),
     timeline: z.array(TimelineEntrySchema).min(1),
     proof_wall: ProofWallSchema,
@@ -355,6 +394,7 @@ const ProfileObjectSchema = z
     faq: z.array(FaqEntrySchema).min(1),
     chat: ChatSchema,
     easter_eggs: EasterEggsSchema,
+    stack_brands: StackBrandsSchema,
     meta: MetaSchema,
   })
   .strict();

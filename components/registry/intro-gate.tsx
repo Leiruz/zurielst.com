@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AppleHelloEffectEnglish } from '@/components/registry/apple-hello-effect-english';
 import {
   INTRO_COVER_ID,
+  INTRO_HELLO_SIZE_CLASS,
   INTRO_REDUCED_MOTION_QUERY,
   INTRO_SEEN_KEY,
 } from '@/components/registry/intro-first-paint';
@@ -141,7 +142,7 @@ export function IntroOverlay({
     >
       <AppleHelloEffectEnglish
         aria-hidden="true"
-        className="h-16 text-white sm:h-20"
+        className={`${INTRO_HELLO_SIZE_CLASS} text-white`}
         onAnimationComplete={() => window.setTimeout(onDismiss, 350)}
       />
       <button

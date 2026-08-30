@@ -11,20 +11,41 @@
     "tagline": "AI. Cyber. Defence.",
     "bio_hook": "I started coding at 14.",
     "metrics": [
-      { "value": "80%", "label": "lower SOC solution cost" },
-      { "value": "Up to 90%", "label": "threat detection uplift" },
-      { "value": "99.9%", "label": "security-tool uptime" },
-      { "value": "WAF telemetry", "label": "made readable for analysts" }
+      {
+        "value": "80%",
+        "label": "lower SOC solution cost"
+      },
+      {
+        "value": "Up to 90%",
+        "label": "threat detection uplift"
+      },
+      {
+        "value": "99.9%",
+        "label": "security-tool uptime"
+      },
+      {
+        "value": "WAF telemetry",
+        "label": "made readable for analysts"
+      }
     ],
-    "location": { "city": "Singapore", "timezone": "UTC+8" },
+    "location": {
+      "city": "Singapore",
+      "timezone": "UTC+8"
+    },
     "email": "zurielst@u.nus.edu",
     "socials": [
-      { "platform": "GitHub", "url": "https://github.com/Leiruz" },
-      { "platform": "LinkedIn", "url": "https://www.linkedin.com/in/zuriel-shanley/" }
+      {
+        "platform": "GitHub",
+        "url": "https://github.com/Leiruz"
+      },
+      {
+        "platform": "LinkedIn",
+        "url": "https://www.linkedin.com/in/zuriel-shanley/"
+      }
     ],
     "portrait": {
       "image": "/media/portrait.jpg",
-      "alt": "Portrait of Zuriel Shanley Tanyory"
+      "alt": "Zuriel Shanley Tanyory standing on a snowy ski slope"
     },
     "github": {
       "username": "Leiruz",
@@ -40,15 +61,45 @@
         "title": "Security",
         "narrative": "I learned security by doing the whole loop: attack, defend, investigate. I ran Lockheed's Cyber Kill Chain against lab targets, performed a Blueborne exploit on a vulnerable Android phone with Kali running on my own device, and pentested web applications with OWASP ZAP and Burp Suite, from DVWA to a live ASP.NET app. I wrote my own Python malware, obfuscated and encrypted it, then took it apart again with Ghidra and IDA to learn x86 from both sides of the fight. I hardened a CentOS file server with OSSEC, firewalld, a host IPS, ACLs and BIOS encryption, configured Palo Alto next-gen firewalls and VPN tunnels, and worked EnCase, Autopsy, FTK Imager and Memoryze through a full forensics case study. In my own time I run Suricata, Snort and Zeek.",
         "skills": [
-          { "name": "Web application pentesting", "detail": "OWASP Top 10, OWASP ZAP, Burp Suite" },
-          { "name": "Reverse engineering", "detail": "Ghidra, IDA, x86 assembly" },
-          { "name": "Malware analysis", "detail": "Static and dynamic analysis" },
-          { "name": "Digital forensics", "detail": "EnCase, Autopsy, FTK Imager" },
-          { "name": "Secure web development", "since": "Jun 2020", "detail": "ASP.NET Razor Pages" },
-          { "name": "Web development", "since": "Oct 2019", "detail": "Self-taught HTML, CSS, JavaScript, wow.js" },
-          { "name": "Cryptography", "since": "Oct 2019", "detail": "An Enigma machine started it" },
-          { "name": "Network infrastructure", "detail": "Cisco, Palo Alto NGFW, FortiGate" },
-          { "name": "Server and cloud hardening", "detail": "CentOS, RedHat, OSSEC, firewalld" }
+          {
+            "name": "Web application pentesting",
+            "detail": "OWASP Top 10, OWASP ZAP, Burp Suite"
+          },
+          {
+            "name": "Reverse engineering",
+            "detail": "Ghidra, IDA, x86 assembly"
+          },
+          {
+            "name": "Malware analysis",
+            "detail": "Static and dynamic analysis"
+          },
+          {
+            "name": "Digital forensics",
+            "detail": "EnCase, Autopsy, FTK Imager"
+          },
+          {
+            "name": "Secure web development",
+            "since": "Jun 2020",
+            "detail": "ASP.NET Razor Pages"
+          },
+          {
+            "name": "Web development",
+            "since": "Oct 2019",
+            "detail": "Self-taught HTML, CSS, JavaScript, wow.js"
+          },
+          {
+            "name": "Cryptography",
+            "since": "Oct 2019",
+            "detail": "An Enigma machine started it"
+          },
+          {
+            "name": "Network infrastructure",
+            "detail": "Cisco, Palo Alto NGFW, FortiGate"
+          },
+          {
+            "name": "Server and cloud hardening",
+            "detail": "CentOS, RedHat, OSSEC, firewalld"
+          }
         ]
       },
       {
@@ -57,10 +108,24 @@
         "title": "AI & Automation",
         "narrative": "Python has been mine since December 2016: Twilio, TensorFlow, Keras, Pandas, smtplib, sockets, cryptography. In 2020 I went deep on deep learning. I trained more than 40 CNN models to reach roughly 70% accuracy on food classification and emoji prediction, built an RNN autocorrect judged on word error rate, and published both write-ups. The same instinct now earns its keep at work: at Singtel I automated Akamai WAF reporting, turning alerts, logs and traffic data into reports analysts actually read. Underneath it all sit boring, load-bearing foundations: object-oriented programming in C# and functional programming.",
         "skills": [
-          { "name": "Python", "since": "Dec 2016", "detail": "Twilio, TensorFlow, Keras, Pandas, smtplib, cryptography, sockets" },
-          { "name": "Deep learning", "since": "Apr 2020", "detail": "RNN, CNN, NLP" },
-          { "name": "Python automation", "detail": "Akamai WAF API reporting integration" },
-          { "name": "Programming foundations", "detail": "Object-oriented (C#) and functional programming" }
+          {
+            "name": "Python",
+            "since": "Dec 2016",
+            "detail": "Twilio, TensorFlow, Keras, Pandas, smtplib, cryptography, sockets"
+          },
+          {
+            "name": "Deep learning",
+            "since": "Apr 2020",
+            "detail": "RNN, CNN, NLP"
+          },
+          {
+            "name": "Python automation",
+            "detail": "Akamai WAF API reporting integration"
+          },
+          {
+            "name": "Programming foundations",
+            "detail": "Object-oriented (C#) and functional programming"
+          }
         ]
       },
       {
@@ -69,9 +134,18 @@
         "title": "Founder",
         "narrative": "CiTaDel started as a conviction that SMEs deserve industry-grade defence at a price they can pay. For three years I ran it: an affordable, open-source SOC with EDR and SOAR at the core, SOC solution cost down 80%, threat detection up by as much as 90%, and deep learning folded into SOC workflows to cut false positives by 20%. The founder muscle came from Genesis, where I served as Vice-President of Startup and was nominated into the Zero to One entrepreneurship program with Meet Ventures and NUS Business School. CiTaDel wound down in May 2026 when I joined Singtel; the lessons did not.",
         "skills": [
-          { "name": "SOC architecture", "detail": "EDR and SOAR on open source" },
-          { "name": "AI in security operations", "detail": "Deep learning in SOC workflows" },
-          { "name": "Zero to One", "detail": "MVP building with Meet Ventures and NUS Business School" }
+          {
+            "name": "SOC architecture",
+            "detail": "EDR and SOAR on open source"
+          },
+          {
+            "name": "AI in security operations",
+            "detail": "Deep learning in SOC workflows"
+          },
+          {
+            "name": "Zero to One",
+            "detail": "MVP building with Meet Ventures and NUS Business School"
+          }
         ]
       }
     ]
@@ -83,7 +157,11 @@
       "kicker": "Security reporting automation, Singtel",
       "period": "May 2026 to Aug 2026",
       "summary": "During my Singtel internship I built a Python automation that integrates Akamai WAF APIs to extract security risk alerts, logs and network traffic data, transforming raw security events into structured reports with technical documentation and visual diagrams. Analysts got better threat visibility, cleaner operations monitoring, and faster reporting.",
-      "stack": ["Python", "Akamai WAF APIs", "Technical documentation"],
+      "stack": [
+        "Python",
+        "Akamai WAF APIs",
+        "Technical documentation"
+      ],
       "links": [],
       "evidence": [],
       "note": "Internal work, described at resume level."
@@ -94,13 +172,29 @@
       "kicker": "Founder, open-source SOC",
       "period": "Mar 2023 to May 2026",
       "summary": "I founded CiTaDel to bring industry-grade protection to SMEs and consumers through affordable, open-source security. I architected and ran a SOC with EDR and SOAR at its core, cut SOC solution cost by 80%, lifted threat detection by up to 90%, and integrated deep learning models into SOC workflows that shrank false positives by 20%.",
-      "stack": ["Open-source SOC", "EDR", "SOAR", "Deep learning"],
+      "stack": [
+        "Open-source SOC",
+        "EDR",
+        "SOAR",
+        "Deep learning"
+      ],
       "links": [
-        { "label": "GitHub", "url": "https://github.com/Leiruz/CiTaDel" },
-        { "label": "citadel.zurielst.com", "url": "https://citadel.zurielst.com", "note": "Service wound down in May 2026; the site stays up as a record." }
+        {
+          "label": "GitHub",
+          "url": "https://github.com/Leiruz/CiTaDel"
+        },
+        {
+          "label": "citadel.zurielst.com",
+          "url": "https://citadel.zurielst.com",
+          "note": "Service wound down in May 2026; the site stays up as a record."
+        }
       ],
       "evidence": [
-        { "type": "image", "media": "/media/cases/citadel.png", "alt": "CiTaDel landing page" }
+        {
+          "type": "image",
+          "media": "/media/cases/citadel.png",
+          "alt": "CiTaDel landing page"
+        }
       ]
     },
     {
@@ -109,7 +203,14 @@
       "kicker": "Full-stack lead under uniform",
       "period": "Jan 2023 to Mar 2023",
       "summary": "In the Singapore Armed Forces I led a four-person team building a 3-tier web application that digitized paper-based military processes. HTML, CSS, JavaScript, PHP, Bootstrap and MySQL; the result improved data accuracy, cut processing time and paper waste, and raised efficiency while lowering costs by up to 20%.",
-      "stack": ["HTML", "CSS", "JavaScript", "PHP", "Bootstrap", "MySQL"],
+      "stack": [
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "PHP",
+        "Bootstrap",
+        "MySQL"
+      ],
       "links": [],
       "evidence": [],
       "note": "Internal system: no demo, no screenshots."
@@ -381,12 +482,24 @@
       "name": "Cinderella Shoes",
       "period": "Oct 2020 to Mar 2021",
       "summary": "I led a team building a 3-tier secure e-commerce app on ASP.NET for our Secure Software Development assignment, wiring in Stripe for payments and reCAPTCHA for bot mitigation. We reported 0% transaction failure through payment.",
-      "stack": ["ASP.NET", "Razor Pages", "Stripe", "reCAPTCHA"],
+      "stack": [
+        "ASP.NET",
+        "Razor Pages",
+        "Stripe",
+        "reCAPTCHA"
+      ],
       "links": [
-        { "label": "GitHub", "url": "https://github.com/Leiruz/Project-Cinderella" }
+        {
+          "label": "GitHub",
+          "url": "https://github.com/Leiruz/Project-Cinderella"
+        }
       ],
       "media": [
-        { "type": "video", "media": "/media/products/cinderella-demo.mp4", "alt": "Cinderella Shoes demo walkthrough" }
+        {
+          "type": "video",
+          "media": "/media/products/cinderella-demo.mp4",
+          "alt": "Cinderella Shoes demo walkthrough"
+        }
       ]
     },
     {
@@ -394,13 +507,29 @@
       "name": "Ngee Ann Badminton Webpage",
       "period": "Apr 2019 to Oct 2019",
       "summary": "My first shipped site: a front-end webpage for the Ngee Ann Badminton CCA in HTML, CSS and JavaScript with Bootstrap and wow.js. It is not fancy, and that is the point: this is where the practice started.",
-      "stack": ["HTML", "CSS", "JavaScript", "Bootstrap", "wow.js"],
+      "stack": [
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "Bootstrap",
+        "wow.js"
+      ],
       "links": [
-        { "label": "Website", "url": "https://ngeeannbadminton.zurielst.com" },
-        { "label": "GitHub", "url": "https://github.com/Leiruz/NgeeAnnBadminton" }
+        {
+          "label": "Website",
+          "url": "https://ngeeannbadminton.zurielst.com"
+        },
+        {
+          "label": "GitHub",
+          "url": "https://github.com/Leiruz/NgeeAnnBadminton"
+        }
       ],
       "media": [
-        { "type": "image", "media": "/media/products/ngee-ann-badminton.png", "alt": "Ngee Ann Badminton webpage" }
+        {
+          "type": "image",
+          "media": "/media/products/ngee-ann-badminton.png",
+          "alt": "Ngee Ann Badminton webpage"
+        }
       ]
     },
     {
@@ -409,10 +538,19 @@
       "period": "Jan 2018 to May 2018",
       "origin_story": true,
       "summary": "My first security build: a three-factor authentication system in Python using Twilio one-time passwords with MD5 and SHA-256 hashing. MD5 reads dated on a security dossier today, which is exactly why this ships as an origin story. It marks where the obsession started, not where it ended.",
-      "stack": ["Python", "Twilio OTP", "MD5", "SHA-256"],
+      "stack": [
+        "Python",
+        "Twilio OTP",
+        "MD5",
+        "SHA-256"
+      ],
       "links": [],
       "media": [
-        { "type": "image", "media": "/media/products/xynthea.png", "alt": "Project Xynthea overview" }
+        {
+          "type": "image",
+          "media": "/media/products/xynthea.png",
+          "alt": "Project Xynthea overview"
+        }
       ],
       "note": "No public repository."
     },
@@ -420,45 +558,76 @@
       "id": "panpath-redactor",
       "name": "PanPath-Redactor",
       "summary": "Public tooling for redacting Palo Alto PAN-OS configuration exports before they are shared for review.",
-      "stack": ["Python", "PAN-OS"],
+      "stack": [
+        "Python",
+        "PAN-OS"
+      ],
       "links": [
-        { "label": "GitHub", "url": "https://github.com/Leiruz/PanPath-Redactor" }
+        {
+          "label": "GitHub",
+          "url": "https://github.com/Leiruz/PanPath-Redactor"
+        }
       ]
     },
     {
       "id": "edl-akamai",
       "name": "edl-akamai",
       "summary": "A connector between External Dynamic List infrastructure and Akamai, published as a public repository.",
-      "stack": ["Python"],
+      "stack": [
+        "Python"
+      ],
       "links": [
-        { "label": "GitHub", "url": "https://github.com/Leiruz/edl-akamai" }
+        {
+          "label": "GitHub",
+          "url": "https://github.com/Leiruz/edl-akamai"
+        }
       ]
     },
     {
       "id": "palo-alto-ioc-automation",
       "name": "Palo Alto EDL IOC Manager",
       "summary": "An add-only IOC manager for Palo Alto External Dynamic List servers: engineers add new indicators to local EDL text files while the script records the change, updates the trusted snapshot, and sends an email notification to the right people.",
-      "stack": ["Python", "PAN-OS EDL"],
+      "stack": [
+        "Python",
+        "PAN-OS EDL"
+      ],
       "links": [
-        { "label": "GitHub", "url": "https://github.com/Leiruz/Palo-Alto-Firewall-IOC-Automation" }
+        {
+          "label": "GitHub",
+          "url": "https://github.com/Leiruz/Palo-Alto-Firewall-IOC-Automation"
+        }
       ]
     },
     {
       "id": "inscribe",
       "name": "Inscribe",
       "summary": "A one-command pipeline that turns YouTube videos into clean transcripts and Fabric-powered summaries and insights using local models. The AI & Automation act, working outside security.",
-      "stack": ["Python", "Whisper", "Fabric"],
+      "stack": [
+        "Python",
+        "Whisper",
+        "Fabric"
+      ],
       "links": [
-        { "label": "GitHub", "url": "https://github.com/Leiruz/Inscribe" }
+        {
+          "label": "GitHub",
+          "url": "https://github.com/Leiruz/Inscribe"
+        }
       ]
     },
     {
       "id": "facial-recognition",
       "name": "Facial-Recognition-Project",
       "summary": "Facial recognition built on the LBHF engine and TensorFlow: hands-on machine learning evidence with the code public.",
-      "stack": ["Python", "TensorFlow", "LBHF"],
+      "stack": [
+        "Python",
+        "TensorFlow",
+        "LBHF"
+      ],
       "links": [
-        { "label": "GitHub", "url": "https://github.com/Leiruz/Facial-Recognition-Project" }
+        {
+          "label": "GitHub",
+          "url": "https://github.com/Leiruz/Facial-Recognition-Project"
+        }
       ]
     },
     {
@@ -466,7 +635,9 @@
       "name": "Contact Tracing App",
       "period": "2020",
       "summary": "A Python contact tracing app built in 2020 while contact tracing was a live national problem, scoped as a beta for Ngee Ann Polytechnic. No public repo backs it, so it ships as a story, not a link.",
-      "stack": ["Python"],
+      "stack": [
+        "Python"
+      ],
       "links": [],
       "note": "No public repository."
     }
@@ -540,5 +711,127 @@
       "url": "https://zurielst.com",
       "type": "website"
     }
+  },
+  "stack_brands": {
+    "disclaimer": "Vendor and product names identify technologies Zuriel has hands-on experience with. No affiliation, sponsorship, or endorsement is implied.",
+    "brands": [
+      {
+        "name": "Palo Alto Networks",
+        "context": "NGFW deployment and firewall management at Singtel"
+      },
+      {
+        "name": "Fortinet",
+        "context": "FortiGate operations, Fortinet Certified Associate"
+      },
+      {
+        "name": "Cisco",
+        "context": "Network infrastructure, Cyber Threat Management certificate"
+      },
+      {
+        "name": "Akamai",
+        "context": "WAF telemetry automation and SIEM reporting at Singtel"
+      },
+      {
+        "name": "Cloudflare",
+        "context": "Workers, Workers AI, and zone security running this site"
+      },
+      {
+        "name": "Microsoft",
+        "context": "Azure AI Foundry security agents, Power BI"
+      },
+      {
+        "name": "CyberArk",
+        "context": "Privileged access management, Certified Trustee"
+      },
+      {
+        "name": "VMware",
+        "context": "Carbon Black Cloud endpoint fundamentals"
+      },
+      {
+        "name": "OWASP",
+        "context": "ZAP and Top 10 driven web application testing"
+      },
+      {
+        "name": "Kali Linux",
+        "context": "Offensive tooling for lab exploitation work"
+      }
+    ]
+  },
+  "intro": {
+    "bullets": [
+      "I am Zuriel Shanley Tanyory, a Forward Deployed AI and Automation Security Engineer at Singtel, turning security operations into deterministic, auditable automation.",
+      "I founded and ran CiTaDel Cybersecurity Solutions for three years, bringing industry-grade SOC defence to SMEs at a price they could pay.",
+      "First Place at Singtel BIG Fearless Find 2026 (Round 1), reading Information Security at NUS, and shipping to production the whole way."
+    ]
+  },
+  "stack": {
+    "categories": [
+      {
+        "name": "Languages",
+        "items": [
+          "Python",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "x86 Assembly",
+          "HTML & CSS"
+        ]
+      },
+      {
+        "name": "Security Operations",
+        "items": [
+          "Palo Alto NGFW",
+          "FortiGate",
+          "Suricata",
+          "Snort",
+          "Zeek",
+          "OSSEC",
+          "VMware Carbon Black"
+        ]
+      },
+      {
+        "name": "Offense & Forensics",
+        "items": [
+          "Kali Linux",
+          "Burp Suite",
+          "OWASP ZAP",
+          "Ghidra",
+          "IDA",
+          "EnCase",
+          "Autopsy",
+          "FTK Imager"
+        ]
+      },
+      {
+        "name": "AI & Automation",
+        "items": [
+          "TensorFlow",
+          "Keras",
+          "Pandas",
+          "Cloudflare Workers AI",
+          "Azure AI Foundry",
+          "Power BI"
+        ]
+      },
+      {
+        "name": "Cloud & Infrastructure",
+        "items": [
+          "Cloudflare Workers",
+          "CentOS",
+          "RedHat",
+          "Cisco",
+          "Akamai"
+        ]
+      },
+      {
+        "name": "Workflow",
+        "items": [
+          "Git",
+          "GitHub",
+          "GitHub Actions",
+          "VS Code"
+        ]
+      }
+    ]
   }
 }
