@@ -10,16 +10,22 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AppleHelloEffectEnglish } from '@/components/registry/apple-hello-effect-english';
-
-const SEEN_KEY = 'zst-hello-seen';
+import {
+  INTRO_COVER_ID,
+  INTRO_REDUCED_MOTION_QUERY,
+  INTRO_SEEN_KEY,
+} from '@/components/registry/intro-first-paint';
 
 export function hasSeenIntro(
-  storage: Pick<Storage, 'getItem' | 'setItem'> = sessionStorage,
+  storage?: Pick<Storage, 'getItem' | 'setItem'>,
 ): boolean {
   try {
-    const seen = storage.getItem(SEEN_KEY) === '1';
-    if (!seen) storage.setItem(SEEN_KEY, '1');
-    return seen;
+    const availableStorage = storage ?? window.sessionStorage;
+    const seen = availableStorage.getItem(INTRO_SEEN_KEY) === '1';
+    if (seen) return true;
+
+    availableStorage.setItem(INTRO_SEEN_KEY, '1');
+    return availableStorage.getItem(INTRO_SEEN_KEY) !== '1';
   } catch {
     return true;
   }
@@ -27,7 +33,7 @@ export function hasSeenIntro(
 
 function markSeen() {
   try {
-    sessionStorage.setItem(SEEN_KEY, '1');
+    window.sessionStorage.setItem(INTRO_SEEN_KEY, '1');
   } catch {
     // Storage is unavailable, so the up-front check will keep failing closed.
   }
@@ -39,19 +45,43 @@ export function IntroGate() {
   const [leaving, setLeaving] = useState(false);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const introWasVisibleRef = useRef(false);
+  const dismissingRef = useRef(false);
+  const dismissTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
+    const root = document.documentElement;
+    const cover = document.getElementById(INTRO_COVER_ID);
+    const stampedPending = root.dataset.intro === 'pending';
     const seen = hasSeenIntro();
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (seen || reduced) {
+    let reduced = true;
+    try {
+      reduced = window.matchMedia(INTRO_REDUCED_MOTION_QUERY).matches;
+    } catch {
+      // A missing media-query API fails closed just like unavailable storage.
+    }
+
+    if (!stampedPending || seen || reduced || !cover) {
       if (reduced) markSeen();
+      root.dataset.intro = 'done';
+      cover?.remove();
       return;
     }
+
     const activeElement = document.activeElement;
     previousFocusRef.current =
       activeElement instanceof HTMLElement ? activeElement : null;
+    root.dataset.intro = 'active';
     setShow(true);
   }, []);
+
+  useEffect(
+    () => () => {
+      if (dismissTimerRef.current !== null) {
+        window.clearTimeout(dismissTimerRef.current);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (show) {
@@ -67,9 +97,17 @@ export function IntroGate() {
   }, [show]);
 
   const dismiss = () => {
+    if (dismissingRef.current) return;
+    dismissingRef.current = true;
     markSeen();
+    document.documentElement.dataset.intro = 'leaving';
     setLeaving(true);
-    window.setTimeout(() => setShow(false), 500);
+    dismissTimerRef.current = window.setTimeout(() => {
+      document.documentElement.dataset.intro = 'done';
+      document.getElementById(INTRO_COVER_ID)?.remove();
+      dismissTimerRef.current = null;
+      setShow(false);
+    }, 500);
   };
 
   if (!show) return null;
@@ -97,13 +135,13 @@ export function IntroOverlay({
           ?.focus();
       }}
       className={
-        'fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-500 ' +
+        'fixed inset-0 z-[101] flex items-center justify-center transition-opacity duration-500 ' +
         (leaving ? 'pointer-events-none opacity-0' : 'opacity-100')
       }
     >
       <AppleHelloEffectEnglish
         aria-hidden="true"
-        className="h-16 text-text-1 sm:h-20"
+        className="h-16 text-white sm:h-20"
         onAnimationComplete={() => window.setTimeout(onDismiss, 350)}
       />
       <button
@@ -111,7 +149,7 @@ export function IntroOverlay({
         autoFocus
         aria-label="Skip intro"
         onClick={onDismiss}
-        className="absolute bottom-8 rounded-full border border-line-strong px-4 py-1.5 font-mono text-xs text-text-3 transition-colors hover:text-text-1"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 rounded-full border border-white/25 bg-black/60 px-3.5 py-1 font-mono text-xs text-white transition-colors hover:border-white/50 hover:bg-black hover:text-white"
       >
         skip
       </button>

@@ -2,6 +2,10 @@ import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { ClientEnhancements } from '@/components/registry/client-enhancements';
+import {
+  IntroCover,
+  IntroFirstPaintHead,
+} from '@/components/registry/intro-first-paint';
 import profileJson from '@/content/profile.json';
 import type { Profile } from '@/content/schema';
 import { hasPublicMedia } from '@/lib/media';
@@ -43,7 +47,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <IntroFirstPaintHead />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <IntroCover />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
           <ClientEnhancements />
