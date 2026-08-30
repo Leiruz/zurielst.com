@@ -1,0 +1,11 @@
+﻿node_modules/
+.next/
+out/
+dist/
+.wrangler/
+.env
+.env.*
+*.local
+.DS_Store
+.tri/state.json
+.tri/run.lock/
