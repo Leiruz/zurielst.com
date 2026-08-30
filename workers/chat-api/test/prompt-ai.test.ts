@@ -13,6 +13,13 @@ import {
 } from '../src/prompt';
 import { ChatRequestSchema } from '../src/schema';
 
+const CANONICAL_PROFILE_REFUSAL = projectionMarkdown.match(
+  /## Worker-side sentinel mapping[\s\S]*?```\r?\n([^\r\n]+)\r?\n```/u,
+)?.[1];
+if (CANONICAL_PROFILE_REFUSAL === undefined) {
+  throw new Error('Projection is missing the worker-side canonical refusal.');
+}
+
 describe('grounded prompt', () => {
   it('puts the curated profile before answer-first grounding instructions', () => {
     const prompt = buildSystemPrompt();
@@ -39,8 +46,9 @@ describe('grounded prompt', () => {
       'When PROFILE contains relevant information, ANSWER with it, concise and factual.',
     );
     expect(normalizedInstructions).toContain(
-      '"That is not something my profile covers. Email zurielst@u.nus.edu and Zuriel will answer directly."',
+      'reply with exactly the single token NO_PROFILE_ANSWER and nothing else.',
     );
+    expect(prompt).not.toContain(CANONICAL_PROFILE_REFUSAL);
     expect(normalizedInstructions).toContain('Use only the named fields in PROFILE.');
     expect(normalizedInstructions.endsWith(
       'For permitted questions, if PROFILE contains any relevant information, ANSWER from it rather than refusing.',
@@ -48,13 +56,17 @@ describe('grounded prompt', () => {
     expect(prompt.indexOf('PROFILE>>')).toBeLessThan(prompt.lastIndexOf('For permitted questions'));
   });
 
-  it('keeps the live Singtel role and CiTaDel facts in the projection body', () => {
+  it('keeps the live role, company, education, and certification facts in the projection body', () => {
     const projectionBody = projectionMarkdown.match(/```\r?\n([\s\S]*?)\r?\n```/)?.[1];
 
     expect(projectionBody).toContain(
       'Forward Deployed AI & Automation Security Engineer at Singtel',
     );
     expect(projectionBody).toContain('CiTaDel Cybersecurity Solutions');
+    expect(projectionBody).toContain(
+      'Information Security undergraduate at NUS until May 2028',
+    );
+    expect(projectionBody).toContain('Cisco Cyber Threat Management');
   });
 
   it('grounds the projection in published profile facts', () => {
@@ -312,7 +324,7 @@ describe('grounded prompt', () => {
     });
     const messages = buildChatMessages(parsed.message, parsed.history);
 
-    expect(serializedPromptByteLength(messages)).toBe(16_177);
+    expect(serializedPromptByteLength(messages)).toBe(16_126);
     expect(serializedPromptByteLength(messages)).toBeLessThanOrEqual(
       MAX_SERIALIZED_PROMPT_BYTES,
     );
