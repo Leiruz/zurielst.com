@@ -1,4 +1,5 @@
 import { Reveal } from '@/components/dossier/reveal';
+import { SectionAnchor } from '@/components/dossier/section-anchor';
 import type { Profile } from '@/content/schema';
 
 interface EducationProps {
@@ -15,23 +16,27 @@ export function Education({ profile }: EducationProps) {
     .sort((left, right) => startYear(right.period) - startYear(left.period));
 
   return (
-    <section id="education" className="dossier-section bg-canvas-raised" aria-labelledby="education-title">
+    <section id="education" className="bp-nodes dossier-section bg-canvas-raised" aria-labelledby="education-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
           <p className="fig-label">Fig. 8. Education</p>
-          <h2 id="education-title" className="dossier-title mt-4 text-text-1">Education</h2>
+          <h2 id="education-title" className="dossier-title mt-4 text-text-1">
+            Education <SectionAnchor href="#education" label="education" />
+          </h2>
         </Reveal>
 
-        <div className="mt-10 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="mt-10 grid min-w-0 grid-cols-1 gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2">
           {entries.map((entry, index) => (
-            <Reveal key={entry.id} delayIndex={index} className="h-full">
-              <article className="dossier-card h-full min-w-0 bg-surface p-6">
-                <p className="font-mono text-xs text-text-3">{entry.org}</p>
-                <h3 className="mt-2 text-lg font-semibold text-text-1">{entry.title}</h3>
-                <p className="mt-3 font-mono text-xs text-text-3">{entry.period}</p>
-                <p className="mt-5 text-sm leading-6 text-text-2">{entry.summary}</p>
-              </article>
-            </Reveal>
+            <div key={entry.id} className="h-full bg-surface transition-colors duration-150 hover:bg-surface-hover">
+              <Reveal delayIndex={index} className="h-full">
+                <article className="h-full min-w-0 p-6">
+                  <p className="font-mono text-xs text-text-3">{entry.org}</p>
+                  <h3 className="mt-2 text-lg font-semibold text-text-1">{entry.title}</h3>
+                  <p className="dim-mark mt-3 font-mono text-xs text-text-3">{entry.period}</p>
+                  <p className="mt-5 text-sm leading-6 text-text-2">{entry.summary}</p>
+                </article>
+              </Reveal>
+            </div>
           ))}
         </div>
       </div>

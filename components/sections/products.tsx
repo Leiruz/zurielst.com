@@ -1,4 +1,5 @@
 import { Reveal } from '@/components/dossier/reveal';
+import { SectionAnchor } from '@/components/dossier/section-anchor';
 import type { MediaRef, Product, Profile } from '@/content/schema';
 import { hasPublicMedia } from '@/lib/media';
 
@@ -8,18 +9,22 @@ interface ProductsProps {
 
 export function Products({ profile }: ProductsProps) {
   return (
-    <section id="products" className="dossier-section bg-canvas" aria-labelledby="products-title">
+    <section id="products" className="bp-nodes dossier-section bg-canvas" aria-labelledby="products-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
           <p className="fig-label">Fig. 10. Products</p>
-          <h2 id="products-title" className="dossier-title mt-4 text-text-1">Products</h2>
+          <h2 id="products-title" className="dossier-title mt-4 text-text-1">
+            Products <SectionAnchor href="#products" label="products" />
+          </h2>
         </Reveal>
 
-        <div className="mt-10 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid min-w-0 grid-cols-1 gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
           {profile.products.map((product, index) => (
-            <Reveal key={product.id} delayIndex={index} className="h-full">
-              <ProductCard product={product} />
-            </Reveal>
+            <div key={product.id} className="h-full bg-surface transition-colors duration-150 hover:bg-surface-hover">
+              <Reveal delayIndex={index} className="h-full">
+                <ProductCard product={product} />
+              </Reveal>
+            </div>
           ))}
         </div>
       </div>
@@ -32,13 +37,13 @@ function ProductCard({ product }: { product: Product }) {
   const notes = [product.note, ...product.links.map((link) => link.note)].filter((note): note is string => Boolean(note));
 
   return (
-    <article data-product-card="true" className="dossier-card flex h-full min-w-0 flex-col overflow-hidden bg-surface">
+    <article data-product-card="true" className="flex h-full min-w-0 flex-col overflow-hidden">
       {availableMedia.map((item) => <ProductMedia key={item.media} item={item} />)}
       <div className="flex flex-1 flex-col p-5">
         {product.origin_story && <p className="dossier-eyebrow">Origin story</p>}
         <div className={product.origin_story ? 'mt-3' : undefined}>
           <h3 className="text-lg font-semibold tracking-tight text-text-1">{product.name}</h3>
-          {product.period && <p className="mt-2 font-mono text-xs leading-5 text-text-3">{product.period}</p>}
+          {product.period && <p className="dim-mark mt-2 font-mono text-xs leading-5 text-text-3">{product.period}</p>}
         </div>
 
         <p className="mt-4 text-sm leading-6 text-text-2">{product.summary}</p>
