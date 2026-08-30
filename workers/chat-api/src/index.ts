@@ -103,10 +103,13 @@ function isAllowedOrigin(request: Request, url: URL, localRequest: boolean): boo
 }
 
 function mapProfileRefusal(answer: string): string {
-  const normalized = normalizeText(answer);
-  const unpunctuated = /[.!]$/u.test(normalized)
-    ? normalized.slice(0, -1)
-    : normalized;
+  // Strict matcher on purpose: plain trim, no NFKC or homoglyph folding, so
+  // only the exact documented sentinel forms map (full-width or zero-width
+  // variants stay unmapped per the projection contract).
+  const trimmed = answer.trim();
+  const unpunctuated = /[.!]$/u.test(trimmed)
+    ? trimmed.slice(0, -1)
+    : trimmed;
   return TRIVIAL_SENTINEL_FORMS.has(unpunctuated)
     ? PROFILE_REFUSAL_REPLY
     : answer;

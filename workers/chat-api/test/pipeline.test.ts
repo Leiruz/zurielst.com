@@ -604,6 +604,8 @@ describe('chat pipeline complete-answer guard and SSE framing', () => {
     ['a real answer with the literal', 'Zuriel uses the literal string NO_PROFILE_ANSWER in this example.'],
     ['mismatched quote wrappers', '"NO_PROFILE_ANSWER\''],
     ['question punctuation', 'NO_PROFILE_ANSWER?'],
+    ['a full-width variant', 'ＮＯ＿ＰＲＯＦＩＬＥ＿ＡＮＳＷＥＲ'],
+    ['a zero-width-embedded variant', 'NO_PROFILE​_ANSWER'],
   ])('does not map %s', async (_label, answer) => {
     const run = vi.fn<AiBinding['run']>().mockResolvedValue({ response: answer });
     const response = await worker.fetch(post(), fakeEnv({ run }));
