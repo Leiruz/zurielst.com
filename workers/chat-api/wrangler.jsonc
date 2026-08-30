@@ -13,12 +13,20 @@
   "durable_objects": {
     "bindings": [{ "name": "DAILY_BUDGET", "class_name": "DailyBudget" }]
   },
+  "unsafe": {
+    "bindings": [
+      {
+        "name": "RATE_LIMITER",
+        "type": "ratelimit",
+        "namespace_id": "4169117853",
+        "simple": { "limit": 10, "period": 60 }
+      }
+    ]
+  },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DailyBudget"] }],
   "vars": {
-    // Hard daily chat cap. Placeholder until M6 derives the real value from
-    // measured worst-case neurons (cap = min(200, derived)); the unit test
-    // asserts the budget inequality against this var.
-    "DAILY_CAP": "200",
+    // Hard daily chat cap derived from the conservative worst-case neuron budget.
+    "DAILY_CAP": "29",
     "ALLOWED_HOSTS": "zurielst.com,staging.zurielst.com"
   }
 }
