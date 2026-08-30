@@ -1,0 +1,146 @@
+# Operations runbook: zurielst.com
+
+Current as of 2026-08-31, after the 2026-08-30 cutover (full record and
+retirement checklist: docs/cutover-2026-08-30.md).
+
+## System overview
+
+Two Cloudflare Workers on the zurielst.com zone:
+
+- zurielst-site: Next.js static export served as Worker assets from `out/`.
+  Configs: workers/site/wrangler.jsonc (routeless, what CI deploys) and
+  workers/site/wrangler.cutover.jsonc (same plus routes).
+- zurielst-chat-api: exact-route API worker for POST /api/chat. Workers AI
+  binding, DailyBudget Durable Object, rate limiter binding. Configs:
+  workers/chat-api/wrangler.jsonc (routeless) and
+  workers/chat-api/wrangler.cutover.jsonc (same plus routes).
+
+Route table (zone, most specific pattern wins):
+
+| Pattern | Worker |
+| --- | --- |
+| zurielst.com/api/chat | zurielst-chat-api |
+| staging.zurielst.com/api/chat | zurielst-chat-api |
+| zurielst.com/* | zurielst-site |
+| staging.zurielst.com/* | zurielst-site |
+| zurielst.com/ai* | zuriel-ai-resume-assistant (legacy, pending deletion) |
+
+www.zurielst.com is not worker-routed: it stays a GitHub Pages 301 to the
+apex. The GitHub Pages origin for the apex remains intact underneath the
+routes as the rollback origin until retirement.
+
+## Deploy paths
+
+There are exactly two ways anything reaches production.
+
+### 1. CI deploy (code changes, no routes)
+
+.github/workflows/deploy.yml runs on every push to main:
+
+1. typecheck, test, build (Linux; this is the enforcing test gate),
+2. verifies the `deploy` environment still has a required reviewer,
+3. `npx wrangler deploy --config workers/site/wrangler.jsonc`,
+4. records the built-artifact hash and `wrangler deployments list` output in
+   the step summary as paired rollback evidence.
+
+The `deploy` GitHub environment holds the only secrets
+(CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN) and requires one reviewer
+approval per run. The CI token deliberately CANNOT edit routes, so a CI
+deploy can never attach or detach a route. Because the config has no
+`routes` key, existing routes stay attached across CI deploys.
+
+Not yet wired: deploy.yml deploys the site worker only (header comment in
+the file). Until the chat-api step is added, chat-api code deploys are
+manual:
+
+    npx wrangler deploy --config workers/chat-api/wrangler.jsonc
+
+run by the operator under wrangler OAuth (below). This routeless deploy
+also leaves the /api/chat routes attached.
+
+PR previews: pr-ci.yml builds and uploads the artifact secretlessly;
+preview-deploy.yml (same `deploy` environment, one approval per preview)
+uploads a preview version of the site worker and comments the URL.
+
+### 2. Manual route deploy (overlay configs, wrangler OAuth)
+
+Route changes only ever happen through the overlay configs, deployed
+locally by the operator:
+
+    npx wrangler login
+    npx wrangler deploy --config workers/site/wrangler.cutover.jsonc
+    npx wrangler deploy --config workers/chat-api/wrangler.cutover.jsonc
+
+Each overlay is its routeless twin plus a `routes` list. Deploy an overlay
+once to attach routes; afterwards routeless CI deploys keep them attached.
+To detach, either delete the route in the dashboard (Workers Routes) or
+redeploy the overlay with the pattern removed from `routes`.
+
+Known drift (2026-08-31): the chat overlay's DAILY_CAP ("120") and
+RATE_LIMITER namespace_id ("1001") differ from wrangler.jsonc ("29",
+"4169117853"). Harmless today (the code clamps the cap to 29), but
+reconcile the overlay before deploying it again. Details in
+docs/cutover-2026-08-30.md.
+
+## Rollback
+
+- Site: delete the zurielst.com/* route (dashboard or overlay minus the
+  pattern). The apex falls back to the GitHub Pages origin instantly.
+- Chat: delete both /api/chat routes the same way. The site keeps serving;
+  the chat UI will surface errors.
+- Bad code, routes fine: redeploy a previous version instead of touching
+  routes. `npx wrangler deployments list --config <config>` then
+  `npx wrangler rollback --config <config>`, or rerun a good CI deploy.
+- Full rollback to the old stack: also re-swap the zone rate-limiting rule
+  back to /ai/ and re-attach zurielst.com/ai* to zuriel-ai-resume-assistant.
+- Never delete DNS records or the TEMP SSL Full rule as part of a rollback.
+
+## Zone objects (Cloudflare dashboard)
+
+| Object | State | Rule |
+| --- | --- | --- |
+| WAF custom rule "Challenge non-read HTTP methods" | amended 2026-08-30 to exempt POST zurielst.com/api/chat | keep |
+| Rate-limiting rule (the single free-plan rule) | exact path /api/chat, 8 requests per 10 seconds per IP and colo, action block, mitigation timeout 10 | keep; re-swap to /ai/ only on full rollback |
+| ACME skip rule | permanent | never touch |
+| TEMP configuration rule, SSL mode Full, apex plus www | ON PURPOSE, guards the GitHub Pages rollback origin | delete only at origin retirement |
+| Response-header CSP transform rule | stale, predates the rebuild | remove at retirement (owner) |
+
+## Secrets
+
+- CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN live only in the GitHub
+  environment `deploy`. The token has deploy permissions but no route
+  (zone) permissions, by design.
+- Setting them from PowerShell via a pipeline appends CRLF and wrangler
+  rejects the value. Set from bash:
+
+      printf %s "$VALUE" | gh secret set CLOUDFLARE_API_TOKEN --env deploy --repo Leiruz/zurielst.com
+
+- Rotation is on the retirement checklist; rotate earlier on any suspicion.
+
+## Verification after any deploy
+
+    curl -sI https://zurielst.com/ | head -5
+    curl -sI https://staging.zurielst.com/ | head -5
+    curl -sI https://www.zurielst.com/ | head -5        # expect 301 to apex
+    curl -sN -X POST https://zurielst.com/api/chat \
+      -H "content-type: application/json" \
+      -H "origin: https://zurielst.com" \
+      -d '{"message":"What does Zuriel work on?"}'      # expect an SSE stream
+
+    npx wrangler deployments list --config workers/site/wrangler.jsonc
+    npx wrangler deployments list --config workers/chat-api/wrangler.jsonc
+
+The deploy.yml step summary of the run holds the artifact hash and
+deployment id pair for the release being verified.
+
+## Gotchas
+
+- Pipelines eat exit codes: `$?` after `cmd | tee` is tee's. Check the
+  command's own exit code directly.
+- `concurrency: deploy-production` means one deploy at a time; a run
+  waiting for environment approval blocks every run queued behind it.
+- Rerunning a superseded Actions run deploys its OLD merge snapshot. Want
+  current main deployed? Push or merge to trigger a fresh run.
+- Local Windows vitest may exit 1 on workerd teardown with all tests
+  passing. The Linux run inside deploy.yml is the gate.
+- Secrets via PowerShell pipelines gain a trailing CRLF (see Secrets).
