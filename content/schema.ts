@@ -341,6 +341,24 @@ const MetaSchema = z
   .strict();
 
 // ---------------------------------------------------------------------------
+// Stack brands (vendors and products worked with; nominative use only)
+// ---------------------------------------------------------------------------
+
+const StackBrandSchema = z
+  .object({
+    name: z.string().min(1).max(40),
+    context: z.string().min(1).max(120),
+  })
+  .strict();
+
+const StackBrandsSchema = z
+  .object({
+    disclaimer: z.string().min(20).max(240),
+    brands: z.array(StackBrandSchema).min(4).max(16),
+  })
+  .strict();
+
+// ---------------------------------------------------------------------------
 // Root schema
 // ---------------------------------------------------------------------------
 
@@ -355,6 +373,7 @@ const ProfileObjectSchema = z
     faq: z.array(FaqEntrySchema).min(1),
     chat: ChatSchema,
     easter_eggs: EasterEggsSchema,
+    stack_brands: StackBrandsSchema,
     meta: MetaSchema,
   })
   .strict();
