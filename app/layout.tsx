@@ -27,6 +27,9 @@ export const metadata: Metadata = {
   description: profile.meta.description,
   metadataBase: new URL(profile.meta.og.url),
   alternates: { canonical: profile.meta.og.url },
+  icons: {
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+  },
   openGraph: {
     title: profile.meta.og.title,
     description: profile.meta.og.description,

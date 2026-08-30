@@ -40,6 +40,28 @@ describe('identity header', () => {
     expect(markup).toContain('href="/media/resume.pdf"');
     expect(markup).toContain('download=""');
   });
+
+  it('renders an accessible xl-only isometric ZST blueprint mark', () => {
+    const markup = renderToStaticMarkup(
+      createElement(IdentityHeader, { profile }),
+    );
+    const markStart = markup.indexOf('data-zst-hero-mark="true"');
+    const markEnd = markup.indexOf('</a>', markStart);
+    const markMarkup = markup.slice(markStart, markEnd);
+
+    expect(markStart).toBeGreaterThanOrEqual(0);
+    expect(markEnd).toBeGreaterThan(markStart);
+    expect(markMarkup).toContain('href="#identity"');
+    expect(markMarkup).toContain('aria-label="Return to top"');
+    expect(markMarkup).toContain('hidden');
+    expect(markMarkup).toContain('xl:flex');
+    expect(markMarkup).toMatch(/opacity-/);
+    expect(markMarkup).toContain('<svg');
+    expect(markMarkup).toContain('aria-hidden="true"');
+    expect(markMarkup).toContain('data-zst-line-art="true"');
+    expect(markMarkup).toContain('zst-blueprint-line-art');
+    expect(markMarkup).not.toContain('<img');
+  });
 });
 
 describe('footer', () => {

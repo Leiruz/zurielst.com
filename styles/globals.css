@@ -180,7 +180,7 @@ html {
   color: var(--foreground);
   max-width: 100%;
   overflow-x: clip;
-  scroll-behavior: auto;
+  scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -354,6 +354,75 @@ canvas {
   color: var(--text-3);
 }
 
+.zst-blueprint-line-art path {
+  vector-effect: non-scaling-stroke;
+}
+
+@keyframes role-light-up-sweep {
+  0% { background-position: 100% 50%; }
+  30%, 100% { background-position: 0 50%; }
+}
+
+@keyframes role-rotation {
+  to { transform: translateY(calc(-100% + var(--role-step))); }
+}
+
+.role-rotator-viewport {
+  --role-step: 3.5rem;
+  display: block;
+  height: var(--role-step);
+  overflow: hidden;
+  vertical-align: bottom;
+  width: 100%;
+}
+
+.role-rotator-track {
+  display: flex;
+  flex-direction: column;
+  animation: role-rotation var(--role-duration) steps(var(--role-count), end) infinite;
+}
+
+.role-rotator-item {
+  align-items: center;
+  display: flex;
+  flex: 0 0 var(--role-step);
+  line-height: 1.35;
+  white-space: normal;
+}
+
+.role-light-up {
+  color: var(--text-1);
+  background-image: linear-gradient(
+    100deg,
+    var(--text-2) 0%,
+    var(--text-2) 38%,
+    var(--text-1) 48%,
+    var(--ring) 52%,
+    var(--text-1) 56%,
+    var(--text-2) 66%,
+    var(--text-2) 100%
+  );
+  background-position: 100% 50%;
+  background-size: 250% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: role-light-up-sweep 3s cubic-bezier(.32, .72, 0, 1) infinite;
+}
+
+@media (min-width: 640px) {
+  .role-rotator-viewport {
+    --role-step: 1.75rem;
+    display: inline-block;
+    width: auto;
+  }
+
+  .role-rotator-item {
+    line-height: 1.75rem;
+    white-space: nowrap;
+  }
+}
+
 @keyframes apple-hello-draw {
   from {
     opacity: 0;
@@ -408,6 +477,18 @@ canvas {
   .copy-disclosure::details-content,
   .copy-disclosure-chevron {
     transition: none !important;
+  }
+
+  .role-light-up {
+    color: var(--text-1);
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    animation: none !important;
+  }
+
+  .role-rotator-track {
+    animation: none !important;
+    transform: none !important;
   }
 }
 

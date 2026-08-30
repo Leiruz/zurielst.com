@@ -7,8 +7,11 @@ import { Terminal } from '@/components/terminal';
 import { CommandPaletteLoader } from '@/components/command-palette-loader';
 import { Contact } from '@/components/sections/contact';
 import { IdentityHeader } from '@/components/sections/identity-header';
+import { Introduction } from '@/components/sections/introduction';
 import { CapabilityActs } from '@/components/sections/capability-acts';
 import { ContributionHeatmap, type ContributionSnapshot } from '@/components/sections/contribution-heatmap';
+import { Stack } from '@/components/sections/stack';
+import { BrandsWall } from '@/components/sections/brands-wall';
 import { SelectedWork } from '@/components/sections/selected-work';
 import { Timeline } from '@/components/sections/timeline';
 import { Education } from '@/components/sections/education';
@@ -39,8 +42,11 @@ export default function Home() {
       <SiteNav />
       <main>
         <IdentityHeader profile={profile} />
+        <Introduction profile={profile} />
         <ContributionHeatmap data={contributions} />
         <CapabilityActs profile={profile} />
+        <Stack profile={profile} />
+        <BrandsWall profile={profile} />
         <SelectedWork profile={profile} />
         <Timeline profile={profile} />
         <Education profile={profile} />

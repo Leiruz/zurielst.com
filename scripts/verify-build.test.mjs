@@ -26,17 +26,21 @@ https://:version.:subdomain.workers.dev/*
 `;
 
 const validLandingPage = `<!doctype html>
+  <head><link rel="icon" type="image/svg+xml" href="/favicon.svg"></head>
   <main>
     <section id="identity"><p class="fig-label">Fig. 1. Identity</p></section>
-    <section id="contributions"><p class="fig-label">Fig. 2. Contributions</p></section>
-    <section id="capabilities"><p class="fig-label">Fig. 3. Capabilities</p></section>
-    <section id="work"><p class="fig-label">Fig. 4. Selected work</p></section>
-    <section id="timeline"><p class="fig-label">Fig. 5. Timeline</p></section>
-    <section id="education"><p class="fig-label">Fig. 6. Education</p></section>
-    <section id="proof"><p class="fig-label">Fig. 7. Proof wall</p></section>
-    <section id="products"><p class="fig-label">Fig. 8. Products</p></section>
-    <section id="faq"><p class="fig-label">Fig. 9. FAQ</p></section>
-    <section id="contact"><p class="fig-label">Fig. 10. Contact</p></section>
+    <section id="intro"><p class="fig-label">Fig. 2. Introduction</p></section>
+    <section id="contributions"><p class="fig-label">Fig. 3. Contributions</p></section>
+    <section id="capabilities"><p class="fig-label">Fig. 4. Capabilities</p></section>
+    <section id="stack"><p class="fig-label">Fig. 5. Stack</p></section>
+    <section id="brands"><p class="fig-label">Fig. 6. Worked with</p></section>
+    <section id="work"><p class="fig-label">Fig. 7. Selected work</p></section>
+    <section id="timeline"><p class="fig-label">Fig. 8. Timeline</p></section>
+    <section id="education"><p class="fig-label">Fig. 9. Education</p></section>
+    <section id="proof"><p class="fig-label">Fig. 10. Accolades</p></section>
+    <section id="products"><p class="fig-label">Fig. 11. Products</p></section>
+    <section id="faq"><p class="fig-label">Fig. 12. FAQ</p></section>
+    <section id="contact"><p class="fig-label">Fig. 13. Contact</p></section>
   </main>`;
 
 function requireSubjectFunction(name) {
@@ -345,25 +349,38 @@ test("accepts the ordered landing-page section and figure contract", () => {
   assert.doesNotThrow(() => validateLandingPageContract(validLandingPage));
 });
 
+test("requires the exported landing page to reference the SVG favicon", () => {
+  const validateLandingPageContract = requireSubjectFunction(
+    "validateLandingPageContract",
+  );
+
+  assert.throws(
+    () => validateLandingPageContract(
+      validLandingPage.replace(/\s*<link rel="icon"[^>]*>/, ""),
+    ),
+    /favicon/i,
+  );
+});
+
 test("rejects missing and unordered landing-page section IDs", () => {
   const validateLandingPageContract = requireSubjectFunction(
     "validateLandingPageContract",
   );
 
   assert.throws(
-    () => validateLandingPageContract(validLandingPage.replace(/\s*<section id="education">[\s\S]*?<\/section>/, "")),
+    () => validateLandingPageContract(validLandingPage.replace(/\s*<section id="brands">[\s\S]*?<\/section>/, "")),
     /section IDs/i,
   );
   assert.throws(
     () => validateLandingPageContract(validLandingPage
-      .replace('id="timeline"', 'id="section-swap"')
-      .replace('id="education"', 'id="timeline"')
-      .replace('id="section-swap"', 'id="education"')),
+      .replace('id="stack"', 'id="section-swap"')
+      .replace('id="brands"', 'id="stack"')
+      .replace('id="section-swap"', 'id="brands"')),
     /section IDs/i,
   );
   assert.throws(
     () => validateLandingPageContract(validLandingPage
-      .replace('</section>\n    <section id="education">', '<section id="education"></section></section>\n    <section>')),
+      .replace('</section>\n    <section id="brands">', '<section id="brands"></section></section>\n    <section>')),
     /section IDs/i,
   );
 });
@@ -374,7 +391,7 @@ test("rejects incorrect landing-page figure numbers", () => {
   );
 
   assert.throws(
-    () => validateLandingPageContract(validLandingPage.replace("Fig. 6. Education", "Fig. 5. Education")),
+    () => validateLandingPageContract(validLandingPage.replace("Fig. 9. Education", "Fig. 8. Education")),
     /figure labels/i,
   );
 });

@@ -42,28 +42,31 @@ afterEach(() => {
 });
 
 describe('command palette action model', () => {
-  it('exposes exactly 17 actions in the required groups and page order', () => {
+  it('exposes exactly 20 actions in the required groups and page order', () => {
     const actions = createCommandPaletteActions(config);
 
-    expect(actions).toHaveLength(17);
+    expect(actions).toHaveLength(20);
     expect(actions.map((item) => item.group)).toEqual([
-      ...Array<string>(10).fill('Sections'),
+      ...Array<string>(13).fill('Sections'),
       ...Array<string>(4).fill('Actions'),
       ...Array<string>(3).fill('Links'),
     ]);
-    expect(actions.slice(0, 10).map((item) => item.label)).toEqual([
+    expect(actions.slice(0, 13).map((item) => item.label)).toEqual([
       'Identity',
+      'Introduction',
       'Contributions',
       'Capabilities',
+      'Stack',
+      'Brands',
       'Selected work',
       'Timeline',
       'Education',
-      'Proof wall',
+      'Accolades',
       'Products',
       'FAQ',
       'Contact',
     ]);
-    expect(actions.slice(10).map((item) => item.label)).toEqual([
+    expect(actions.slice(13).map((item) => item.label)).toEqual([
       'Download resume',
       'Open terminal',
       'Toggle theme',
@@ -85,7 +88,10 @@ describe('command palette action model', () => {
     const actions = createCommandPaletteActions(config);
 
     expect(filterCommandPaletteActions(actions, 'PROOF').map((item) => item.label)).toEqual([
-      'Proof wall',
+      'Accolades',
+    ]);
+    expect(filterCommandPaletteActions(actions, 'accolades').map((item) => item.label)).toEqual([
+      'Accolades',
     ]);
     expect(filterCommandPaletteActions(actions, 'cv').map((item) => item.label)).toEqual([
       'Download resume',
@@ -96,9 +102,14 @@ describe('command palette action model', () => {
   });
 
   it('wraps ArrowDown and ArrowUp selection', () => {
-    expect(moveCommandPaletteSelection(16, 'ArrowDown', 17)).toBe(0);
-    expect(moveCommandPaletteSelection(0, 'ArrowUp', 17)).toBe(16);
-    expect(moveCommandPaletteSelection(4, 'ArrowDown', 17)).toBe(5);
+    const actionCount = createCommandPaletteActions(config).length;
+    expect(moveCommandPaletteSelection(actionCount - 1, 'ArrowDown', actionCount)).toBe(0);
+    expect(moveCommandPaletteSelection(0, 'ArrowUp', actionCount)).toBe(actionCount - 1);
+    expect(moveCommandPaletteSelection(4, 'ArrowDown', actionCount)).toBe(5);
+  });
+
+  it('keeps the Accolades action on the stable proof anchor', () => {
+    expect(action('Accolades')).toMatchObject({ kind: 'section', targetId: 'proof' });
   });
 
   it('keeps a keyboard-selected option visible inside the scrolling list', () => {
@@ -404,7 +415,7 @@ describe('command palette markup', () => {
     expect(markup).toMatch(/<input(?=[^>]*role="combobox")(?=[^>]*aria-controls="command-palette-listbox")(?=[^>]*aria-expanded="true")(?=[^>]*aria-autocomplete="list")(?=[^>]*aria-activedescendant="command-palette-option-)/);
     expect(markup).toMatch(/role="listbox"/);
     expect(markup).not.toMatch(/role="listbox"[^>]*aria-activedescendant/);
-    expect(markup.match(/role="option"/g)).toHaveLength(17);
+    expect(markup.match(/role="option"/g)).toHaveLength(20);
     expect(markup).toMatch(/href="\/media\/resume\.pdf"[^>]*download=""/);
     expect(markup).toMatch(/href="https:\/\/github\.com\/Leiruz"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
   });

@@ -61,13 +61,16 @@ interface CommandDialogKeyDependencies {
 }
 
 const SECTION_ACTIONS: readonly CommandPaletteAction[] = [
-  { id: 'identity', group: 'Sections', keywords: ['home', 'about', 'intro'], label: 'Identity', kind: 'section', targetId: 'identity' },
+  { id: 'identity', group: 'Sections', keywords: ['home', 'about'], label: 'Identity', kind: 'section', targetId: 'identity' },
+  { id: 'intro', group: 'Sections', keywords: ['hello', 'about', 'bio'], label: 'Introduction', kind: 'section', targetId: 'intro' },
   { id: 'contributions', group: 'Sections', keywords: ['github', 'activity', 'heatmap'], label: 'Contributions', kind: 'section', targetId: 'contributions' },
   { id: 'capabilities', group: 'Sections', keywords: ['skills', 'security', 'engineering'], label: 'Capabilities', kind: 'section', targetId: 'capabilities' },
+  { id: 'stack', group: 'Sections', keywords: ['skills', 'tools', 'technologies'], label: 'Stack', kind: 'section', targetId: 'stack' },
+  { id: 'brands', group: 'Sections', keywords: ['vendors', 'technologies', 'worked with'], label: 'Brands', kind: 'section', targetId: 'brands' },
   { id: 'work', group: 'Sections', keywords: ['projects', 'case studies', 'portfolio'], label: 'Selected work', kind: 'section', targetId: 'work' },
   { id: 'timeline', group: 'Sections', keywords: ['experience', 'career', 'history'], label: 'Timeline', kind: 'section', targetId: 'timeline' },
   { id: 'education', group: 'Sections', keywords: ['school', 'university', 'learning'], label: 'Education', kind: 'section', targetId: 'education' },
-  { id: 'proof', group: 'Sections', keywords: ['awards', 'certifications', 'evidence'], label: 'Proof wall', kind: 'section', targetId: 'proof' },
+  { id: 'proof', group: 'Sections', keywords: ['proof', 'awards', 'certifications', 'evidence'], label: 'Accolades', kind: 'section', targetId: 'proof' },
   { id: 'products', group: 'Sections', keywords: ['tools', 'builds', 'software'], label: 'Products', kind: 'section', targetId: 'products' },
   { id: 'faq', group: 'Sections', keywords: ['questions', 'answers'], label: 'FAQ', kind: 'section', targetId: 'faq' },
   { id: 'contact', group: 'Sections', keywords: ['email', 'connect', 'hire'], label: 'Contact', kind: 'section', targetId: 'contact' },

@@ -85,7 +85,7 @@ export function Contact({ email, socials, disclaimer, intentChips }: ContactProp
   return (
     <section id="contact" className="dossier-section bg-canvas" aria-labelledby="contact-title">
       <div className="dossier-shell">
-        <p className="fig-label">Fig. 10. Contact</p>
+        <p className="fig-label">Fig. 13. Contact</p>
         <h2 id="contact-title" className="dossier-title mt-4 text-text-1">The dossier is open.</h2>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">

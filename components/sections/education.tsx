@@ -18,7 +18,7 @@ export function Education({ profile }: EducationProps) {
     <section id="education" className="dossier-section bg-canvas-raised" aria-labelledby="education-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
-          <p className="fig-label">Fig. 6. Education</p>
+          <p className="fig-label">Fig. 9. Education</p>
           <h2 id="education-title" className="dossier-title mt-4 text-text-1">Education</h2>
         </Reveal>
 

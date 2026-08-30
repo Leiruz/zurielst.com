@@ -32,7 +32,7 @@ export function ContributionHeatmap({ data }: ContributionHeatmapProps) {
     <section id="contributions" className="dossier-section bg-canvas" aria-labelledby="contributions-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
-          <p className="fig-label">Fig. 2. Contributions</p>
+          <p className="fig-label">Fig. 3. Contributions</p>
           <h2 id="contributions-title" className="sr-only">Contributions</h2>
           <p className="sr-only">{summary}</p>
 
@@ -56,7 +56,7 @@ export function ContributionHeatmap({ data }: ContributionHeatmapProps) {
           </div>
 
           <p className="mt-4 font-mono text-xs leading-5 text-text-3">
-            Fig. 2. {data.total_contributions} contributions in the last year. Source: {sourcePath}, committed build-time snapshot.
+            Fig. 3. {data.total_contributions} contributions in the last year. Source: {sourcePath}, committed build-time snapshot.
           </p>
         </Reveal>
       </div>

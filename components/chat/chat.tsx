@@ -193,7 +193,7 @@ export function ChatTranscript({ messages, streaming }: ChatTranscriptProps) {
     >
       {messages.length === 0 && (
         <p className="text-sm leading-6 text-text-3">
-          Ask about Zuriel&apos;s published roles, projects, or proof.
+          Ask about Zuriel&apos;s published roles, projects, or accolades.
         </p>
       )}
       {messages.map((message, index) => {
@@ -360,7 +360,7 @@ export function Chat({ open, onClose, opener, intentChips, disclaimer }: ChatPro
       >
         <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-line bg-surface px-4 py-4 sm:px-5">
           <div>
-            <p className="fig-label">Fig. 9A. Assistant terminal</p>
+            <p className="fig-label">Fig. 13A. Assistant terminal</p>
             <h2 id="assistant-title" className="mt-2 text-base font-medium text-text-1">
               Ask the dossier
             </h2>

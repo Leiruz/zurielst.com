@@ -6,8 +6,11 @@ const PRODUCTION_ORIGIN = new URL("https://zurielst.com");
 const PREVIEW_RULE = "https://:version.:subdomain.workers.dev/*";
 const LANDING_SECTION_IDS = [
   "identity",
+  "intro",
   "contributions",
   "capabilities",
+  "stack",
+  "brands",
   "work",
   "timeline",
   "education",
@@ -749,6 +752,29 @@ export function validateLandingPageContract(html) {
     throw new Error(
       `Landing-page section IDs must be ${LANDING_SECTION_IDS.join(", ")} in order; found ${sectionIds.join(", ")}`,
     );
+  }
+
+  const referencesSvgFavicon = extractTags(html).some((tag) => {
+    if (tag.name !== "link") return false;
+    const relations = new Set(
+      (tag.attributes.get("rel") ?? "").toLowerCase().split(/\s+/),
+    );
+    if (!relations.has("icon")) return false;
+    if ((tag.attributes.get("type") ?? "").toLowerCase() !== "image/svg+xml") {
+      return false;
+    }
+
+    try {
+      return new URL(
+        tag.attributes.get("href") ?? "",
+        PRODUCTION_ORIGIN,
+      ).pathname === "/favicon.svg";
+    } catch {
+      return false;
+    }
+  });
+  if (!referencesSvgFavicon) {
+    throw new Error("Landing-page HTML must reference /favicon.svg as an SVG favicon");
   }
 
   const figureNumbers = [...html.matchAll(

@@ -12,7 +12,7 @@ export function CapabilityActs({ profile }: CapabilityActsProps) {
     <section id="capabilities" className="border-t border-line" aria-labelledby="capabilities-title">
       <div className="dossier-shell py-[clamp(4rem,8vw,7rem)]">
         <Reveal>
-          <p className="fig-label">Fig. 3. Capabilities</p>
+          <p className="fig-label">Fig. 4. Capabilities</p>
           <h2 id="capabilities-title" className="dossier-title mt-4 text-text-1">Capabilities</h2>
         </Reveal>
       </div>

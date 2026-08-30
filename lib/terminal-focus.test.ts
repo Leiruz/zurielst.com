@@ -1,7 +1,11 @@
-import { isValidElement, type ReactElement } from 'react';
+import { createElement, isValidElement, type ReactElement } from 'react';
+// @ts-expect-error The installed react-dom runtime has no declaration package in this project.
+import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Footer, TERMINAL_OPEN_EVENT } from '@/components/footer';
+import { SiteNav } from '@/components/site-nav';
+import * as siteNavModule from '@/components/site-nav';
 import * as terminalModule from '@/components/terminal';
 
 interface FocusTarget {
@@ -237,5 +241,94 @@ describe('Footer terminal opener', () => {
     const event = dispatchEvent.mock.calls[0]?.[0] as TestEvent;
     expect(event.type).toBe(TERMINAL_OPEN_EVENT);
     expect(event.detail).toBe(opener);
+  });
+});
+
+describe('SiteNav terminal opener', () => {
+  it('renders the compact ZST wordmark instead of the domain label', () => {
+    const markup = renderToStaticMarkup(createElement(SiteNav));
+
+    expect(markup).toContain('aria-label="Open terminal"');
+    expect(markup).toMatch(/>ZST<\/span>/);
+    expect(markup).not.toContain('>zurielst.com<');
+    expect(markup).toContain('lg:flex');
+    expect(markup).toContain('lg:hidden');
+    expect(markup).not.toContain('md:flex');
+    expect(markup).toContain('data-terminal-trigger="true"');
+    expect(markup).toContain('data-command-palette-trigger="true"');
+    expect(markup).toContain('data-mobile-nav-link="true"');
+    expect(markup).toContain('id="site-nav-enhancement"');
+  });
+
+  it('delegates terminal, palette, and mobile-menu actions from server markup', () => {
+    type EnhanceSiteNav = (
+      nav: { addEventListener(type: string, listener: (event: { target: unknown }) => void): void },
+      runtime: {
+        CustomEvent: typeof TestEvent;
+        dispatchEvent(event: TestEvent): void;
+      },
+    ) => void;
+    class TestEvent {
+      constructor(
+        readonly type: string,
+        readonly init?: { detail?: unknown },
+      ) {}
+
+      get detail() {
+        return this.init?.detail;
+      }
+    }
+
+    const listeners = new Map<string, (event: { target: unknown }) => void>();
+    const dispatchEvent = vi.fn();
+    const enhanceSiteNav = Reflect.get(
+      siteNavModule,
+      'enhanceSiteNav',
+    ) as unknown as EnhanceSiteNav | undefined;
+
+    expect(enhanceSiteNav).toBeTypeOf('function');
+    if (!enhanceSiteNav) return;
+    enhanceSiteNav(
+      {
+        addEventListener(type, listener) {
+          listeners.set(type, listener);
+        },
+      },
+      { CustomEvent: TestEvent, dispatchEvent },
+    );
+
+    const terminalTrigger = {
+      closest(selector: string) {
+        return selector === '[data-terminal-trigger]' ? this : null;
+      },
+    };
+    listeners.get('click')?.({ target: terminalTrigger });
+
+    expect(dispatchEvent).toHaveBeenCalledOnce();
+    const event = dispatchEvent.mock.calls[0]?.[0] as TestEvent;
+    expect(event.type).toBe(TERMINAL_OPEN_EVENT);
+    expect(event.detail).toBe(terminalTrigger);
+
+    const paletteTrigger = {
+      closest(selector: string) {
+        return selector === '[data-command-palette-trigger]' ? this : null;
+      },
+    };
+    listeners.get('click')?.({ target: paletteTrigger });
+    expect((dispatchEvent.mock.calls[1]?.[0] as TestEvent).type).toBe(
+      'dossier:command-palette-open',
+    );
+
+    const removeAttribute = vi.fn();
+    const details = { removeAttribute };
+    const mobileLink = {
+      closest(selector: string) {
+        if (selector === '[data-mobile-nav-link]') return this;
+        if (selector === 'details') return details;
+        return null;
+      },
+    };
+    listeners.get('click')?.({ target: mobileLink });
+    expect(removeAttribute).toHaveBeenCalledWith('open');
   });
 });

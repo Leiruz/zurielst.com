@@ -2,6 +2,7 @@ import type { Profile } from '@/content/schema';
 import { CountUpMetric } from '@/components/dossier/count-up-metric';
 import { LiveClock } from '@/components/dossier/live-clock';
 import { RoleRotator } from '@/components/dossier/role-rotator';
+import { ZstHeroMark } from '@/components/dossier/zst-hero-mark';
 import { PortraitAvatar } from '@/components/sections/portrait-avatar';
 
 export function IdentityHeader({ profile }: { profile: Profile }) {
@@ -21,7 +22,7 @@ export function IdentityHeader({ profile }: { profile: Profile }) {
 
       <div className="dossier-shell relative">
         <p className="fig-label absolute right-4 top-0 sm:right-8">Fig. 1. Identity</p>
-        <div className="grid gap-10 pt-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.85fr)] lg:items-start">
+        <div className="grid gap-10 pt-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.85fr)] lg:items-start xl:grid-cols-[minmax(0,1.05fr)_minmax(18rem,0.75fr)_minmax(12rem,0.4fr)]">
           <div className="min-w-0">
             <div className="mb-7 flex size-24 items-center justify-center overflow-hidden rounded-full border border-line-strong bg-surface font-mono text-2xl font-semibold text-text-1">
               <PortraitAvatar {...identity.portrait} name={identity.name} />
@@ -71,6 +72,8 @@ export function IdentityHeader({ profile }: { profile: Profile }) {
               <dd className="min-w-0"><a href="/media/resume.pdf" download className="text-text-1 underline decoration-line-strong underline-offset-4 transition-colors duration-150 hover:text-text-2">DOWNLOAD PDF</a></dd>
             </div>
           </dl>
+
+          <ZstHeroMark />
         </div>
 
         <dl className="mt-14 grid grid-cols-1 border-l border-t border-line sm:grid-cols-2 lg:grid-cols-4">

@@ -23,11 +23,14 @@ describe('core dossier sections', () => {
     const markup = renderToStaticMarkup(createElement(Home));
 
     for (const [id, label] of [
-      ['contributions', 'Fig. 2. Contributions'],
-      ['capabilities', 'Fig. 3. Capabilities'],
-      ['work', 'Fig. 4. Selected work'],
-      ['timeline', 'Fig. 5. Timeline'],
-      ['education', 'Fig. 6. Education'],
+      ['intro', 'Fig. 2. Introduction'],
+      ['contributions', 'Fig. 3. Contributions'],
+      ['capabilities', 'Fig. 4. Capabilities'],
+      ['stack', 'Fig. 5. Stack'],
+      ['brands', 'Fig. 6. Worked with'],
+      ['work', 'Fig. 7. Selected work'],
+      ['timeline', 'Fig. 8. Timeline'],
+      ['education', 'Fig. 9. Education'],
     ] as const) {
       expect(markup).toContain(`id="${id}"`);
       expect(markup).toContain(label);
@@ -41,6 +44,58 @@ describe('core dossier sections', () => {
     expect(markup).toContain(
       `<span hidden="" role="img" aria-label="${profile.identity.name} monogram">ZT</span>`,
     );
+  });
+
+  it('renders Introduction, Stack, and Brands from profile data in page order', () => {
+    const markup = renderToStaticMarkup(createElement(Home));
+    const identityStart = markup.indexOf('id="identity"');
+    const introStart = markup.indexOf('id="intro"');
+    const contributionsStart = markup.indexOf('id="contributions"');
+    const capabilitiesStart = markup.indexOf('id="capabilities"');
+    const stackStart = markup.indexOf('id="stack"');
+    const brandsStart = markup.indexOf('id="brands"');
+    const workStart = markup.indexOf('id="work"');
+    const introMarkup = markup.slice(introStart, contributionsStart);
+    const stackMarkup = markup.slice(stackStart, brandsStart);
+    const brandsMarkup = markup.slice(brandsStart, workStart);
+    const stackItems = profile.stack.categories.flatMap((category) => category.items);
+
+    expect(identityStart).toBeGreaterThanOrEqual(0);
+    expect(introStart).toBeGreaterThan(identityStart);
+    expect(contributionsStart).toBeGreaterThan(introStart);
+    expect(capabilitiesStart).toBeGreaterThan(contributionsStart);
+    expect(stackStart).toBeGreaterThan(capabilitiesStart);
+    expect(brandsStart).toBeGreaterThan(stackStart);
+    expect(workStart).toBeGreaterThan(brandsStart);
+
+    expect(introMarkup).toContain('data-local-greeting="true">Hello</');
+    expect(introMarkup.match(/data-intro-bullet="true"/g)).toHaveLength(profile.intro.bullets.length);
+    for (const bullet of profile.intro.bullets) expectRenderedText(introMarkup, bullet);
+
+    expect(stackMarkup.match(/data-stack-category="true"/g)).toHaveLength(profile.stack.categories.length);
+    expect(stackMarkup.match(/data-stack-item="true"/g)).toHaveLength(stackItems.length);
+    for (const [index, category] of profile.stack.categories.entries()) {
+      expectRenderedText(stackMarkup, String(index + 1).padStart(2, '0'));
+      expectRenderedText(stackMarkup, category.name);
+      for (const item of category.items) expectRenderedText(stackMarkup, item);
+    }
+    expect(stackMarkup).not.toMatch(/<(?:img|svg)\b/);
+
+    expect(brandsMarkup.match(/data-brand-tile="true"/g)).toHaveLength(profile.stack_brands.brands.length);
+    for (const brand of profile.stack_brands.brands) {
+      expectRenderedText(brandsMarkup, brand.name);
+      expectRenderedText(brandsMarkup, brand.context);
+    }
+    expectRenderedText(brandsMarkup, profile.stack_brands.disclaimer);
+    expect(brandsMarkup).not.toMatch(/<(?:img|svg)\b/);
+
+    expect(markup).toContain('href="#stack"');
+    expect(markup).toContain('>Stack</a>');
+    expect(markup).not.toContain('href="#intro"');
+    expect(markup).not.toContain('href="#brands"');
+    expect(markup).toContain('href="#proof"');
+    expect(markup).toContain('>Accolades</a>');
+    expect(markup).not.toContain('>Proof</a>');
   });
 
   it('server-renders copy disclosures collapsed with their full text available', () => {
@@ -147,7 +202,7 @@ describe('core dossier sections', () => {
       .toBeLessThan(educationMarkup.indexOf(educationEntries[1].org));
   });
 
-  it('orders Timeline, Education, and Proof and links Education from the site navigation', () => {
+  it('orders Timeline, Education, and Accolades and links Education from the site navigation', () => {
     const markup = renderToStaticMarkup(createElement(Home));
     const timelineStart = markup.indexOf('id="timeline"');
     const educationStart = markup.indexOf('id="education"');

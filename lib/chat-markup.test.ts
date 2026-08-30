@@ -60,7 +60,9 @@ describe('chat panel markup', () => {
     );
 
     expect(markup).toContain('role="dialog"');
-    expect(markup).toContain('Fig. 9A. Assistant terminal');
+    expect(markup).toContain('Fig. 13A. Assistant terminal');
+    expect(markup).toContain('published roles, projects, or accolades.');
+    expect(markup).not.toContain('published roles, projects, or proof.');
     expect(markup).toContain('aria-live="polite"');
     expect(markup).toContain('maxLength="500"');
     expect(markup).toContain('0/500');
