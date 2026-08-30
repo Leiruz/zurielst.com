@@ -48,18 +48,4 @@ export default {
   },
 };
 
-/** Minimal Durable Object shell; real reservation logic arrives in M6. */
-export class DailyBudget {
-  private state: DurableObjectState;
-
-  constructor(state: DurableObjectState) {
-    this.state = state;
-  }
-
-  async fetch(): Promise<Response> {
-    return new Response(JSON.stringify({ error: 'Not launched.' }), {
-      status: 503,
-      headers: { 'content-type': 'application/json; charset=utf-8' },
-    });
-  }
-}
+export { DailyBudget } from './budget';
