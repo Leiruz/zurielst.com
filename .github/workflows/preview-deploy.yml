@@ -73,4 +73,4 @@ jobs:
         run: |
           pr=$(gh api "repos/${{ github.repository }}/commits/${{ github.event.workflow_run.head_sha }}/pulls" --jq '.[0].number')
           test -n "$pr"
-          gh pr comment "$pr" -R "${{ github.repository }}" --body "Preview for ${{ github.event.workflow_run.head_sha }}: ${PREVIEW_URL:-see the preview-deploy run log} (unlisted; robots noindex hardening lands with M8)"
+          gh pr comment "$pr" -R "${{ github.repository }}" --body "Preview for ${{ github.event.workflow_run.head_sha }}: ${PREVIEW_URL:-see the preview-deploy run log} (unlisted; sends X-Robots-Tag: noindex on workers.dev)"

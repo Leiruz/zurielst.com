@@ -4,7 +4,6 @@ import { ThemeProvider } from 'next-themes';
 import { ClientEnhancements } from '@/components/registry/client-enhancements';
 import profileJson from '@/content/profile.json';
 import type { Profile } from '@/content/schema';
-import { hasPublicMedia } from '@/lib/media';
 import '../styles/globals.css';
 
 const geistSans = Geist({
@@ -18,18 +17,23 @@ const geistMono = Geist_Mono({
 });
 
 const profile = profileJson as Profile;
-const ogImageAvailable = hasPublicMedia(profile.meta.og.image);
 
 export const metadata: Metadata = {
   title: profile.meta.title,
   description: profile.meta.description,
   metadataBase: new URL(profile.meta.og.url),
+  alternates: { canonical: profile.meta.og.url },
   openGraph: {
     title: profile.meta.og.title,
     description: profile.meta.og.description,
     url: profile.meta.og.url,
+    siteName: profile.identity.name,
     type: profile.meta.og.type,
-    ...(ogImageAvailable ? { images: [{ url: profile.meta.og.image }] } : {}),
+  },
+  twitter: {
+    card: 'summary',
+    title: profile.meta.og.title,
+    description: profile.meta.og.description,
   },
 };
 

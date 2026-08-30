@@ -34,3 +34,16 @@ for (const [fileName, followingStep] of [
     assert.ok(stepIndex < workflow.indexOf(followingStep), "preflight runs before release");
   });
 }
+
+test("preview comments identify the enforced noindex header", async () => {
+  const workflow = await readWorkflow("preview-deploy.yml");
+
+  assert.ok(
+    workflow.includes("X-Robots-Tag: noindex"),
+    "the preview comment names the host-specific indexing control",
+  );
+  assert.ok(
+    !workflow.includes("noindex hardening lands with M8"),
+    "the completed M8 work is not described as future work",
+  );
+});
