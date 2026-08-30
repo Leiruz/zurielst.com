@@ -47,6 +47,7 @@ export default function Home() {
           email={profile.identity.email}
           socials={profile.identity.socials}
           disclaimer={profile.chat.disclaimer}
+          intentChips={profile.chat.intent_chips.slice(0, 4)}
         />
       </main>
       <script
