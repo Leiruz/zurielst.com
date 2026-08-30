@@ -427,6 +427,8 @@ canvas {
   .heatmap-cell:hover::after { opacity: 1; }
 }
 
+.heatmap-cell:focus::after { opacity: 1; }
+
 .heatmap-week:first-child .heatmap-cell::after {
   left: 0;
   transform: none;

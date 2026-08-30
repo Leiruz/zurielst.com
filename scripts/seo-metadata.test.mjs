@@ -32,12 +32,16 @@ test("publishes complete Open Graph profile metadata without a broken image", ()
   assert.doesNotMatch(layoutSource, /hasPublicMedia/);
 });
 
-test("publishes a large summary Twitter card without a premature image tag", () => {
+test("publishes an honest summary Twitter card until its image ships", () => {
   assert.match(layoutSource, /twitter:\s*\{/);
-  assert.match(layoutSource, /card: 'summary_large_image'/);
+  assert.match(layoutSource, /card: 'summary'/);
   assert.match(layoutSource, /title: profile\.meta\.og\.title/);
   assert.match(layoutSource, /description: profile\.meta\.og\.description/);
   assert.doesNotMatch(layoutSource, /twitter:\s*\{[\s\S]*?images:/);
+  assert.match(
+    layoutSource,
+    /summary_large_image plus twitter:image and og:image must land atomically with the asset/,
+  );
 });
 
 test("derives author and keyword metadata from the public profile", () => {

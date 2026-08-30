@@ -11,7 +11,23 @@ try {
   if (error?.code !== "ERR_MODULE_NOT_FOUND") throw error;
 }
 
+const nextConfigModule = await import("../next.config.mjs");
+
 const temporaryDirectories = new Set();
+
+test("falls back safely when git build SHA discovery throws", () => {
+  const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
+  const throwingExec = () => {
+    throw new Error("git unavailable");
+  };
+
+  assert.equal(typeof resolveBuildSha, "function");
+  if (typeof resolveBuildSha !== "function") return;
+
+  assert.equal(resolveBuildSha(throwingExec, { BUILD_SHA: " build-override " }), "build-override");
+  assert.equal(resolveBuildSha(throwingExec, { GITHUB_SHA: " github-override " }), "github-override");
+  assert.equal(resolveBuildSha(throwingExec, {}), "unknown");
+});
 
 const validHeaders = `/*
   X-Content-Type-Options: nosniff

@@ -7,8 +7,10 @@ const ROOT_LABELS = new Map([
   ["intro", "Introduction"],
   ["capabilities", "Capabilities"],
   ["stack", "Stack"],
+  ["work", "Selected Work"],
   ["work_cases", "Selected Work"],
   ["timeline", "Timeline"],
+  ["education", "Education"],
   ["proof_wall", "Proof Wall"],
   ["products", "Products"],
   ["faq", "FAQ"],
@@ -74,14 +76,34 @@ function renderObject(value, level, lines) {
   }
 }
 
+export function projectPublicProfile(profile) {
+  return {
+    identity: profile.identity,
+    intro: profile.intro,
+    capabilities: profile.capabilities,
+    stack: profile.stack,
+    work: profile.work_cases,
+    timeline: profile.timeline.filter((entry) => entry.type !== "education"),
+    education: profile.timeline.filter((entry) => entry.type === "education"),
+    proof_wall: {
+      certifications: profile.proof_wall.certifications,
+      awards: profile.proof_wall.awards,
+      ctf_results: profile.proof_wall.ctf_results,
+      publications: profile.proof_wall.publications,
+    },
+    products: profile.products,
+    stack_brands: profile.stack_brands,
+    faq: profile.faq,
+  };
+}
+
 export function renderDossierMarkdown(profile) {
+  const publicProfile = projectPublicProfile(profile);
   const lines = [
-    `# ${profile.identity.name}`,
-    "",
-    profile.meta.description,
+    `# ${publicProfile.identity.name}`,
   ];
 
-  for (const [key, value] of Object.entries(profile)) {
+  for (const [key, value] of Object.entries(publicProfile)) {
     lines.push("", heading(2, ROOT_LABELS.get(key) ?? labelFor(key)));
     renderObject(value, 3, lines);
   }

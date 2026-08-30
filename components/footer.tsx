@@ -17,6 +17,8 @@ export function Footer({
   const buildDay = buildDate.slice(0, 10);
   const buildYear = buildDay.slice(0, 4);
   const commitUrl = `https://github.com/Leiruz/zurielst.com/commit/${buildSha}`;
+  const isCommitSha = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i.test(buildSha);
+  const buildLabel = isCommitSha ? buildSha.slice(0, 7) : buildSha;
 
   return (
     <footer className="border-t border-line bg-canvas py-10">
@@ -33,7 +35,9 @@ export function Footer({
             <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-3 border-b border-line py-2.5">
               <dt>BUILD</dt>
               <dd className="min-w-0 text-text-1">
-                <a href={commitUrl} target="_blank" rel="noopener noreferrer" className={linkClassName}>{buildSha.slice(0, 7)}</a>
+                {isCommitSha ? (
+                  <a href={commitUrl} target="_blank" rel="noopener noreferrer" className={linkClassName}>{buildLabel}</a>
+                ) : buildLabel}
               </dd>
             </div>
             <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-3 border-b border-line py-2.5">

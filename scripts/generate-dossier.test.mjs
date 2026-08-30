@@ -24,25 +24,58 @@ function requireSubjectFunction(name) {
   return dossierGenerator[name];
 }
 
-function collectStrings(value, strings = []) {
-  if (typeof value === "string") strings.push(value);
-  else if (Array.isArray(value)) value.forEach((item) => collectStrings(item, strings));
-  else if (value && typeof value === "object") {
-    Object.values(value).forEach((item) => collectStrings(item, strings));
-  }
-  return strings;
-}
-
-test("renders the complete public profile as clean Markdown", () => {
+test("renders the explicit public profile projection as clean Markdown", () => {
+  const projectPublicProfile = requireSubjectFunction("projectPublicProfile");
   const renderDossierMarkdown = requireSubjectFunction("renderDossierMarkdown");
+  const projection = projectPublicProfile(profile);
   const markdown = renderDossierMarkdown(profile);
+
+  assert.deepEqual(Object.keys(projection), [
+    "identity",
+    "intro",
+    "capabilities",
+    "stack",
+    "work",
+    "timeline",
+    "education",
+    "proof_wall",
+    "products",
+    "stack_brands",
+    "faq",
+  ]);
+  assert.deepEqual(
+    projection.timeline,
+    profile.timeline.filter((entry) => entry.type !== "education"),
+  );
+  assert.deepEqual(
+    projection.education,
+    profile.timeline.filter((entry) => entry.type === "education"),
+  );
+  assert.equal("extras" in projection.proof_wall, false);
 
   assert.match(markdown, /^# Zuriel Shanley Tanyory$/m);
   assert.match(markdown, /^## Identity$/m);
   assert.match(markdown, /^## Selected Work$/m);
+  assert.match(markdown, /^## Timeline$/m);
+  assert.match(markdown, /^## Education$/m);
   assert.match(markdown, /^## Proof Wall$/m);
-  for (const value of collectStrings(profile)) {
-    assert.ok(markdown.includes(value), `Markdown must include profile value: ${value}`);
+  for (const value of [
+    profile.identity.email,
+    profile.intro.bullets[0],
+    profile.capabilities.acts[0].narrative,
+    profile.stack.categories[0].items[0],
+    profile.work_cases[0].summary,
+    profile.timeline.find((entry) => entry.type === "role").summary,
+    profile.timeline.find((entry) => entry.type === "education").summary,
+    profile.proof_wall.certifications[0].title,
+    profile.proof_wall.awards[0].title,
+    profile.proof_wall.ctf_results[0].title,
+    profile.proof_wall.publications[0].title,
+    profile.products[0].summary,
+    profile.stack_brands.disclaimer,
+    profile.faq[0].answer,
+  ]) {
+    assert.ok(markdown.includes(value), `Markdown must include public value: ${value}`);
   }
   assert.doesNotMatch(markdown, /```json/);
 });
@@ -70,6 +103,25 @@ test("writes dossier.md and llms.txt into the static export", async () => {
       readFile(path.join(outputDirectory, "llms.txt"), "utf8"),
     ]);
     assert.match(dossier, /Zuriel Shanley Tanyory/);
+    for (const value of [
+      profile.easter_eggs.terminal.note,
+      profile.easter_eggs.terminal.source,
+      profile.chat.disclaimer,
+      ...profile.chat.intent_chips.slice(1),
+      profile.meta.title,
+      profile.meta.description,
+      profile.meta.og.title,
+      profile.meta.og.description,
+      profile.meta.og.image,
+      profile.meta.og.url,
+      profile.proof_wall.extras[0].title,
+      profile.proof_wall.extras[0].media,
+      profile.proof_wall.extras[0].caption,
+    ]) {
+      assert.ok(!dossier.includes(value), `dossier.md must exclude non-public value: ${value}`);
+    }
+    assert.doesNotMatch(dossier, /^## (Chat|Easter Eggs|Metadata)$/m);
+    assert.doesNotMatch(dossier, /^### Extras$/m);
     assert.match(llms, /https:\/\/zurielst\.com\/dossier\.md/);
   } finally {
     await rm(outputDirectory, { force: true, recursive: true });

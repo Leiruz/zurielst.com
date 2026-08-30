@@ -103,9 +103,15 @@ describe('page client boundaries', () => {
       expect(source).toContain(`"${key}":"${targetId}"`);
     }
     expect(source).toContain('event.key.toLowerCase()');
-    expect(source).toContain('event.target instanceof HTMLInputElement');
-    expect(source).toContain('event.target instanceof HTMLTextAreaElement');
-    expect(source).toContain('event.target.isContentEditable');
+    expect(source).toContain('target instanceof HTMLInputElement');
+    expect(source).toContain('target instanceof HTMLTextAreaElement');
+    expect(source).toContain('target.isContentEditable');
+    expect(source).toContain('dataset.intro !== "done"');
+    expect(source).toContain('[role="dialog"][aria-modal="true"]');
+    expect(source).toContain('#dossier-chat-dialog[data-state="open"]');
+    for (const guard of ['event.ctrlKey', 'event.altKey', 'event.metaKey', 'event.shiftKey', 'event.repeat']) {
+      expect(source).toContain(guard);
+    }
     expect(source).toContain('goPrefix');
   });
 

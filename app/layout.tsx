@@ -53,7 +53,8 @@ export const metadata: Metadata = {
     username: profile.identity.github.username,
   },
   twitter: {
-    card: 'summary_large_image',
+    // summary_large_image plus twitter:image and og:image must land atomically with the asset.
+    card: 'summary',
     title: profile.meta.og.title,
     description: profile.meta.og.description,
   },

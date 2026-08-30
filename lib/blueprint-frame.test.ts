@@ -81,6 +81,8 @@ describe('blueprint frame', () => {
     expect(styles).toMatch(/::-webkit-scrollbar\s*\{[\s\S]*width:\s*6px[\s\S]*height:\s*6px/);
     expect(styles).toMatch(/::-webkit-scrollbar-thumb\s*\{[\s\S]*var\(--text-3\)/);
     expect(styles).toMatch(/\.heatmap-cell::after\s*\{[\s\S]*content:\s*attr\(data-tooltip\)/);
+    expect(styles).toMatch(/\.heatmap-cell:focus::after\s*\{\s*opacity:\s*1;?\s*\}/);
+    expect(styles).toMatch(/:where\([^)]*\[tabindex\][^)]*\):focus-visible\s*\{[\s\S]*?outline:\s*2px solid var\(--ring\)/);
   });
 });
 
