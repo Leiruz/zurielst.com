@@ -15,6 +15,16 @@ import { Products } from '@/components/sections/products';
 import { Faq } from '@/components/sections/faq';
 import { hasPublicMedia } from '@/lib/media';
 
+const COPY_DISCLOSURE_STATE_SCRIPT = `(() => {
+  document.querySelectorAll("details[data-copy-disclosure]").forEach((details) => {
+    const summary = details.querySelector(":scope > summary");
+    if (!summary) return;
+    const syncExpandedState = () => summary.setAttribute("aria-expanded", String(details.open));
+    syncExpandedState();
+    details.addEventListener("toggle", syncExpandedState);
+  });
+})();`;
+
 export default function Home() {
   const profile = profileJson as Profile;
   const contributions = contributionJson as ContributionSnapshot;
@@ -39,6 +49,10 @@ export default function Home() {
           disclaimer={profile.chat.disclaimer}
         />
       </main>
+      <script
+        id="copy-disclosure-state"
+        dangerouslySetInnerHTML={{ __html: COPY_DISCLOSURE_STATE_SCRIPT }}
+      />
       <Footer name={profile.identity.name} />
       <Terminal
         commands={profile.easter_eggs.terminal.commands}

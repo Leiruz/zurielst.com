@@ -294,6 +294,48 @@ canvas {
   display: inline;
 }
 
+.copy-disclosure {
+  interpolate-size: allow-keywords;
+}
+
+.copy-disclosure::details-content {
+  block-size: 0;
+  content-visibility: hidden;
+  opacity: 0;
+  overflow: clip;
+  transition:
+    block-size 150ms cubic-bezier(.32, .72, 0, 1),
+    content-visibility 150ms,
+    opacity 150ms cubic-bezier(.32, .72, 0, 1);
+  transition-behavior: allow-discrete;
+}
+
+.copy-disclosure[open]::details-content {
+  block-size: auto;
+  content-visibility: visible;
+  opacity: 1;
+}
+
+.copy-disclosure-less {
+  display: none;
+}
+
+.copy-disclosure[open] .copy-disclosure-more {
+  display: none;
+}
+
+.copy-disclosure[open] .copy-disclosure-less {
+  display: inline;
+}
+
+.copy-disclosure-chevron {
+  transition: transform 150ms cubic-bezier(.32, .72, 0, 1);
+}
+
+.copy-disclosure[open] .copy-disclosure-chevron {
+  transform: rotate(180deg);
+}
+
 /* Blueprint linework primitives */
 .bp-grid {
   background:
@@ -361,6 +403,11 @@ canvas {
 
   .dossier-count-up-animated {
     display: none;
+  }
+
+  .copy-disclosure::details-content,
+  .copy-disclosure-chevron {
+    transition: none !important;
   }
 }
 
