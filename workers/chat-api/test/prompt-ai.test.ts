@@ -14,28 +14,47 @@ import {
 import { ChatRequestSchema } from '../src/schema';
 
 describe('grounded prompt', () => {
-  it('reproduces the curated projection blocks exactly', () => {
+  it('puts the curated profile before answer-first grounding instructions', () => {
     const prompt = buildSystemPrompt();
-    const profile = prompt.slice(0, 4_512);
-    const instructions = prompt.slice(4_514);
     const expectedBlocks = [...projectionMarkdown.matchAll(/```\r?\n([\s\S]*?)\r?\n```/g)]
       .map((match) => match[1]?.replaceAll('\r\n', '\n'));
+    const [expectedProfile, expectedInstructions] = expectedBlocks;
+    expect(expectedProfile).toBeDefined();
+    expect(expectedInstructions).toBeDefined();
 
-    expect(buildProfileBlock()).toBe(expectedBlocks[0]);
+    const profile = buildProfileBlock();
+    const instructions = expectedInstructions ?? '';
+    const normalizedInstructions = instructions.replace(/\s+/g, ' ').trim();
 
-    expect(prompt).toHaveLength(5_637);
-    expect(profile).toHaveLength(4_512);
-    expect(instructions).toHaveLength(1_123);
-    expect(prompt.slice(4_512, 4_514)).toBe('\n\n');
+    expect(profile).toBe(expectedProfile);
+    expect(prompt).toBe(`${profile}\n\n${instructions}`);
+    expect(prompt.match(/^<<PROFILE v[^\n]+$/gm)).toHaveLength(1);
+    expect(prompt.match(/^PROFILE>>$/gm)).toHaveLength(1);
     expect(profile.startsWith('<<PROFILE v2026-08-30\nidentity: Zuriel Shanley Tanyory.')).toBe(true);
     expect(profile.endsWith('Languages: English (native), Chinese (conversational), Bahasa Indonesia (basic).\nPROFILE>>')).toBe(true);
-    expect(instructions).toContain('Your only source of truth is the PROFILE block between <<PROFILE and\nPROFILE>>.');
-    expect(instructions).toContain(
-      '"That is not something my profile covers. Email zurielst@u.nus.edu and\n   Zuriel will answer directly."',
+    expect(normalizedInstructions.startsWith(
+      'You answer questions about Zuriel Shanley Tanyory using ONLY the PROFILE block',
+    )).toBe(true);
+    expect(normalizedInstructions).toContain(
+      'When PROFILE contains relevant information, ANSWER with it, concise and factual.',
     );
-    expect(instructions.endsWith('Zuriel. No speculation about opinions, availability, or compensation.')).toBe(true);
+    expect(normalizedInstructions).toContain(
+      '"That is not something my profile covers. Email zurielst@u.nus.edu and Zuriel will answer directly."',
+    );
+    expect(normalizedInstructions).toContain('Use only the named fields in PROFILE.');
+    expect(normalizedInstructions.endsWith(
+      'For permitted questions, if PROFILE contains any relevant information, ANSWER from it rather than refusing.',
+    )).toBe(true);
+    expect(prompt.indexOf('PROFILE>>')).toBeLessThan(prompt.lastIndexOf('For permitted questions'));
+  });
 
-    expect([profile, instructions]).toEqual(expectedBlocks);
+  it('keeps the live Singtel role and CiTaDel facts in the projection body', () => {
+    const projectionBody = projectionMarkdown.match(/```\r?\n([\s\S]*?)\r?\n```/)?.[1];
+
+    expect(projectionBody).toContain(
+      'Forward Deployed AI & Automation Security Engineer at Singtel',
+    );
+    expect(projectionBody).toContain('CiTaDel Cybersecurity Solutions');
   });
 
   it('grounds the projection in published profile facts', () => {
@@ -293,7 +312,7 @@ describe('grounded prompt', () => {
     });
     const messages = buildChatMessages(parsed.message, parsed.history);
 
-    expect(serializedPromptByteLength(messages)).toBe(15_955);
+    expect(serializedPromptByteLength(messages)).toBe(16_177);
     expect(serializedPromptByteLength(messages)).toBeLessThanOrEqual(
       MAX_SERIALIZED_PROMPT_BYTES,
     );
