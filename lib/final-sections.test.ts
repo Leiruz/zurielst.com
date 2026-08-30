@@ -27,9 +27,10 @@ describe('final dossier sections', () => {
     ];
 
     for (const [id, label] of [
-      ['proof', 'Fig. 6. Proof wall'],
-      ['products', 'Fig. 7. Products'],
-      ['faq', 'Fig. 8. FAQ'],
+      ['proof', 'Fig. 7. Proof wall'],
+      ['products', 'Fig. 8. Products'],
+      ['faq', 'Fig. 9. FAQ'],
+      ['contact', 'Fig. 10. Contact'],
     ] as const) {
       expect(markup).toContain(`id="${id}"`);
       expect(markup).toContain(label);
@@ -48,5 +49,14 @@ describe('final dossier sections', () => {
     expect(missingVideo).toBeDefined();
     expect(markup).toContain('Video artifact');
     expect(markup).not.toContain(`src="${missingVideo?.media}"`);
+  });
+
+  it('numbers the ten top-level figure labels in exact order', () => {
+    const markup = renderToStaticMarkup(createElement(Home));
+    const figureNumbers = [...markup.matchAll(
+      /<[^>]+class="[^"]*\bfig-label\b[^"]*"[^>]*>\s*Fig\. (\d+)\./g,
+    )].map((match) => Number(match[1]));
+
+    expect(figureNumbers).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   });
 });

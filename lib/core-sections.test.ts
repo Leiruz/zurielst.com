@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import Home from '@/app/page';
 import { SelectedWork } from '@/components/sections/selected-work';
+import { Timeline } from '@/components/sections/timeline';
 import profileJson from '@/content/profile.json';
 import type { Profile } from '@/content/schema';
 import * as dossier from '@/lib/dossier';
@@ -18,7 +19,7 @@ function expectRenderedText(markup: string, value: string) {
 }
 
 describe('core dossier sections', () => {
-  it('server-renders the four section contracts and 53 contribution weeks', () => {
+  it('server-renders the core section contracts and 53 contribution weeks', () => {
     const markup = renderToStaticMarkup(createElement(Home));
 
     for (const [id, label] of [
@@ -26,6 +27,7 @@ describe('core dossier sections', () => {
       ['capabilities', 'Fig. 3. Capabilities'],
       ['work', 'Fig. 4. Selected work'],
       ['timeline', 'Fig. 5. Timeline'],
+      ['education', 'Fig. 6. Education'],
     ] as const) {
       expect(markup).toContain(`id="${id}"`);
       expect(markup).toContain(label);
@@ -59,10 +61,11 @@ describe('core dossier sections', () => {
     const longWorkCases = profile.work_cases.filter((workCase) => workCase.summary.length > 200);
     expect(longWorkCases).toHaveLength(3);
     expect(markup.match(/data-copy-disclosure="work"/g)).toHaveLength(longWorkCases.length);
-    expect(markup.match(/data-copy-disclosure="timeline"/g)).toHaveLength(profile.timeline.length);
+    const nonEducationEntries = profile.timeline.filter((entry) => entry.type !== 'education');
+    expect(markup.match(/data-copy-disclosure="timeline"/g)).toHaveLength(nonEducationEntries.length);
     const disclosureBlocks = markup.match(/<details(?=[^>]*data-copy-disclosure)[\s\S]*?<\/details>/g) ?? [];
     expect(disclosureBlocks).toHaveLength(
-      collapsedCapabilities.length + longWorkCases.length + profile.timeline.length,
+      collapsedCapabilities.length + longWorkCases.length + nonEducationEntries.length,
     );
     for (const block of disclosureBlocks) {
       const openingTag = block.match(/^<details[^>]*>/)?.[0] ?? '';
@@ -100,13 +103,61 @@ describe('core dossier sections', () => {
       }
     }
 
-    for (const entry of profile.timeline) {
+    for (const entry of nonEducationEntries) {
       const disclosureStart = markup.indexOf(`data-copy-id="${entry.id}"`);
       const disclosureEnd = markup.indexOf('</details>', disclosureStart);
       expect(disclosureStart).toBeGreaterThanOrEqual(0);
       expect(disclosureEnd).toBeGreaterThan(disclosureStart);
       expectRenderedText(markup.slice(disclosureStart, disclosureEnd), entry.summary);
     }
+  });
+
+  it('keeps education out of Timeline and renders it in its own reverse-chronological section', () => {
+    const timelineMarkup = renderToStaticMarkup(createElement(Timeline, { profile }));
+    const homeMarkup = renderToStaticMarkup(createElement(Home));
+    const educationStart = homeMarkup.indexOf('id="education"');
+    const proofStart = homeMarkup.indexOf('id="proof"');
+    const educationMarkup = homeMarkup.slice(educationStart, proofStart);
+    const educationEntries = profile.timeline
+      .filter((entry) => entry.type === 'education')
+      .sort((left, right) => Number.parseInt(right.period.match(/\d{4}/)?.[0] ?? '0', 10)
+        - Number.parseInt(left.period.match(/\d{4}/)?.[0] ?? '0', 10));
+
+    expect(educationStart).toBeGreaterThanOrEqual(0);
+    expect(proofStart).toBeGreaterThan(educationStart);
+    expect(educationEntries.map((entry) => entry.org)).toEqual([
+      'National University of Singapore',
+      'Ngee Ann Polytechnic',
+    ]);
+
+    for (const entry of educationEntries) {
+      expect(timelineMarkup).not.toContain(entry.org);
+      expectRenderedText(educationMarkup, entry.org);
+      expectRenderedText(educationMarkup, entry.title);
+      expectRenderedText(educationMarkup, entry.period);
+      expectRenderedText(educationMarkup, entry.summary);
+    }
+
+    for (const entry of profile.timeline.filter((entry) => entry.type !== 'education')) {
+      expect(educationMarkup).not.toContain(entry.title);
+      expect(timelineMarkup).toContain(entry.org);
+    }
+
+    expect(educationMarkup.indexOf(educationEntries[0].org))
+      .toBeLessThan(educationMarkup.indexOf(educationEntries[1].org));
+  });
+
+  it('orders Timeline, Education, and Proof and links Education from the site navigation', () => {
+    const markup = renderToStaticMarkup(createElement(Home));
+    const timelineStart = markup.indexOf('id="timeline"');
+    const educationStart = markup.indexOf('id="education"');
+    const proofStart = markup.indexOf('id="proof"');
+
+    expect(timelineStart).toBeGreaterThanOrEqual(0);
+    expect(educationStart).toBeGreaterThan(timelineStart);
+    expect(proofStart).toBeGreaterThan(educationStart);
+    expect(markup).toContain('href="#education"');
+    expect(markup).toContain('>Education</a>');
   });
 
   it('keeps a long single-sentence work summary visible without an empty disclosure', () => {

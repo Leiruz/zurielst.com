@@ -25,6 +25,20 @@ https://:version.:subdomain.workers.dev/*
   X-Robots-Tag: noindex
 `;
 
+const validLandingPage = `<!doctype html>
+  <main>
+    <section id="identity"><p class="fig-label">Fig. 1. Identity</p></section>
+    <section id="contributions"><p class="fig-label">Fig. 2. Contributions</p></section>
+    <section id="capabilities"><p class="fig-label">Fig. 3. Capabilities</p></section>
+    <section id="work"><p class="fig-label">Fig. 4. Selected work</p></section>
+    <section id="timeline"><p class="fig-label">Fig. 5. Timeline</p></section>
+    <section id="education"><p class="fig-label">Fig. 6. Education</p></section>
+    <section id="proof"><p class="fig-label">Fig. 7. Proof wall</p></section>
+    <section id="products"><p class="fig-label">Fig. 8. Products</p></section>
+    <section id="faq"><p class="fig-label">Fig. 9. FAQ</p></section>
+    <section id="contact"><p class="fig-label">Fig. 10. Contact</p></section>
+  </main>`;
+
 function requireSubjectFunction(name) {
   assert.equal(
     typeof buildVerifier[name],
@@ -321,6 +335,71 @@ test("does not treat comment markers inside CSS strings as comments", () => {
 
   assert.equal(violations.length, 1);
   assert.match(violations[0], /images\.example.*img-src/);
+});
+
+test("accepts the ordered landing-page section and figure contract", () => {
+  const validateLandingPageContract = requireSubjectFunction(
+    "validateLandingPageContract",
+  );
+
+  assert.doesNotThrow(() => validateLandingPageContract(validLandingPage));
+});
+
+test("rejects missing and unordered landing-page section IDs", () => {
+  const validateLandingPageContract = requireSubjectFunction(
+    "validateLandingPageContract",
+  );
+
+  assert.throws(
+    () => validateLandingPageContract(validLandingPage.replace(/\s*<section id="education">[\s\S]*?<\/section>/, "")),
+    /section IDs/i,
+  );
+  assert.throws(
+    () => validateLandingPageContract(validLandingPage
+      .replace('id="timeline"', 'id="section-swap"')
+      .replace('id="education"', 'id="timeline"')
+      .replace('id="section-swap"', 'id="education"')),
+    /section IDs/i,
+  );
+  assert.throws(
+    () => validateLandingPageContract(validLandingPage
+      .replace('</section>\n    <section id="education">', '<section id="education"></section></section>\n    <section>')),
+    /section IDs/i,
+  );
+});
+
+test("rejects incorrect landing-page figure numbers", () => {
+  const validateLandingPageContract = requireSubjectFunction(
+    "validateLandingPageContract",
+  );
+
+  assert.throws(
+    () => validateLandingPageContract(validLandingPage.replace("Fig. 6. Education", "Fig. 5. Education")),
+    /figure labels/i,
+  );
+});
+
+test("rejects an em dash in exported landing-page HTML", () => {
+  const validateLandingPageContract = requireSubjectFunction(
+    "validateLandingPageContract",
+  );
+
+  assert.throws(
+    () => validateLandingPageContract(`${validLandingPage}<p>not allowed \u2014 here</p>`),
+    /em dash/i,
+  );
+});
+
+test("requires the exported resume PDF to be a file", async () => {
+  const verifyBuildOutput = requireSubjectFunction("verifyBuildOutput");
+  const outputDirectory = await createTemporaryDirectory();
+  await writeFile(path.join(outputDirectory, "_headers"), validHeaders);
+  await writeFile(path.join(outputDirectory, "index.html"), validLandingPage);
+
+  await assert.rejects(
+    verifyBuildOutput(outputDirectory),
+    /media[\\/]resume\.pdf.*missing/i,
+  );
 });
 
 test("verifies every exported HTML file, not only the landing page", async () => {

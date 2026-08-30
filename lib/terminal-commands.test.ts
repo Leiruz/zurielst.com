@@ -26,7 +26,7 @@ describe('resolveTerminalCommand', () => {
   it.each([
     ['about', 'identity'],
     ['experience', 'timeline'],
-    ['education', 'timeline'],
+    ['education', 'education'],
     ['projects', 'work'],
     ['skills', 'capabilities'],
     ['awards', 'proof'],

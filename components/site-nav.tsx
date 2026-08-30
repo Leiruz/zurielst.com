@@ -7,6 +7,7 @@ import { DeferredThemeSwitcher } from '@/components/registry/client-enhancements
 const LINKS = [
   ['Work', '#work'],
   ['Timeline', '#timeline'],
+  ['Education', '#education'],
   ['Proof', '#proof'],
   ['Products', '#products'],
   ['FAQ', '#faq'],

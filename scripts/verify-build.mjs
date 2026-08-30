@@ -4,6 +4,34 @@ import { fileURLToPath } from "node:url";
 
 const PRODUCTION_ORIGIN = new URL("https://zurielst.com");
 const PREVIEW_RULE = "https://:version.:subdomain.workers.dev/*";
+const LANDING_SECTION_IDS = [
+  "identity",
+  "contributions",
+  "capabilities",
+  "work",
+  "timeline",
+  "education",
+  "proof",
+  "products",
+  "faq",
+  "contact",
+];
+const VOID_ELEMENTS = new Set([
+  "area",
+  "base",
+  "br",
+  "col",
+  "embed",
+  "hr",
+  "img",
+  "input",
+  "link",
+  "meta",
+  "param",
+  "source",
+  "track",
+  "wbr",
+]);
 
 const requiredHeaders = new Map([
   ["x-content-type-options", "nosniff"],
@@ -686,6 +714,58 @@ async function findStaticFiles(directory) {
   return nestedFiles.flat().sort();
 }
 
+function topLevelSectionIds(html) {
+  const mainOpeningTag = /<main\b[^>]*>/i.exec(html);
+  if (!mainOpeningTag) return [];
+  const mainContentStart = mainOpeningTag.index + mainOpeningTag[0].length;
+  const mainContentEnd = html.indexOf("</main>", mainContentStart);
+  if (mainContentEnd === -1) return [];
+
+  const stack = [];
+  const sectionIds = [];
+  const tagPattern = /<\/?([a-z][\w:-]*)\b[^>]*>/gi;
+  const mainContent = html.slice(mainContentStart, mainContentEnd);
+  for (const match of mainContent.matchAll(tagPattern)) {
+    const tag = match[0];
+    const name = match[1].toLowerCase();
+    if (tag.startsWith("</")) {
+      const openingIndex = stack.lastIndexOf(name);
+      if (openingIndex !== -1) stack.length = openingIndex;
+      continue;
+    }
+
+    if (name === "section" && stack.length === 0) {
+      const id = /\bid=(["'])([^"']+)\1/i.exec(tag)?.[2];
+      if (id) sectionIds.push(id);
+    }
+    if (!VOID_ELEMENTS.has(name) && !/\/\s*>$/.test(tag)) stack.push(name);
+  }
+  return sectionIds;
+}
+
+export function validateLandingPageContract(html) {
+  const sectionIds = topLevelSectionIds(html);
+  if (JSON.stringify(sectionIds) !== JSON.stringify(LANDING_SECTION_IDS)) {
+    throw new Error(
+      `Landing-page section IDs must be ${LANDING_SECTION_IDS.join(", ")} in order; found ${sectionIds.join(", ")}`,
+    );
+  }
+
+  const figureNumbers = [...html.matchAll(
+    /<[^>]*\bclass=(["'])[^"']*\bfig-label\b[^"']*\1[^>]*>\s*Fig\.\s*(\d+)\./gi,
+  )].map((match) => Number(match[2]));
+  const expectedFigureNumbers = LANDING_SECTION_IDS.map((_, index) => index + 1);
+  if (JSON.stringify(figureNumbers) !== JSON.stringify(expectedFigureNumbers)) {
+    throw new Error(
+      `Landing-page figure labels must be ${expectedFigureNumbers.join(", ")} in order; found ${figureNumbers.join(", ")}`,
+    );
+  }
+
+  if (html.includes("\u2014")) {
+    throw new Error("Landing-page HTML must not contain an em dash");
+  }
+}
+
 export async function verifyBuildOutput(outputDirectory = path.resolve("out")) {
   const resolvedOutputDirectory = path.resolve(outputDirectory);
   const headersPath = path.join(resolvedOutputDirectory, "_headers");
@@ -737,6 +817,20 @@ export async function verifyBuildOutput(outputDirectory = path.resolve("out")) {
   if (violations.length > 0) {
     throw new Error(`CSP compatibility check failed:\n${violations.join("\n")}`);
   }
+
+  validateLandingPageContract(await readFile(indexPath, "utf8"));
+
+  const resumePath = path.join(resolvedOutputDirectory, "media", "resume.pdf");
+  let resumeStatus;
+  try {
+    resumeStatus = await stat(resumePath);
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      throw new Error(`${resumePath} is missing`);
+    }
+    throw error;
+  }
+  if (!resumeStatus.isFile()) throw new Error(`${resumePath} is not a file`);
 
   return { cssFileCount: cssFiles.length, htmlFileCount: htmlFiles.length, headersPath };
 }

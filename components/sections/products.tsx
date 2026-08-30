@@ -11,7 +11,7 @@ export function Products({ profile }: ProductsProps) {
     <section id="products" className="dossier-section bg-canvas" aria-labelledby="products-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
-          <p className="fig-label">Fig. 7. Products</p>
+          <p className="fig-label">Fig. 8. Products</p>
           <h2 id="products-title" className="dossier-title mt-4 text-text-1">Products</h2>
         </Reveal>
 

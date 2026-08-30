@@ -22,7 +22,7 @@ export function Timeline({ profile }: TimelineProps) {
         </Reveal>
 
         <ol className="relative mt-12 ml-2 border-l border-line-strong sm:ml-3">
-          {profile.timeline.map((entry, index) => (
+          {profile.timeline.filter((entry) => entry.type !== 'education').map((entry, index) => (
             <li key={entry.id} className="relative pb-10 pl-7 last:pb-0 sm:pl-10">
               <span className="absolute -left-[5px] top-2 size-[9px] rounded-full border-2 border-canvas bg-text-3" aria-hidden="true" />
               <Reveal delayIndex={index}>

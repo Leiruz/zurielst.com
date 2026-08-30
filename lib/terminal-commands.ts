@@ -14,7 +14,7 @@ export interface TerminalCommandContext {
 const SCROLL_TARGETS: Readonly<Record<string, string>> = {
   about: 'identity',
   experience: 'timeline',
-  education: 'timeline',
+  education: 'education',
   projects: 'work',
   skills: 'capabilities',
   awards: 'proof',
