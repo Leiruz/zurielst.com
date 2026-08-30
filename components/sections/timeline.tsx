@@ -17,7 +17,7 @@ export function Timeline({ profile }: TimelineProps) {
     <section id="timeline" className="dossier-section bg-canvas" aria-labelledby="timeline-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
-          <p className="fig-label">Fig. 8. Timeline</p>
+          <p className="fig-label">Fig. 7. Timeline</p>
           <h2 id="timeline-title" className="dossier-title mt-4 text-text-1">Timeline</h2>
         </Reveal>
 

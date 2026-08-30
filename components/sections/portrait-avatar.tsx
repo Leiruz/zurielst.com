@@ -19,7 +19,8 @@ export function PortraitAvatar({ image, alt, name }: PortraitAvatarProps) {
         alt={alt}
         width={192}
         height={192}
-        loading="lazy"
+        loading="eager"
+        fetchPriority="high"
         decoding="async"
         hidden={failed}
         onError={() => setFailed(true)}

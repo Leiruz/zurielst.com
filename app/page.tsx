@@ -46,12 +46,12 @@ export default function Home() {
         <ContributionHeatmap data={contributions} />
         <CapabilityActs profile={profile} />
         <Stack profile={profile} />
-        <BrandsWall profile={profile} />
         <SelectedWork profile={profile} />
         <Timeline profile={profile} />
         <Education profile={profile} />
         <ProofWall profile={profile} />
         <Products profile={profile} />
+        <BrandsWall profile={profile} />
         <Faq profile={profile} />
         <Contact
           email={profile.identity.email}

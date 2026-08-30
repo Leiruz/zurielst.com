@@ -13,6 +13,17 @@ vi.mock('server-only', () => ({}));
 
 const profile = profileJson as Profile;
 
+const expectedSectionIds = [
+  'identity', 'intro', 'contributions', 'capabilities', 'stack', 'work',
+  'timeline', 'education', 'proof', 'products', 'brands', 'faq', 'contact',
+];
+
+const expectedFigureLabels = [
+  'Identity', 'Introduction', 'Contributions', 'Capabilities', 'Stack',
+  'Selected work', 'Timeline', 'Education', 'Accolades', 'Products',
+  'Worked with', 'FAQ', 'Contact',
+];
+
 function expectRenderedText(markup: string, value: string) {
   const encodedValue = renderToStaticMarkup(createElement('span', null, value)).replace(/^<span>|<\/span>$/g, '');
   expect(markup).toContain(encodedValue);
@@ -22,18 +33,9 @@ describe('core dossier sections', () => {
   it('server-renders the core section contracts and 53 contribution weeks', () => {
     const markup = renderToStaticMarkup(createElement(Home));
 
-    for (const [id, label] of [
-      ['intro', 'Fig. 2. Introduction'],
-      ['contributions', 'Fig. 3. Contributions'],
-      ['capabilities', 'Fig. 4. Capabilities'],
-      ['stack', 'Fig. 5. Stack'],
-      ['brands', 'Fig. 6. Worked with'],
-      ['work', 'Fig. 7. Selected work'],
-      ['timeline', 'Fig. 8. Timeline'],
-      ['education', 'Fig. 9. Education'],
-    ] as const) {
+    for (const [index, id] of expectedSectionIds.entries()) {
       expect(markup).toContain(`id="${id}"`);
-      expect(markup).toContain(label);
+      expect(markup).toContain(`Fig. ${index + 1}. ${expectedFigureLabels[index]}`);
     }
 
     expect(markup.match(/data-week-column="true"/g)).toHaveLength(53);
@@ -53,11 +55,13 @@ describe('core dossier sections', () => {
     const contributionsStart = markup.indexOf('id="contributions"');
     const capabilitiesStart = markup.indexOf('id="capabilities"');
     const stackStart = markup.indexOf('id="stack"');
-    const brandsStart = markup.indexOf('id="brands"');
     const workStart = markup.indexOf('id="work"');
+    const productsStart = markup.indexOf('id="products"');
+    const brandsStart = markup.indexOf('id="brands"');
+    const faqStart = markup.indexOf('id="faq"');
     const introMarkup = markup.slice(introStart, contributionsStart);
-    const stackMarkup = markup.slice(stackStart, brandsStart);
-    const brandsMarkup = markup.slice(brandsStart, workStart);
+    const stackMarkup = markup.slice(stackStart, workStart);
+    const brandsMarkup = markup.slice(brandsStart, faqStart);
     const stackItems = profile.stack.categories.flatMap((category) => category.items);
 
     expect(identityStart).toBeGreaterThanOrEqual(0);
@@ -65,8 +69,10 @@ describe('core dossier sections', () => {
     expect(contributionsStart).toBeGreaterThan(introStart);
     expect(capabilitiesStart).toBeGreaterThan(contributionsStart);
     expect(stackStart).toBeGreaterThan(capabilitiesStart);
-    expect(brandsStart).toBeGreaterThan(stackStart);
-    expect(workStart).toBeGreaterThan(brandsStart);
+    expect(workStart).toBeGreaterThan(stackStart);
+    expect(productsStart).toBeGreaterThan(workStart);
+    expect(brandsStart).toBeGreaterThan(productsStart);
+    expect(faqStart).toBeGreaterThan(brandsStart);
 
     expect(introMarkup).toContain('data-local-greeting="true">Hello</');
     expect(introMarkup.match(/data-intro-bullet="true"/g)).toHaveLength(profile.intro.bullets.length);

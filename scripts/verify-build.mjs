@@ -10,14 +10,29 @@ const LANDING_SECTION_IDS = [
   "contributions",
   "capabilities",
   "stack",
-  "brands",
   "work",
   "timeline",
   "education",
   "proof",
   "products",
+  "brands",
   "faq",
   "contact",
+];
+const LANDING_SECTION_CAPTIONS = [
+  "Identity",
+  "Introduction",
+  "Contributions",
+  "Capabilities",
+  "Stack",
+  "Selected work",
+  "Timeline",
+  "Education",
+  "Accolades",
+  "Products",
+  "Worked with",
+  "FAQ",
+  "Contact",
 ];
 const VOID_ELEMENTS = new Set([
   "area",
@@ -717,7 +732,7 @@ async function findStaticFiles(directory) {
   return nestedFiles.flat().sort();
 }
 
-function topLevelSectionIds(html) {
+function topLevelSections(html) {
   const mainOpeningTag = /<main\b[^>]*>/i.exec(html);
   if (!mainOpeningTag) return [];
   const mainContentStart = mainOpeningTag.index + mainOpeningTag[0].length;
@@ -725,29 +740,49 @@ function topLevelSectionIds(html) {
   if (mainContentEnd === -1) return [];
 
   const stack = [];
-  const sectionIds = [];
+  const sections = [];
   const tagPattern = /<\/?([a-z][\w:-]*)\b[^>]*>/gi;
   const mainContent = html.slice(mainContentStart, mainContentEnd);
   for (const match of mainContent.matchAll(tagPattern)) {
     const tag = match[0];
     const name = match[1].toLowerCase();
     if (tag.startsWith("</")) {
-      const openingIndex = stack.lastIndexOf(name);
-      if (openingIndex !== -1) stack.length = openingIndex;
+      let openingIndex = -1;
+      for (let index = stack.length - 1; index >= 0; index -= 1) {
+        if (stack[index].name === name) {
+          openingIndex = index;
+          break;
+        }
+      }
+      if (openingIndex === -1) continue;
+      const openingTag = stack[openingIndex];
+      if (name === "section" && openingIndex === 0 && openingTag.id) {
+        sections.push({
+          id: openingTag.id,
+          markup: mainContent.slice(openingTag.start, match.index + tag.length),
+        });
+      }
+      stack.length = openingIndex;
       continue;
     }
 
     if (name === "section" && stack.length === 0) {
       const id = /\bid=(["'])([^"']+)\1/i.exec(tag)?.[2];
-      if (id) sectionIds.push(id);
+      stack.push({ id, name, start: match.index });
+      continue;
     }
-    if (!VOID_ELEMENTS.has(name) && !/\/\s*>$/.test(tag)) stack.push(name);
+    if (!VOID_ELEMENTS.has(name) && !/\/\s*>$/.test(tag)) stack.push({ name });
   }
-  return sectionIds;
+  return sections;
+}
+
+function topLevelSectionIds(html) {
+  return topLevelSections(html).map((section) => section.id);
 }
 
 export function validateLandingPageContract(html) {
-  const sectionIds = topLevelSectionIds(html);
+  const sections = topLevelSections(html);
+  const sectionIds = sections.map((section) => section.id);
   if (JSON.stringify(sectionIds) !== JSON.stringify(LANDING_SECTION_IDS)) {
     throw new Error(
       `Landing-page section IDs must be ${LANDING_SECTION_IDS.join(", ")} in order; found ${sectionIds.join(", ")}`,
@@ -777,14 +812,16 @@ export function validateLandingPageContract(html) {
     throw new Error("Landing-page HTML must reference /favicon.svg as an SVG favicon");
   }
 
-  const figureNumbers = [...html.matchAll(
-    /<[^>]*\bclass=(["'])[^"']*\bfig-label\b[^"']*\1[^>]*>\s*Fig\.\s*(\d+)\./gi,
-  )].map((match) => Number(match[2]));
-  const expectedFigureNumbers = LANDING_SECTION_IDS.map((_, index) => index + 1);
-  if (JSON.stringify(figureNumbers) !== JSON.stringify(expectedFigureNumbers)) {
-    throw new Error(
-      `Landing-page figure labels must be ${expectedFigureNumbers.join(", ")} in order; found ${figureNumbers.join(", ")}`,
-    );
+  for (const [index, section] of sections.entries()) {
+    const expectedLabel = `Fig. ${index + 1}. ${LANDING_SECTION_CAPTIONS[index]}`;
+    const figureLabels = [...section.markup.matchAll(
+      /<[^>]*\bclass=(["'])[^"']*\bfig-label\b[^"']*\1[^>]*>\s*([^<]+?)\s*<\/[^>]+>/gi,
+    )].map((match) => match[2]);
+    if (figureLabels.length !== 1 || figureLabels[0] !== expectedLabel) {
+      throw new Error(
+        `Landing-page figure labels must contain exactly "${expectedLabel}" in section ${section.id}; found ${figureLabels.join(", ") || "none"}`,
+      );
+    }
   }
 
   if (html.includes("\u2014")) {

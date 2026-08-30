@@ -24,6 +24,7 @@ interface SiteNavRoot {
 }
 
 interface SiteNavRuntime {
+  __dossierPendingOpenRequests?: Array<{ detail: unknown; eventType: string }>;
   CustomEvent: new (type: string, init?: { detail?: unknown }) => Event;
   dispatchEvent(event: Event): boolean | void;
 }
@@ -40,6 +41,10 @@ export function enhanceSiteNav(
 
     const terminalTrigger = target.closest('[data-terminal-trigger]');
     if (terminalTrigger) {
+      (runtime.__dossierPendingOpenRequests ??= []).push({
+        detail: terminalTrigger,
+        eventType: 'dossier:terminal-open',
+      });
       runtime.dispatchEvent(
         new runtime.CustomEvent('dossier:terminal-open', {
           detail: terminalTrigger,
@@ -49,6 +54,10 @@ export function enhanceSiteNav(
 
     const paletteTrigger = target.closest('[data-command-palette-trigger]');
     if (paletteTrigger) {
+      (runtime.__dossierPendingOpenRequests ??= []).push({
+        detail: paletteTrigger,
+        eventType: 'dossier:command-palette-open',
+      });
       runtime.dispatchEvent(
         new runtime.CustomEvent('dossier:command-palette-open', {
           detail: paletteTrigger,

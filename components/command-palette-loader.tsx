@@ -3,6 +3,11 @@
 import { useEffect, useRef, useState, type ComponentType } from 'react';
 
 import type { CommandPaletteConfig } from '@/lib/command-palette';
+import {
+  drainPendingOpenRequests,
+  takePendingOpenRequest,
+  type PendingOpenRequestTarget,
+} from '@/lib/pending-open-requests';
 
 export const COMMAND_PALETTE_OPEN_EVENT = 'dossier:command-palette-open';
 
@@ -14,7 +19,7 @@ interface PaletteOpenEvent {
   preventDefault?(): void;
 }
 
-interface PaletteEventTarget {
+interface PaletteEventTarget extends PendingOpenRequestTarget {
   addEventListener(type: string, listener: (event: PaletteOpenEvent) => void): void;
   removeEventListener(type: string, listener: (event: PaletteOpenEvent) => void): void;
 }
@@ -79,6 +84,10 @@ export function listenForPaletteOpen(
   getActiveElement: () => FocusTarget | null,
   open: (opener: FocusTarget | null) => void,
 ) {
+  for (const request of drainPendingOpenRequests(target, COMMAND_PALETTE_OPEN_EVENT)) {
+    open((request.detail as FocusTarget | null) ?? getActiveElement());
+  }
+
   function onKeyDown(event: PaletteOpenEvent) {
     if (event.key?.toLowerCase() !== 'k' || (!event.ctrlKey && !event.metaKey)) return;
     event.preventDefault?.();
@@ -86,7 +95,8 @@ export function listenForPaletteOpen(
   }
 
   function onOpenEvent(event: PaletteOpenEvent) {
-    open((event.detail as FocusTarget | null) ?? getActiveElement());
+    const pending = takePendingOpenRequest(target, COMMAND_PALETTE_OPEN_EVENT);
+    open(((pending ? pending.detail : event.detail) as FocusTarget | null) ?? getActiveElement());
   }
 
   target.addEventListener('keydown', onKeyDown);

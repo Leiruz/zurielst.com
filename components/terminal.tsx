@@ -2,6 +2,11 @@
 
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { TERMINAL_OPEN_EVENT } from '@/components/footer';
+import {
+  drainPendingOpenRequests,
+  takePendingOpenRequest,
+  type PendingOpenRequestTarget,
+} from '@/lib/pending-open-requests';
 import { resolveTerminalCommand } from '@/lib/terminal-commands';
 
 interface TerminalProps {
@@ -26,6 +31,18 @@ interface FocusTarget {
 interface TerminalKeyTarget {
   addEventListener(type: 'keydown', listener: (event: globalThis.KeyboardEvent) => void): void;
   removeEventListener(type: 'keydown', listener: (event: globalThis.KeyboardEvent) => void): void;
+}
+
+interface TerminalOpenEvent {
+  detail?: unknown;
+  key?: string;
+  preventDefault?(): void;
+  target?: unknown;
+}
+
+interface TerminalOpenTarget extends PendingOpenRequestTarget {
+  addEventListener(type: string, listener: (event: TerminalOpenEvent) => void): void;
+  removeEventListener(type: string, listener: (event: TerminalOpenEvent) => void): void;
 }
 
 interface TerminalTabEvent {
@@ -77,6 +94,38 @@ export function listenForTerminalEscape(target: TerminalKeyTarget, close: () => 
   return () => target.removeEventListener('keydown', onKeyDown);
 }
 
+export function listenForTerminalOpen(
+  target: TerminalOpenTarget,
+  open: (opener?: unknown) => void,
+) {
+  for (const request of drainPendingOpenRequests(target, TERMINAL_OPEN_EVENT)) {
+    open(request.detail);
+  }
+
+  function onOpenEvent(event: TerminalOpenEvent) {
+    const pending = takePendingOpenRequest(target, TERMINAL_OPEN_EVENT);
+    open(pending ? pending.detail : event.detail);
+  }
+
+  function onGlobalKeyDown(event: TerminalOpenEvent) {
+    const eventTarget = event.target;
+    const isEditable = eventTarget instanceof HTMLInputElement
+      || eventTarget instanceof HTMLTextAreaElement
+      || (eventTarget instanceof HTMLElement && eventTarget.isContentEditable);
+    if (event.key === '`' && !isEditable) {
+      event.preventDefault?.();
+      open();
+    }
+  }
+
+  target.addEventListener(TERMINAL_OPEN_EVENT, onOpenEvent);
+  target.addEventListener('keydown', onGlobalKeyDown);
+  return () => {
+    target.removeEventListener(TERMINAL_OPEN_EVENT, onOpenEvent);
+    target.removeEventListener('keydown', onGlobalKeyDown);
+  };
+}
+
 export function trapTerminalTab(
   event: TerminalTabEvent,
   dialog: HTMLDivElement | null,
@@ -119,8 +168,7 @@ export function Terminal({ commands, source, email, gamesUrl, resumeAvailable }:
   const lineIdRef = useRef(1);
 
   useEffect(() => {
-    function open(event?: Event) {
-      const eventOpener = event && 'detail' in event ? (event as CustomEvent<unknown>).detail : null;
+    function open(eventOpener?: unknown) {
       const opener = eventOpener instanceof HTMLElement
         ? eventOpener
         : document.activeElement instanceof HTMLElement
@@ -129,21 +177,10 @@ export function Terminal({ commands, source, email, gamesUrl, resumeAvailable }:
       openTerminalDialog(isOpenRef, restoreFocusRef, opener, setIsOpen);
     }
 
-    function onGlobalKeyDown(event: globalThis.KeyboardEvent) {
-      const target = event.target;
-      const isEditable = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || (target instanceof HTMLElement && target.isContentEditable);
-      if (event.key === '`' && !isEditable) {
-        event.preventDefault();
-        open();
-      }
-    }
-
-    window.addEventListener(TERMINAL_OPEN_EVENT, open);
-    window.addEventListener('keydown', onGlobalKeyDown);
-    return () => {
-      window.removeEventListener(TERMINAL_OPEN_EVENT, open);
-      window.removeEventListener('keydown', onGlobalKeyDown);
-    };
+    return listenForTerminalOpen(
+      window as unknown as TerminalOpenTarget,
+      open,
+    );
   }, []);
 
   useEffect(() => {

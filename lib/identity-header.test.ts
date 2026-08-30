@@ -18,8 +18,9 @@ describe('identity header', () => {
 
     expect(markup).toContain(`src="${profile.identity.portrait.image}"`);
     expect(markup).toContain(`alt="${profile.identity.portrait.alt}"`);
-    expect(markup).toContain('loading="lazy"');
-    expect(markup).not.toContain('fetchpriority=');
+    expect(markup).toMatch(
+      /<img(?=[^>]*loading="eager")(?=[^>]*fetchPriority="high")(?=[^>]*decoding="async")/,
+    );
     expect(markup).toContain(`${profile.identity.name} monogram`);
   });
 

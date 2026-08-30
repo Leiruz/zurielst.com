@@ -331,4 +331,92 @@ describe('SiteNav terminal opener', () => {
     listeners.get('click')?.({ target: mobileLink });
     expect(removeAttribute).toHaveBeenCalledWith('open');
   });
+
+  it('replays a terminal click made before the terminal listener mounts exactly once', () => {
+    interface PendingRequestRuntime {
+      CustomEvent: typeof TestEvent;
+      __dossierPendingOpenRequests?: Array<{ detail: unknown; eventType: string }>;
+      addEventListener(type: string, listener: (event: TestEvent) => void): void;
+      dispatchEvent(event: TestEvent): void;
+      removeEventListener(type: string, listener: (event: TestEvent) => void): void;
+    }
+    type EnhanceSiteNav = (
+      nav: { addEventListener(type: string, listener: (event: { target: unknown }) => void): void },
+      runtime: PendingRequestRuntime,
+    ) => void;
+    type ListenForTerminalOpen = (
+      target: PendingRequestRuntime,
+      open: (opener?: unknown) => void,
+    ) => () => void;
+    class TestEvent {
+      constructor(
+        readonly type: string,
+        readonly init?: { detail?: unknown },
+      ) {}
+
+      get detail() {
+        return this.init?.detail;
+      }
+    }
+
+    const navListeners = new Map<string, (event: { target: unknown }) => void>();
+    const runtimeListeners = new Map<string, (event: TestEvent) => void>();
+    const runtime: PendingRequestRuntime = {
+      CustomEvent: TestEvent,
+      addEventListener(type, listener) {
+        runtimeListeners.set(type, listener);
+      },
+      dispatchEvent(event) {
+        runtimeListeners.get(event.type)?.(event);
+      },
+      removeEventListener(type, listener) {
+        if (runtimeListeners.get(type) === listener) runtimeListeners.delete(type);
+      },
+    };
+    const enhanceSiteNav = Reflect.get(
+      siteNavModule,
+      'enhanceSiteNav',
+    ) as unknown as EnhanceSiteNav;
+    const listenForTerminalOpen = Reflect.get(
+      terminalModule,
+      'listenForTerminalOpen',
+    ) as ListenForTerminalOpen | undefined;
+    const trigger = {
+      closest(selector: string) {
+        return selector === '[data-terminal-trigger]' ? this : null;
+      },
+    };
+    const open = vi.fn();
+
+    enhanceSiteNav(
+      {
+        addEventListener(type, listener) {
+          navListeners.set(type, listener);
+        },
+      },
+      runtime,
+    );
+    navListeners.get('click')?.({ target: trigger });
+
+    expect(open).not.toHaveBeenCalled();
+    expect(runtime.__dossierPendingOpenRequests).toEqual([
+      { detail: trigger, eventType: TERMINAL_OPEN_EVENT },
+    ]);
+    expect(listenForTerminalOpen).toBeTypeOf('function');
+    if (!listenForTerminalOpen) return;
+
+    const cleanup = listenForTerminalOpen(runtime, open);
+
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(open).toHaveBeenLastCalledWith(trigger);
+    expect(runtime.__dossierPendingOpenRequests).toBeUndefined();
+
+    navListeners.get('click')?.({ target: trigger });
+
+    expect(open).toHaveBeenCalledTimes(2);
+    expect(open).toHaveBeenLastCalledWith(trigger);
+    expect(runtime.__dossierPendingOpenRequests).toBeUndefined();
+
+    cleanup();
+  });
 });

@@ -10,6 +10,17 @@ vi.mock('server-only', () => ({}));
 
 const profile = profileJson as Profile;
 
+const expectedSectionIds = [
+  'identity', 'intro', 'contributions', 'capabilities', 'stack', 'work',
+  'timeline', 'education', 'proof', 'products', 'brands', 'faq', 'contact',
+];
+
+const expectedFigureLabels = [
+  'Identity', 'Introduction', 'Contributions', 'Capabilities', 'Stack',
+  'Selected work', 'Timeline', 'Education', 'Accolades', 'Products',
+  'Worked with', 'FAQ', 'Contact',
+];
+
 function expectRenderedText(markup: string, value: string) {
   const encodedValue = renderToStaticMarkup(createElement('span', null, value)).replace(/^<span>|<\/span>$/g, '');
   expect(markup).toContain(encodedValue);
@@ -26,8 +37,9 @@ describe('final dossier sections', () => {
     ];
 
     for (const [id, label] of [
-      ['proof', 'Fig. 10. Accolades'],
-      ['products', 'Fig. 11. Products'],
+      ['proof', 'Fig. 9. Accolades'],
+      ['products', 'Fig. 10. Products'],
+      ['brands', 'Fig. 11. Worked with'],
       ['faq', 'Fig. 12. FAQ'],
       ['contact', 'Fig. 13. Contact'],
     ] as const) {
@@ -56,12 +68,24 @@ describe('final dossier sections', () => {
     expect(markup).not.toContain('Image artifact');
   });
 
-  it('numbers the thirteen top-level figure labels in exact order', () => {
+  it('keeps one exact figure label inside each top-level section', () => {
     const markup = renderToStaticMarkup(createElement(Home));
-    const figureNumbers = [...markup.matchAll(
-      /<[^>]+class="[^"]*\bfig-label\b[^"]*"[^>]*>\s*Fig\. (\d+)\./g,
-    )].map((match) => Number(match[1]));
+    const sectionIds = [...markup.matchAll(/<section\b[^>]*\bid="([^"]+)"/g)]
+      .map((match) => match[1]);
 
-    expect(figureNumbers).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
+    expect(sectionIds).toEqual(expectedSectionIds);
+    for (const [index, label] of expectedFigureLabels.entries()) {
+      const sectionStart = markup.indexOf(`<section id="${expectedSectionIds[index]}"`);
+      const nextSectionStart = index === expectedSectionIds.length - 1
+        ? markup.indexOf('</main>', sectionStart)
+        : markup.indexOf(`<section id="${expectedSectionIds[index + 1]}"`, sectionStart);
+      const sectionMarkup = markup.slice(sectionStart, nextSectionStart);
+      const figureLabels = [...sectionMarkup.matchAll(
+        /<[^>]+class="[^"]*\bfig-label\b[^"]*"[^>]*>\s*(Fig\. \d+\. [^<]+)\s*</g,
+      )].map((match) => match[1]);
+
+      expect(sectionMarkup).not.toBe('');
+      expect(figureLabels).toEqual([`Fig. ${index + 1}. ${label}`]);
+    }
   });
 });

@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { CommandPalette } from '@/components/command-palette';
+import * as siteNavModule from '@/components/site-nav';
 import {
   COMMAND_PALETTE_OPEN_EVENT,
   closeCommandPalette,
@@ -57,12 +58,12 @@ describe('command palette action model', () => {
       'Contributions',
       'Capabilities',
       'Stack',
-      'Brands',
       'Selected work',
       'Timeline',
       'Education',
       'Accolades',
       'Products',
+      'Brands',
       'FAQ',
       'Contact',
     ]);
@@ -367,6 +368,85 @@ describe('command palette keyboard and focus lifecycle', () => {
 
     cleanup();
     expect(listeners.size).toBe(0);
+  });
+
+  it('replays a header click made before the palette listener mounts exactly once', () => {
+    interface PendingRequestRuntime {
+      CustomEvent: typeof TestEvent;
+      __dossierPendingOpenRequests?: Array<{ detail: unknown; eventType: string }>;
+      addEventListener(type: string, listener: (event: TestEvent) => void): void;
+      dispatchEvent(event: TestEvent): void;
+      removeEventListener(type: string, listener: (event: TestEvent) => void): void;
+    }
+    type EnhanceSiteNav = (
+      nav: { addEventListener(type: string, listener: (event: { target: unknown }) => void): void },
+      runtime: PendingRequestRuntime,
+    ) => void;
+    class TestEvent {
+      constructor(
+        readonly type: string,
+        readonly init?: { detail?: unknown },
+      ) {}
+
+      get detail() {
+        return this.init?.detail;
+      }
+    }
+
+    const navListeners = new Map<string, (event: { target: unknown }) => void>();
+    const runtimeListeners = new Map<string, (event: TestEvent) => void>();
+    const runtime: PendingRequestRuntime = {
+      CustomEvent: TestEvent,
+      addEventListener(type, listener) {
+        runtimeListeners.set(type, listener);
+      },
+      dispatchEvent(event) {
+        runtimeListeners.get(event.type)?.(event);
+      },
+      removeEventListener(type, listener) {
+        if (runtimeListeners.get(type) === listener) runtimeListeners.delete(type);
+      },
+    };
+    const enhanceSiteNav = Reflect.get(
+      siteNavModule,
+      'enhanceSiteNav',
+    ) as unknown as EnhanceSiteNav;
+    const trigger = {
+      closest(selector: string) {
+        return selector === '[data-command-palette-trigger]' ? this : null;
+      },
+    };
+    const activeElement = { focus: vi.fn() };
+    const open = vi.fn();
+
+    enhanceSiteNav(
+      {
+        addEventListener(type, listener) {
+          navListeners.set(type, listener);
+        },
+      },
+      runtime,
+    );
+    navListeners.get('click')?.({ target: trigger });
+
+    expect(open).not.toHaveBeenCalled();
+    expect(runtime.__dossierPendingOpenRequests).toEqual([
+      { detail: trigger, eventType: COMMAND_PALETTE_OPEN_EVENT },
+    ]);
+
+    const cleanup = listenForPaletteOpen(runtime, () => activeElement, open);
+
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(open).toHaveBeenLastCalledWith(trigger);
+    expect(runtime.__dossierPendingOpenRequests).toBeUndefined();
+
+    navListeners.get('click')?.({ target: trigger });
+
+    expect(open).toHaveBeenCalledTimes(2);
+    expect(open).toHaveBeenLastCalledWith(trigger);
+    expect(runtime.__dossierPendingOpenRequests).toBeUndefined();
+
+    cleanup();
   });
 
   it('imports once, preserves the first opener while open, and reuses the component', async () => {
