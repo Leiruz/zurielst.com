@@ -68,6 +68,12 @@ describe('blueprint frame', () => {
     expect(styles).toContain('.dossier-anchor {');
     expect(styles).toContain('.dim-mark {');
   });
+
+  it('defines the branded 404 redaction-bar motif in dossier tokens', () => {
+    expect(styles).toContain('.not-found-redactions {');
+    expect(styles).toMatch(/\.not-found-redactions\s*\{[\s\S]*repeating-linear-gradient/);
+    expect(styles).toMatch(/\.not-found-redactions\s*\{[\s\S]*var\(--text-1\)/);
+  });
 });
 
 describe('hairline grids', () => {

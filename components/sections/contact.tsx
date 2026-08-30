@@ -65,6 +65,9 @@ export function Contact({ email, socials }: ContactProps) {
               {social.platform} ↗
             </a>
           ))}
+          <a href="/zurielst.vcf" download className="contact-social-link">
+            vCard ↓
+          </a>
         </div>
 
         <div className="mt-10 border-t border-line pt-5">

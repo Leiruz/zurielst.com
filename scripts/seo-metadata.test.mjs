@@ -22,18 +22,29 @@ test("uses the production canonical URL and profile description", () => {
   );
 });
 
-test("publishes complete Open Graph website metadata without a broken image", () => {
+test("publishes complete Open Graph profile metadata without a broken image", () => {
   assert.match(layoutSource, /siteName: profile\.identity\.name/);
   assert.match(layoutSource, /type: profile\.meta\.og\.type/);
+  assert.match(layoutSource, /firstName(?:,|:)/);
+  assert.match(layoutSource, /lastName(?:,|:)/);
+  assert.match(layoutSource, /username: profile\.identity\.github\.username/);
   assert.doesNotMatch(layoutSource, /images:/);
   assert.doesNotMatch(layoutSource, /hasPublicMedia/);
 });
 
-test("publishes a summary Twitter card from profile metadata", () => {
+test("publishes a large summary Twitter card without a premature image tag", () => {
   assert.match(layoutSource, /twitter:\s*\{/);
-  assert.match(layoutSource, /card: 'summary'/);
+  assert.match(layoutSource, /card: 'summary_large_image'/);
   assert.match(layoutSource, /title: profile\.meta\.og\.title/);
   assert.match(layoutSource, /description: profile\.meta\.og\.description/);
+  assert.doesNotMatch(layoutSource, /twitter:\s*\{[\s\S]*?images:/);
+});
+
+test("derives author and keyword metadata from the public profile", () => {
+  assert.match(layoutSource, /authors:\s*\[\s*\{\s*name: profile\.identity\.name/);
+  assert.match(layoutSource, /keywords:/);
+  assert.match(layoutSource, /profile\.identity\.roles/);
+  assert.match(layoutSource, /profile\.identity\.tagline/);
 });
 
 test("wires the SVG favicon through Next metadata", () => {

@@ -334,7 +334,7 @@ const MetaSchema = z
         description: z.string().min(1),
         image: MediaPath,
         url: HttpUrl,
-        type: z.literal("website"),
+        type: z.literal("profile"),
       })
       .strict(),
   })

@@ -66,6 +66,7 @@ describe('final dossier sections', () => {
     expect(markup).not.toContain('Artifacts');
     expect(markup).not.toContain('Video artifact');
     expect(markup).not.toContain('Image artifact');
+    expect(markup).toMatch(/href="\/zurielst\.vcf"[^>]*download=""/);
   });
 
   it('keeps one exact figure label inside each top-level section', () => {

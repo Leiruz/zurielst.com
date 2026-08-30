@@ -8,6 +8,8 @@ import {
 } from '@/components/registry/intro-first-paint';
 import profileJson from '@/content/profile.json';
 import type { Profile } from '@/content/schema';
+import { BUILD_DATE } from '@/lib/build-info';
+import { createProfileStructuredData } from '@/lib/structured-data';
 import '../styles/globals.css';
 
 const geistSans = Geist({
@@ -21,10 +23,20 @@ const geistMono = Geist_Mono({
 });
 
 const profile = profileJson as Profile;
+const nameParts = profile.identity.name.split(' ');
+const firstName = nameParts[0] ?? '';
+const lastName = nameParts.at(-1) ?? '';
+const profileStructuredData = createProfileStructuredData(profile, BUILD_DATE);
+const structuredDataJson = JSON.stringify(profileStructuredData).replaceAll('<', '\\u003c');
 
 export const metadata: Metadata = {
   title: profile.meta.title,
   description: profile.meta.description,
+  authors: [{ name: profile.identity.name, url: profile.meta.og.url }],
+  keywords: [
+    ...profile.identity.roles,
+    ...profile.identity.tagline.split('.').map((keyword) => keyword.trim()).filter(Boolean),
+  ],
   metadataBase: new URL(profile.meta.og.url),
   alternates: { canonical: profile.meta.og.url },
   icons: {
@@ -36,9 +48,12 @@ export const metadata: Metadata = {
     url: profile.meta.og.url,
     siteName: profile.identity.name,
     type: profile.meta.og.type,
+    firstName,
+    lastName,
+    username: profile.identity.github.username,
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: profile.meta.og.title,
     description: profile.meta.og.description,
   },
@@ -56,6 +71,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <head>
         <IntroFirstPaintHead />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: structuredDataJson }}
+        />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <IntroCover />

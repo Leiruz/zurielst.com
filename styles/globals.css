@@ -362,6 +362,16 @@ canvas {
   background: repeating-linear-gradient(45deg, var(--hatch) 0 1px, transparent 1px 7px);
 }
 
+.not-found-redactions {
+  height: 4.5rem;
+  border-block: 1px solid var(--line);
+  background:
+    linear-gradient(var(--text-1), var(--text-1)) 0 0.75rem / 72% 0.625rem no-repeat,
+    linear-gradient(var(--text-1), var(--text-1)) 0 2rem / 48% 0.625rem no-repeat,
+    linear-gradient(var(--text-1), var(--text-1)) 0 3.25rem / 61% 0.625rem no-repeat,
+    repeating-linear-gradient(135deg, var(--hatch) 0 1px, transparent 1px 7px);
+}
+
 @media (min-width: 80rem) {
   .bp-rails::before,
   .bp-rails::after {

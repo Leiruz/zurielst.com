@@ -20,6 +20,10 @@ describe('content/profile.json', () => {
     expect(raw).not.toContain('\u2014');
   });
 
+  it('identifies the site as an Open Graph profile', () => {
+    expect(profile.meta.og.type).toBe('profile');
+  });
+
   it('Singtel content stays at resume level: no internal tool names beyond the resume', () => {
     const raw = JSON.stringify(profile);
     // The resume-level allowlist is what the resume itself says; a couple of
