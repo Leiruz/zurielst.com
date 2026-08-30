@@ -20,7 +20,7 @@ export function formatSingaporeClock(date: Date): SingaporeClock {
   const singaporeIso = new Date(date.getTime() + SINGAPORE_OFFSET_MS).toISOString();
   const singaporeDate = singaporeIso.slice(0, 10);
   const time = singaporeIso.slice(11, 19);
-  const display = `+08 ${time}`;
+  const display = `${time} +08`;
 
   return {
     display,

@@ -28,8 +28,8 @@ describe('LiveClock', () => {
   it('gives its server fallback the same accessible and visible time', () => {
     const markup = renderToStaticMarkup(createElement(LiveClock));
 
-    expect(markup).toContain('aria-label="Current time in Singapore: +08 --:--:--"');
-    expect(markup).toContain('>+08 --:--:--</time>');
+    expect(markup).toContain('aria-label="Current time in Singapore: --:--:-- +08"');
+    expect(markup).toContain('>--:--:-- +08</time>');
     expect(markup).not.toContain('datetime=');
   });
 });

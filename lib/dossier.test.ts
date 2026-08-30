@@ -10,9 +10,9 @@ describe('formatSingaporeClock', () => {
     if (typeof formatter !== 'function') return;
 
     expect(formatter(new Date('2026-08-30T01:02:03.000Z'))).toEqual({
-      display: '+08 09:02:03',
+      display: '09:02:03 +08',
       dateTime: '2026-08-30T09:02:03+08:00',
-      accessibleLabel: 'Current time in Singapore: +08 09:02:03',
+      accessibleLabel: 'Current time in Singapore: 09:02:03 +08',
     });
   });
 });

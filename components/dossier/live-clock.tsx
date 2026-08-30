@@ -24,10 +24,10 @@ export function LiveClock({ className }: LiveClockProps) {
   return (
     <time
       className={cn('font-mono tabular-nums', className)}
-      aria-label={clock?.accessibleLabel ?? 'Current time in Singapore: +08 --:--:--'}
+      aria-label={clock?.accessibleLabel ?? 'Current time in Singapore: --:--:-- +08'}
       dateTime={clock?.dateTime}
     >
-      {clock?.display ?? '+08 --:--:--'}
+      {clock?.display ?? '--:--:-- +08'}
     </time>
   );
 }
