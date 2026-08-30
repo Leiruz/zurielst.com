@@ -2,93 +2,113 @@
 // Do not edit without noting divergence in docs/components-map.md.
 "use client"
 
-import type { JSX, ReactNode } from "react"
-import { useSyncExternalStore } from "react"
+import { useRef, useSyncExternalStore } from "react"
 import { useTheme } from "next-themes"
 
 // Divergence from vendored source (recorded in docs/components-map.md):
 // IconPlaceholder is a registry template shim; replaced with inline SVG icons.
 
-function ThemeIcon({ children }: { children: ReactNode }) {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-      viewBox="0 0 24 24"
-    >
-      {children}
-    </svg>
-  )
+type ThemeChoice = "light" | "dark"
+
+interface ThemeSelectionDependencies {
+  currentTheme: string | undefined
+  playSound(theme: ThemeChoice): void
+  prefersReducedMotion(): boolean
+  setTheme(theme: ThemeChoice): void
 }
 
-function ThemeOption({
-  icon,
-  value,
-  isActive,
-  onClick,
+function browserAudioContext() {
+  if (typeof window === "undefined") return null
+
+  const AudioContextConstructor = window.AudioContext
+    ?? (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+  return AudioContextConstructor ? new AudioContextConstructor() : null
+}
+
+function createThemeAudioContextGetter(
+  createContext: () => AudioContext | null = browserAudioContext,
+) {
+  let context: AudioContext | null | undefined
+  return () => {
+    if (context !== undefined) return context
+    try {
+      context = createContext()
+    } catch {
+      context = null
+    }
+    return context
+  }
+}
+
+function selectThemeChoice(
+  nextTheme: ThemeChoice,
+  dependencies: ThemeSelectionDependencies,
+) {
+  if (dependencies.currentTheme === nextTheme) return
+
+  let reducedMotion = true
+  try {
+    reducedMotion = dependencies.prefersReducedMotion()
+  } catch {
+    // A blocked media-query API disables optional audio, not theme switching.
+  }
+
+  if (!reducedMotion) {
+    try {
+      dependencies.playSound(nextTheme)
+    } catch {
+      // Optional audio can never prevent the explicit theme choice.
+    }
+  }
+  dependencies.setTheme(nextTheme)
+}
+
+function resolveActiveTheme(
+  theme: string | undefined,
+  resolvedTheme: string | undefined,
+): ThemeChoice | undefined {
+  if (theme === "light" || theme === "dark") return theme
+  if (resolvedTheme === "light" || resolvedTheme === "dark") {
+    return resolvedTheme
+  }
+  return undefined
+}
+
+const THEME_OPTIONS = ["light", "dark"] as const
+
+function ThemeSwitcherControl({
+  activeTheme,
+  onSelect,
 }: {
-  icon: JSX.Element
-  value: string
-  isActive?: boolean
-  onClick: (value: string) => void
+  activeTheme: ThemeChoice | undefined
+  onSelect: (theme: ThemeChoice) => void
 }) {
   return (
-    <button
-      data-active={isActive}
-      className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground transition-[color] hover:text-foreground data-[active=true]:text-foreground [&_svg]:size-4"
-      role="radio"
-      aria-checked={isActive}
-      aria-label={`Switch to ${value} theme`}
-      onClick={() => onClick(value)}
+    <div
+      className="theme-switcher-reveal inline-flex items-center overflow-clip rounded-full bg-background inset-ring-1 inset-ring-border"
+      role="group"
+      aria-label="Theme"
     >
-      {icon}
-
-      <span
-        aria-hidden="true"
-        className={
-          "pointer-events-none absolute inset-0 rounded-full border transition-[opacity,transform] duration-300 " +
-          (isActive ? "scale-100 opacity-100" : "scale-75 opacity-0")
-        }
-      />
-    </button>
+      {THEME_OPTIONS.map((value) => (
+        <button
+          key={value}
+          type="button"
+          data-active={activeTheme === value}
+          className="flex size-11 items-center justify-center rounded-full border border-transparent font-mono text-xs text-muted-foreground transition-colors hover:text-foreground data-[active=true]:border-border data-[active=true]:text-foreground"
+          aria-label={`Switch to ${value} theme`}
+          aria-pressed={activeTheme === value}
+          onClick={() => onSelect(value)}
+        >
+          <span aria-hidden="true">{value === "light" ? "L" : "D"}</span>
+        </button>
+      ))}
+    </div>
   )
 }
 
-const THEME_OPTIONS = [
-  {
-    icon: (
-      <ThemeIcon>
-        <rect height="14" rx="2" width="20" x="2" y="3" />
-        <path d="M8 21h8M12 17v4" />
-      </ThemeIcon>
-    ),
-    value: "system",
-  },
-  {
-    icon: (
-      <ThemeIcon>
-        <circle cx="12" cy="12" r="4" />
-        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-      </ThemeIcon>
-    ),
-    value: "light",
-  },
-  {
-    icon: (
-      <ThemeIcon>
-        <path d="M20.99 12.49A9 9 0 1 1 11.51 3a6 6 0 0 0 8.67 8.67c.35-.22.83 0 .81.82Z" />
-      </ThemeIcon>
-    ),
-    value: "dark",
-  },
-]
-
 function ThemeSwitcher() {
-  const { theme, setTheme } = useTheme()
+  const { resolvedTheme, setTheme, theme } = useTheme()
+  const audioContextGetterRef = useRef<ReturnType<typeof createThemeAudioContextGetter> | null>(null)
 
   const isMounted = useSyncExternalStore(
     () => () => {},
@@ -97,26 +117,47 @@ function ThemeSwitcher() {
   )
 
   if (!isMounted) {
-    return <div className="flex h-8 w-24" />
+    return <div className="flex h-11 w-[5.5rem]" />
+  }
+
+  const activeTheme = resolveActiveTheme(theme, resolvedTheme)
+
+  function selectTheme(nextTheme: ThemeChoice) {
+    selectThemeChoice(nextTheme, {
+      currentTheme: theme,
+      playSound(themeChoice) {
+        audioContextGetterRef.current ??= createThemeAudioContextGetter()
+        const context = audioContextGetterRef.current()
+        if (!context) return
+
+        if (context.state === "suspended") {
+          void context.resume().catch(() => {})
+        }
+        void import("@/lib/theme-toggle-sound")
+          .then(({ scheduleThemeToggleSound }) => {
+            scheduleThemeToggleSound(context, themeChoice)
+          })
+          .catch(() => {})
+      },
+      prefersReducedMotion: () => typeof window.matchMedia !== "function"
+        || window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+      setTheme,
+    })
   }
 
   return (
-    <div
+    <ThemeSwitcherControl
       key={String(isMounted)}
-      className="theme-switcher-reveal inline-flex items-center overflow-clip rounded-full bg-background inset-ring-1 inset-ring-border"
-      role="radiogroup"
-    >
-      {THEME_OPTIONS.map((option) => (
-        <ThemeOption
-          key={option.value}
-          icon={option.icon}
-          value={option.value}
-          isActive={theme === option.value}
-          onClick={setTheme}
-        />
-      ))}
-    </div>
+      activeTheme={activeTheme}
+      onSelect={selectTheme}
+    />
   )
 }
 
-export { ThemeSwitcher }
+export {
+  createThemeAudioContextGetter,
+  resolveActiveTheme,
+  selectThemeChoice,
+  ThemeSwitcher,
+  ThemeSwitcherControl,
+}
