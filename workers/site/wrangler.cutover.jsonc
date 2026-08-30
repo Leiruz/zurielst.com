@@ -15,6 +15,7 @@
   "workers_dev": false,
   "preview_urls": true,
   "routes": [
-    { "pattern": "staging.zurielst.com/*", "zone_name": "zurielst.com" }
+    { "pattern": "staging.zurielst.com/*", "zone_name": "zurielst.com" },
+    { "pattern": "zurielst.com/*", "zone_name": "zurielst.com" }
   ]
 }
