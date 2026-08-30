@@ -171,6 +171,33 @@ body {
   color: var(--text-3);
 }
 
+@keyframes apple-hello-draw {
+  from {
+    opacity: 0;
+    stroke-dashoffset: 1;
+  }
+  to {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+.apple-hello-stroke {
+  animation: apple-hello-draw var(--hello-duration) ease-in-out var(--hello-delay) forwards;
+  opacity: 0;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+@keyframes theme-switcher-reveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.theme-switcher-reveal {
+  animation: theme-switcher-reveal 0.3s ease-out;
+}
+
 /* Motion restraint: global reduced-motion kill switch */
 @media (prefers-reduced-motion: reduce) {
   *,

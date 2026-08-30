@@ -73,7 +73,12 @@ registryDependencies legend: plain name = shadcn base component (ui.shadcn.com);
 
 - consent-manager: imports @c15t/nextjs.
 - consent-manager: local component overrides registry copy with site-specific measurement-only privacy wording.
+- consent-manager: uses c15t's headless provider and state with a site-owned automatic banner, and loads the split c15t dialog only after Customize opens it.
 - theme-switcher: imports next-themes.
+- apple-hello-effect: replaces the Motion runtime with a native SVG and CSS stroke animation while retaining duration scaling and completion signaling.
+- apple-hello-effect: joins its two static class names directly so the automatic intro does not load a class-merging runtime.
+- theme-switcher: replaces the Motion runtime with CSS reveal and active-state transitions while retaining the visible three-option control.
+- theme-switcher: inlines its three small SVG icons so the landing route does not load an icon-library runtime.
 - line-nav: imports next/link.
 - npm-level: @c15t/nextjs declared by consent-manager.
 - npm-level: next-themes declared by theme-switcher.

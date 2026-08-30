@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { ThemeProvider } from 'next-themes';
-import { ConsentManager } from '@/components/registry/consent-manager';
-import { IntroGate } from '@/components/registry/intro-gate';
+import { ClientEnhancements } from '@/components/registry/client-enhancements';
 import '../styles/globals.css';
 
 export const metadata: Metadata = {
@@ -23,10 +22,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <ConsentManager>
-            <IntroGate />
-            {children}
-          </ConsentManager>
+          {children}
+          <ClientEnhancements />
         </ThemeProvider>
       </body>
     </html>

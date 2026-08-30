@@ -29,6 +29,12 @@ describe('hasSeenIntro', () => {
 });
 
 describe('IntroOverlay', () => {
+  it('leaves the prerendered hero visible behind the blocking intro', () => {
+    const overlay = IntroOverlay({ leaving: false, onDismiss: () => {} });
+
+    expect(overlay.props.className).not.toContain('bg-canvas');
+  });
+
   it('exposes its controls while hiding the decorative animation', () => {
     const overlay = IntroOverlay({ leaving: false, onDismiss: () => {} });
     const [animation, skipButton] = overlay.props.children;

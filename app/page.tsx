@@ -1,11 +1,11 @@
-import { ThemeSwitcher } from '@/components/registry/theme-switcher';
+import { DeferredThemeSwitcher } from '@/components/registry/client-enhancements';
 
 export default function Home() {
   return (
     <main className="bp-grid min-h-screen">
       <header className="mx-auto flex max-w-3xl items-center justify-between px-6 pt-6">
         <span className="fig-label">zurielst.com</span>
-        <ThemeSwitcher />
+        <DeferredThemeSwitcher />
       </header>
       <section className="mx-auto flex max-w-3xl flex-col justify-center px-6 pt-[26vh]">
         <p className="fig-label">Fig. 0. Scaffold</p>

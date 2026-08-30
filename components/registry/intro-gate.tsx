@@ -97,7 +97,7 @@ export function IntroOverlay({
           ?.focus();
       }}
       className={
-        'fixed inset-0 z-50 flex items-center justify-center bg-canvas transition-opacity duration-500 ' +
+        'fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-500 ' +
         (leaving ? 'pointer-events-none opacity-0' : 'opacity-100')
       }
     >
