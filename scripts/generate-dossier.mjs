@@ -47,15 +47,19 @@ function recordLabel(value, index) {
   return `Record ${index + 1}`;
 }
 
+function startYear(period) {
+  return Number.parseInt(period.match(/\d{4}/)?.[0] ?? "0", 10);
+}
+
 function renderObject(value, level, lines) {
   for (const [key, child] of Object.entries(value)) {
     const label = labelFor(key);
 
     if (Array.isArray(child)) {
+      if (child.length === 0) continue;
+
       lines.push("", heading(level, label));
-      if (child.length === 0) {
-        lines.push("", "- None recorded.");
-      } else if (child.every((item) => item === null || typeof item !== "object")) {
+      if (child.every((item) => item === null || typeof item !== "object")) {
         lines.push("", ...child.map((item) => `- ${String(item)}`));
       } else {
         child.forEach((item, index) => {
@@ -77,23 +81,178 @@ function renderObject(value, level, lines) {
 }
 
 export function projectPublicProfile(profile) {
+  const currentRole = profile.timeline.find(
+    (entry) => entry.type === "role" && entry.org === profile.identity.employer,
+  );
+  const founderRecord = profile.timeline.find(
+    (entry) => entry.type === "role" && entry.title === "Founder",
+  );
+  const educationRecord = profile.timeline.find(
+    (entry) => entry.type === "education" && entry.org.includes("University"),
+  );
+  const award = profile.proof_wall.awards[0];
+
+  const identity = {
+    name: profile.identity.name,
+    roles: profile.identity.roles.map((role) => role),
+    tagline: profile.identity.tagline,
+    one_liner: profile.identity.bio_hook,
+  };
+
+  if (currentRole) identity.role = `${currentRole.title} @ ${currentRole.org}`;
+  if (founderRecord) identity.founder = `${founderRecord.org}, ${founderRecord.period}`;
+  identity.location = `${profile.identity.location.city} ${profile.identity.location.timezone}`;
+  if (educationRecord) identity.education = `${educationRecord.title}, ${educationRecord.org}`;
+  if (award) identity.award = `${award.title}, ${award.year}`;
+  identity.email = profile.identity.email;
+  identity.socials = profile.identity.socials.map((social) => ({
+    label: social.platform,
+    url: social.url,
+  }));
+  identity.metrics = profile.identity.metrics.map((metric) => ({
+    value: metric.value,
+    label: metric.label,
+  }));
+  identity.portrait_alt = profile.identity.portrait.alt;
+
   return {
-    identity: profile.identity,
-    intro: profile.intro,
-    capabilities: profile.capabilities,
-    stack: profile.stack,
-    work: profile.work_cases,
-    timeline: profile.timeline.filter((entry) => entry.type !== "education"),
-    education: profile.timeline.filter((entry) => entry.type === "education"),
-    proof_wall: {
-      certifications: profile.proof_wall.certifications,
-      awards: profile.proof_wall.awards,
-      ctf_results: profile.proof_wall.ctf_results,
-      publications: profile.proof_wall.publications,
+    identity,
+    intro: {
+      bullets: profile.intro.bullets.map((bullet) => bullet),
     },
-    products: profile.products,
-    stack_brands: profile.stack_brands,
-    faq: profile.faq,
+    capabilities: {
+      acts: profile.capabilities.acts.map((act) => ({
+        act: act.act,
+        title: act.title,
+        narrative: act.narrative,
+        skills: act.skills.map((skill) => {
+          const publicSkill = {
+            name: skill.name,
+          };
+
+          if (skill.since !== undefined) publicSkill.since = skill.since;
+          if (skill.detail !== undefined) publicSkill.detail = skill.detail;
+          return publicSkill;
+        }),
+      })),
+    },
+    stack: {
+      categories: profile.stack.categories.map((category) => ({
+        name: category.name,
+        items: category.items.map((item) => item),
+      })),
+    },
+    work: profile.work_cases.map((workCase) => {
+      const publicWorkCase = {
+        kicker: workCase.kicker,
+        title: workCase.title,
+        period: workCase.period,
+        summary: workCase.summary,
+        stack: workCase.stack.map((item) => item),
+        links: workCase.links.map((link) => {
+          const publicLink = {
+            label: link.label,
+            url: link.url,
+          };
+
+          if (link.note !== undefined) publicLink.note = link.note;
+          return publicLink;
+        }),
+      };
+
+      if (workCase.note !== undefined) publicWorkCase.note = workCase.note;
+      return publicWorkCase;
+    }),
+    timeline: profile.timeline
+      .filter((entry) => entry.type !== "education")
+      .map((entry) => ({
+        type: entry.type,
+        org: entry.org,
+        title: entry.title,
+        period: entry.period,
+        summary: entry.summary,
+      })),
+    education: profile.timeline
+      .filter((entry) => entry.type === "education")
+      .sort((left, right) => startYear(right.period) - startYear(left.period))
+      .map((entry) => ({
+        org: entry.org,
+        title: entry.title,
+        period: entry.period,
+        summary: entry.summary,
+      })),
+    proof_wall: {
+      certifications: profile.proof_wall.certifications.map((certification) => {
+        const publicCertification = {
+          title: certification.title,
+          issuer: certification.issuer,
+        };
+
+        if (certification.year !== undefined) publicCertification.year = certification.year;
+        if (certification.validity !== undefined) publicCertification.validity = certification.validity;
+        if (certification.caption !== undefined) publicCertification.caption = certification.caption;
+        return publicCertification;
+      }),
+      awards: profile.proof_wall.awards.map((proofAward) => {
+        const publicAward = {
+          title: proofAward.title,
+          issuer: proofAward.issuer,
+          year: proofAward.year,
+        };
+
+        if (proofAward.caption !== undefined) publicAward.caption = proofAward.caption;
+        return publicAward;
+      }),
+      ctf_results: profile.proof_wall.ctf_results.map((result) => {
+        const publicResult = {
+          title: result.title,
+          organizer: result.organizer,
+          year: result.year,
+          result: result.result,
+        };
+
+        if (result.caption !== undefined) publicResult.caption = result.caption;
+        return publicResult;
+      }),
+      publications: profile.proof_wall.publications.map((publication) => ({
+        title: publication.title,
+        year: publication.year,
+        link: publication.link,
+        format: publication.format,
+      })),
+    },
+    products: profile.products.map((product) => {
+      const publicProduct = {
+        name: product.name,
+      };
+
+      if (product.origin_story) publicProduct.kicker = "Origin story";
+      if (product.period !== undefined) publicProduct.period = product.period;
+      publicProduct.summary = product.summary;
+      publicProduct.stack = product.stack.map((item) => item);
+      publicProduct.links = product.links.map((link) => {
+        const publicLink = {
+          label: link.label,
+          url: link.url,
+        };
+
+        if (link.note !== undefined) publicLink.note = link.note;
+        return publicLink;
+      });
+      if (product.note !== undefined) publicProduct.note = product.note;
+      return publicProduct;
+    }),
+    stack_brands: {
+      disclaimer: profile.stack_brands.disclaimer,
+      brands: profile.stack_brands.brands.map((brand) => ({
+        name: brand.name,
+        context: brand.context,
+      })),
+    },
+    faq: profile.faq.map((item) => ({
+      question: item.question,
+      answer: item.answer,
+    })),
   };
 }
 

@@ -15,18 +15,117 @@ const nextConfigModule = await import("../next.config.mjs");
 
 const temporaryDirectories = new Set();
 
-test("falls back safely when git build SHA discovery throws", () => {
+test("prefers BUILD_SHA over other environment sources and Git", () => {
   const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
-  const throwingExec = () => {
+  let gitCallCount = 0;
+  const successfulGit = () => {
+    gitCallCount += 1;
+    return "git-sha\n";
+  };
+
+  assert.equal(typeof resolveBuildSha, "function");
+  if (typeof resolveBuildSha !== "function") return;
+
+  assert.equal(resolveBuildSha(successfulGit, {
+    BUILD_SHA: " build-sha ",
+    GITHUB_SHA: "github-sha",
+    CF_PAGES_COMMIT_SHA: "cloudflare-sha",
+  }), "build-sha");
+  assert.equal(gitCallCount, 0);
+});
+
+test("prefers GITHUB_SHA after skipping an empty BUILD_SHA", () => {
+  const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
+  let gitCallCount = 0;
+  const successfulGit = () => {
+    gitCallCount += 1;
+    return "git-sha\n";
+  };
+
+  assert.equal(typeof resolveBuildSha, "function");
+  if (typeof resolveBuildSha !== "function") return;
+
+  assert.equal(resolveBuildSha(successfulGit, {
+    BUILD_SHA: " ",
+    GITHUB_SHA: " github-sha ",
+    CF_PAGES_COMMIT_SHA: "cloudflare-sha",
+  }), "github-sha");
+  assert.equal(gitCallCount, 0);
+});
+
+test("uses CF_PAGES_COMMIT_SHA after skipping empty higher-priority values", () => {
+  const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
+  let gitCallCount = 0;
+  const successfulGit = () => {
+    gitCallCount += 1;
+    return "git-sha\n";
+  };
+
+  assert.equal(typeof resolveBuildSha, "function");
+  if (typeof resolveBuildSha !== "function") return;
+
+  assert.equal(resolveBuildSha(successfulGit, {
+    BUILD_SHA: "",
+    GITHUB_SHA: "\t",
+    CF_PAGES_COMMIT_SHA: " cloudflare-sha ",
+  }), "cloudflare-sha");
+  assert.equal(gitCallCount, 0);
+});
+
+test("falls back to Git after skipping empty environment values", () => {
+  const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
+  const successfulGit = () => "git-sha\n";
+
+  assert.equal(typeof resolveBuildSha, "function");
+  if (typeof resolveBuildSha !== "function") return;
+
+  assert.equal(resolveBuildSha(successfulGit, {
+    BUILD_SHA: " ",
+    GITHUB_SHA: "",
+    CF_PAGES_COMMIT_SHA: "\n",
+  }), "git-sha");
+});
+
+test("invokes Git with the exact rev-parse contract when all environment values are empty", () => {
+  const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
+  const gitCalls = [];
+  const successfulGit = (...arguments_) => {
+    gitCalls.push(arguments_);
+    return "git-sha\n";
+  };
+
+  assert.equal(typeof resolveBuildSha, "function");
+  if (typeof resolveBuildSha !== "function") return;
+
+  assert.equal(resolveBuildSha(successfulGit, {
+    BUILD_SHA: "",
+    GITHUB_SHA: "",
+    CF_PAGES_COMMIT_SHA: "",
+  }), "git-sha");
+  assert.deepEqual(gitCalls, [
+    ["git", ["rev-parse", "HEAD"], { encoding: "utf8" }],
+  ]);
+});
+
+test("returns unknown when Git discovery produces only whitespace", () => {
+  const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
+
+  assert.equal(typeof resolveBuildSha, "function");
+  if (typeof resolveBuildSha !== "function") return;
+
+  assert.equal(resolveBuildSha(() => " \t\n", {}), "unknown");
+});
+
+test("returns unknown when Git discovery throws and no environment value exists", () => {
+  const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
+  const throwingGit = () => {
     throw new Error("git unavailable");
   };
 
   assert.equal(typeof resolveBuildSha, "function");
   if (typeof resolveBuildSha !== "function") return;
 
-  assert.equal(resolveBuildSha(throwingExec, { BUILD_SHA: " build-override " }), "build-override");
-  assert.equal(resolveBuildSha(throwingExec, { GITHUB_SHA: " github-override " }), "github-override");
-  assert.equal(resolveBuildSha(throwingExec, {}), "unknown");
+  assert.equal(resolveBuildSha(throwingGit, {}), "unknown");
 });
 
 const validHeaders = `/*
