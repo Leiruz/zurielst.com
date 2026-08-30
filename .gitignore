@@ -9,3 +9,4 @@ dist/
 .DS_Store
 .tri/state.json
 .tri/run.lock/
+.tri/
