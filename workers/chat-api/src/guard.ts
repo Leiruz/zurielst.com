@@ -2,7 +2,7 @@ import profile from '../../../content/profile.json';
 import { normalizeText } from './normalize';
 
 const MAX_ANSWER_CHARACTERS = 4000;
-const SG_PHONE_PATTERN = /(\+?65[ -]?)?[89]\d{3}[ -]?\d{4}/u;
+const SG_PHONE_PATTERN = /(?<!\d)(?:\+?65[ -]?)?[3689]\d{3}[ -]?\d{4}(?!\d)/u;
 const EXPLICIT_SCHEME_PATTERN = /^[a-z][a-z\d+.-]*:/iu;
 const EXPLICIT_SCHEME_START_PATTERN = /(?<![./\\])\b[a-z][a-z\d+.-]*:(?=[^\s<>"'])/giu;
 const SCHEME_RELATIVE_START_PATTERN = /(?<![:/])\/\/(?=[^\s/])/gu;
@@ -13,6 +13,7 @@ const PATHED_NUMERIC_HOST_START_PATTERN = /(?<![:/\\?#=&.@\p{L}\p{N}\p{M}_-])(?=
 const IPV6_START_PATTERN = /(?<![/\\?#=&\p{L}\p{N}\p{M}_-])(?=\[[a-f\d:.]+\])/giu;
 const USERINFO_URL_START_PATTERN = /(?<![/\\?#=&.@\p{L}\p{N}\p{M}_-])(?=[^\s/@<>"'(),]+@[^\s/@<>"'(),]+[/?#])/gu;
 const URL_TOKEN_PATTERN = /^[^\s<>"']+/u;
+const TERMINAL_URL_PROSE_PUNCTUATION_PATTERN = /[,.!?;:\]\p{Quotation_Mark}]+$/u;
 const URL_DOMAIN_SEPARATOR_PATTERN = /[\u3002\uFF0E\uFF61]/gu;
 const ENCODED_UNICODE_DOMAIN_SEPARATOR_PATTERN = /%e3%80%82|%ef%bc%8e|%ef%bd%a1/giu;
 const PERCENT_ENCODED_BYTE_PATTERN = /%([a-f\d]{2})/giu;
@@ -73,13 +74,22 @@ function isAllowedUrl(url: URL): boolean {
   });
 }
 
-function urlCandidates(match: string): string[] {
-  const candidates = [match];
-  const trimmed = match.replace(/[),.!?;\]]+$/u, '');
-  if (trimmed !== match) {
-    candidates.push(trimmed);
+function trimTerminalUrlProsePunctuation(match: string): string {
+  let trimmed = match;
+  while (true) {
+    trimmed = trimmed.replace(TERMINAL_URL_PROSE_PUNCTUATION_PATTERN, '');
+    const openingParentheses = trimmed.match(/\(/gu)?.length ?? 0;
+    const closingParentheses = trimmed.match(/\)/gu)?.length ?? 0;
+    if (trimmed.endsWith(')') && closingParentheses > openingParentheses) {
+      trimmed = trimmed.slice(0, -1);
+      continue;
+    }
+    return trimmed;
   }
-  return candidates;
+}
+
+function urlCandidates(match: string): string[] {
+  return [trimTerminalUrlProsePunctuation(match)];
 }
 
 function isAllowedUrlMatch(match: string): boolean {

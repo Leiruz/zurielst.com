@@ -111,6 +111,22 @@ describe('output guard', () => {
     expect(guardAnswer('x'.repeat(4001))).toMatchObject({ safe: false, reason: 'length' });
   });
 
+  it.each([
+    ['PSTN', 'Call 6123 4567.'],
+    ['IP telephony', 'Call +65 3123 4567.'],
+    ['PSTN with a bare prefix and hyphen', 'Call 65 6123-4567.'],
+    ['compact IP telephony', 'Call +6531234567.'],
+  ])('rejects a Singapore %s number', (_kind, answer) => {
+    expect(guardAnswer(answer)).toMatchObject({ safe: false, reason: 'phone' });
+  });
+
+  it.each([
+    ['nine-digit foreign number', 'Call +1 912345678.'],
+    ['timestamp', 'Generated at 20260830123456.'],
+  ])('does not mistake a %s for a Singapore phone number', (_kind, answer) => {
+    expect(guardAnswer(answer)).toEqual({ safe: true, answer });
+  });
+
   it('rejects Unicode and default-ignorable email and phone evasions', () => {
     for (const value of [
       'Email 用户@example.com.',
@@ -218,6 +234,42 @@ describe('output guard', () => {
     }
   });
 
+  it.each([
+    ['schemeful', 'comma', 'See https://github.com/Leiruz, where he publishes code.'],
+    ['bare', 'comma', 'See github.com/Leiruz, where he publishes code.'],
+    ['schemeful', 'period', 'See https://github.com/Leiruz.'],
+    ['bare', 'period', 'See github.com/Leiruz.'],
+  ])('allows an allowlisted %s URL followed by a %s', (_form, _punctuation, answer) => {
+    expect(guardAnswer(answer)).toEqual({ safe: true, answer });
+  });
+
+  it.each([
+    ['semicolon', 'See https://github.com/Leiruz; then continue.'],
+    ['colon', 'See https://github.com/Leiruz: this is his profile.'],
+    ['unbalanced closing parenthesis', 'See (https://github.com/Leiruz).'],
+    ['double quote', 'See "https://github.com/Leiruz" for details.'],
+    ['single quote', "See 'github.com/Leiruz' for details."],
+    ['smart quote', 'See “https://github.com/Leiruz” for details.'],
+    ['exclamation mark', 'See https://github.com/Leiruz!'],
+    ['closing bracket', 'See [https://github.com/Leiruz].'],
+  ])('allows an allowlisted URL followed by a terminal %s', (_punctuation, answer) => {
+    expect(guardAnswer(answer)).toEqual({ safe: true, answer });
+  });
+
+  it('still rejects a non-allowlisted URL followed by a comma', () => {
+    expect(guardAnswer('See https://evil.example/private, where it is hidden.')).toMatchObject({
+      safe: false,
+      reason: 'url',
+    });
+  });
+
+  it('keeps a comma inside the candidate path for allowlist evaluation', () => {
+    expect(guardAnswer('See https://github.com/Lei,ruz.')).toMatchObject({
+      safe: false,
+      reason: 'url',
+    });
+  });
+
   it('rejects non-allowlisted URLs with any valid scheme length', () => {
     for (const scheme of ['a', 'a'.repeat(33)]) {
       expect(guardAnswer(`See ${scheme}:evil.example/private.`)).toMatchObject({
@@ -248,8 +300,15 @@ describe('output guard', () => {
     }
   });
 
-  it('does not trim path-significant colons into an allowlisted URL', () => {
-    expect(guardAnswer('<https://github.com/Leiruz:>')).toMatchObject({
+  it('does not trim a path-significant colon inside a URL candidate', () => {
+    expect(guardAnswer('See https://github.com/Lei:ruz.')).toMatchObject({
+      safe: false,
+      reason: 'url',
+    });
+  });
+
+  it('keeps balanced parentheses inside a candidate path for allowlist evaluation', () => {
+    expect(guardAnswer('See https://github.com/Leiruz(foo).')).toMatchObject({
       safe: false,
       reason: 'url',
     });

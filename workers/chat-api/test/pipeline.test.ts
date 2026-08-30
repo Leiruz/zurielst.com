@@ -1,6 +1,7 @@
 import { SELF, env, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import profileData from '../../../content/profile.json';
 import type { AiBinding, ChatMessage } from '../src/ai';
 import { DAILY_CAP, type DailyBudget } from '../src/budget';
 import worker, { type Env } from '../src/index';
@@ -35,8 +36,9 @@ function nextIp(): string {
 function post(
   body: BodyInit = JSON.stringify({ message: 'What does Zuriel do?' }),
   headers: HeadersInit = {},
+  url = BASE,
 ): Request {
-  return new Request(BASE, {
+  return new Request(url, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -173,6 +175,62 @@ describe('chat pipeline request validation', () => {
     const response = await SELF.fetch(post(undefined, headers));
     expect(response.status).toBe(403);
     expect(await jsonBody(response)).toEqual({ answer: expect.any(String) });
+  });
+
+  it.each([
+    [
+      'rejects a staging origin against the production host',
+      'https://zurielst.com/api/chat',
+      'https://staging.zurielst.com',
+      403,
+    ],
+    [
+      'accepts the matching production origin',
+      'https://zurielst.com/api/chat',
+      'https://zurielst.com',
+      200,
+    ],
+    [
+      'accepts the matching staging origin',
+      'https://staging.zurielst.com/api/chat',
+      'https://staging.zurielst.com',
+      200,
+    ],
+    [
+      'rejects the production origin against the staging host',
+      'https://staging.zurielst.com/api/chat',
+      'https://zurielst.com',
+      403,
+    ],
+  ])('%s when Sec-Fetch-Site is absent', async (_label, url, origin, expectedStatus) => {
+    const response = await worker.fetch(
+      post(undefined, { origin }, url),
+      fakeEnv(),
+    );
+
+    expect(response.status).toBe(expectedStatus);
+    if (expectedStatus === 403) {
+      expect(await jsonBody(response)).toEqual({ answer: 'Forbidden.' });
+    } else {
+      expect(await readSse(response)).toMatchObject({
+        text: 'Zuriel works in security engineering.',
+      });
+    }
+  });
+
+  it('rejects a matching origin that is not a configured production origin', async () => {
+    const testEnv = fakeEnv();
+    const origin = 'https://preview.zurielst.com';
+    const response = await worker.fetch(
+      post(undefined, { origin }, `${origin}/api/chat`),
+      {
+        ...testEnv,
+        ALLOWED_HOSTS: `${testEnv.ALLOWED_HOSTS},preview.zurielst.com`,
+      },
+    );
+
+    expect(response.status).toBe(403);
+    expect(await jsonBody(response)).toEqual({ answer: 'Forbidden.' });
   });
 
   it('rejects a headerless production request before rate, budget, or model spend', async () => {
@@ -534,6 +592,22 @@ describe('chat pipeline complete-answer guard and SSE framing', () => {
     const response = await worker.fetch(post(), fakeEnv({ run }));
     expect(response.headers.get('content-type')).toContain('application/json');
     expect(await jsonBody(response)).toEqual({ answer: EXPECTED_GUARD_REPLY });
+    expect(run).toHaveBeenCalledTimes(1);
+  });
+
+  it('streams the profile metric and year prose without a false phone match', async () => {
+    const numericProfileProse = [
+      ...profileData.identity.metrics.map(({ value, label }) => `${value} ${label}`),
+      ...profileData.timeline.flatMap(({ period, summary }) => [period, summary]),
+    ].filter((value) => /\d+(?:\.\d+)?%|\b(?:19|20)\d{2}\b/u.test(value));
+    const answer = numericProfileProse.join('; ');
+    const run = vi.fn<AiBinding['run']>().mockResolvedValue({ response: answer });
+
+    const response = await worker.fetch(post(), fakeEnv({ run }));
+
+    expect(answer).toContain('99.9% security-tool uptime');
+    expect(answer).toContain('Aug 2024 to May 2028');
+    expect(await readSse(response)).toMatchObject({ text: answer });
     expect(run).toHaveBeenCalledTimes(1);
   });
 

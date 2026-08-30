@@ -72,8 +72,8 @@ function isAllowedOrigin(request: Request, url: URL, localRequest: boolean): boo
   if (origin === null) {
     return localRequest;
   }
-  if (PRODUCTION_ORIGINS.has(origin)) {
-    return true;
+  if (PRODUCTION_ORIGINS.has(url.origin)) {
+    return origin === url.origin;
   }
   if (!localRequest) {
     return false;
