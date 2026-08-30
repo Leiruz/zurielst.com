@@ -763,5 +763,75 @@
       "I founded and ran CiTaDel Cybersecurity Solutions for three years, bringing industry-grade SOC defence to SMEs at a price they could pay.",
       "First Place at Singtel BIG Fearless Find 2026 (Round 1), reading Information Security at NUS, and shipping to production the whole way."
     ]
+  },
+  "stack": {
+    "categories": [
+      {
+        "name": "Languages",
+        "items": [
+          "Python",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "x86 Assembly",
+          "HTML & CSS"
+        ]
+      },
+      {
+        "name": "Security Operations",
+        "items": [
+          "Palo Alto NGFW",
+          "FortiGate",
+          "Suricata",
+          "Snort",
+          "Zeek",
+          "OSSEC",
+          "VMware Carbon Black"
+        ]
+      },
+      {
+        "name": "Offense & Forensics",
+        "items": [
+          "Kali Linux",
+          "Burp Suite",
+          "OWASP ZAP",
+          "Ghidra",
+          "IDA",
+          "EnCase",
+          "Autopsy",
+          "FTK Imager"
+        ]
+      },
+      {
+        "name": "AI & Automation",
+        "items": [
+          "TensorFlow",
+          "Keras",
+          "Pandas",
+          "Cloudflare Workers AI",
+          "Azure AI Foundry",
+          "Power BI"
+        ]
+      },
+      {
+        "name": "Cloud & Infrastructure",
+        "items": [
+          "Cloudflare Workers",
+          "CentOS",
+          "RedHat",
+          "Cisco",
+          "Akamai"
+        ]
+      },
+      {
+        "name": "Workflow",
+        "items": [
+          "Git",
+          "GitHub",
+          "GitHub Actions",
+          "VS Code"
+        ]
+      }
+    ]
   }
 }
