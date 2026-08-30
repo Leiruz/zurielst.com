@@ -17,7 +17,7 @@ describe('content/profile.json', () => {
     expect(raw.toLowerCase()).not.toContain('@gmail.com');
     expect(raw.toLowerCase()).not.toContain('christine.zurielst');
     expect(raw.toLowerCase()).not.toContain('janice.zurielst');
-    expect(raw).not.toContain('—');
+    expect(raw).not.toContain('\u2014');
   });
 
   it('Singtel content stays at resume level: no internal tool names beyond the resume', () => {
