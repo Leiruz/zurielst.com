@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   createLocationClockFallback,
   formatLocationClock,
+  formatVisitorRelativeOffset,
   type ClockLocation,
   type LocationClock,
 } from '@/lib/dossier';
@@ -14,12 +15,16 @@ interface LiveClockProps {
 }
 
 export function LiveClock({ location, className }: LiveClockProps) {
-  const [clock, setClock] = useState<LocationClock | null>(null);
+  const [clock, setClock] = useState<(LocationClock & { relativeDelta: string }) | null>(null);
   const fallback = createLocationClockFallback(location);
 
   useEffect(() => {
     const updateClock = () => {
-      setClock(formatLocationClock(new Date(), location));
+      const now = new Date();
+      setClock({
+        ...formatLocationClock(now, location),
+        relativeDelta: formatVisitorRelativeOffset(location.timezone, now.getTimezoneOffset()),
+      });
     };
 
     updateClock();
@@ -28,12 +33,14 @@ export function LiveClock({ location, className }: LiveClockProps) {
   }, [location.city, location.timezone]);
 
   return (
-    <time
-      className={['font-mono tabular-nums', className].filter(Boolean).join(' ')}
-      aria-label={clock?.accessibleLabel ?? fallback.accessibleLabel}
-      dateTime={clock?.dateTime}
-    >
-      {clock?.display ?? fallback.display}
-    </time>
+    <span className={['font-mono tabular-nums', className].filter(Boolean).join(' ')}>
+      <time
+        aria-label={clock?.accessibleLabel ?? fallback.accessibleLabel}
+        dateTime={clock?.dateTime}
+      >
+        {clock?.display ?? fallback.display}
+      </time>
+      {clock && <span aria-hidden="true"> · {clock.relativeDelta}</span>}
+    </span>
   );
 }

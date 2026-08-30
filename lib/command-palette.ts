@@ -5,6 +5,7 @@ interface CommandPaletteActionBase {
   group: CommandPaletteGroup;
   keywords: readonly string[];
   label: string;
+  shortcut?: readonly [string, string];
 }
 
 export type CommandPaletteAction =
@@ -19,7 +20,10 @@ export type CommandPaletteAction =
       kind: 'link';
     })
   | (CommandPaletteActionBase & { kind: 'terminal' })
-  | (CommandPaletteActionBase & { kind: 'theme' })
+  | (CommandPaletteActionBase & {
+      kind: 'theme';
+      theme: 'light' | 'dark';
+    })
   | (CommandPaletteActionBase & {
       email: string;
       kind: 'copy';
@@ -39,7 +43,6 @@ interface ActivationDependencies {
   findSection(id: string): { scrollIntoView(options: ScrollIntoViewOptions): void } | null;
   navigate(action: Extract<CommandPaletteAction, { kind: 'link' }>): void;
   reducedMotion: boolean;
-  resolvedTheme: string | undefined;
   setTheme(theme: string): void;
   updateHash(hash: string): void;
 }
@@ -61,19 +64,19 @@ interface CommandDialogKeyDependencies {
 }
 
 const SECTION_ACTIONS: readonly CommandPaletteAction[] = [
-  { id: 'identity', group: 'Sections', keywords: ['home', 'about'], label: 'Identity', kind: 'section', targetId: 'identity' },
+  { id: 'identity', group: 'Sections', keywords: ['home', 'about'], label: 'Identity', kind: 'section', targetId: 'identity', shortcut: ['g', 'i'] },
   { id: 'intro', group: 'Sections', keywords: ['hello', 'about', 'bio'], label: 'Introduction', kind: 'section', targetId: 'intro' },
   { id: 'contributions', group: 'Sections', keywords: ['github', 'activity', 'heatmap'], label: 'Contributions', kind: 'section', targetId: 'contributions' },
   { id: 'capabilities', group: 'Sections', keywords: ['skills', 'security', 'engineering'], label: 'Capabilities', kind: 'section', targetId: 'capabilities' },
-  { id: 'stack', group: 'Sections', keywords: ['skills', 'tools', 'technologies'], label: 'Stack', kind: 'section', targetId: 'stack' },
-  { id: 'work', group: 'Sections', keywords: ['projects', 'case studies', 'portfolio'], label: 'Selected work', kind: 'section', targetId: 'work' },
-  { id: 'timeline', group: 'Sections', keywords: ['experience', 'career', 'history'], label: 'Timeline', kind: 'section', targetId: 'timeline' },
-  { id: 'education', group: 'Sections', keywords: ['school', 'university', 'learning'], label: 'Education', kind: 'section', targetId: 'education' },
-  { id: 'proof', group: 'Sections', keywords: ['proof', 'awards', 'certifications', 'evidence'], label: 'Accolades', kind: 'section', targetId: 'proof' },
-  { id: 'products', group: 'Sections', keywords: ['tools', 'builds', 'software'], label: 'Products', kind: 'section', targetId: 'products' },
+  { id: 'stack', group: 'Sections', keywords: ['skills', 'tools', 'technologies'], label: 'Stack', kind: 'section', targetId: 'stack', shortcut: ['g', 's'] },
+  { id: 'work', group: 'Sections', keywords: ['projects', 'case studies', 'portfolio'], label: 'Selected work', kind: 'section', targetId: 'work', shortcut: ['g', 'w'] },
+  { id: 'timeline', group: 'Sections', keywords: ['experience', 'career', 'history'], label: 'Timeline', kind: 'section', targetId: 'timeline', shortcut: ['g', 't'] },
+  { id: 'education', group: 'Sections', keywords: ['school', 'university', 'learning'], label: 'Education', kind: 'section', targetId: 'education', shortcut: ['g', 'e'] },
+  { id: 'proof', group: 'Sections', keywords: ['proof', 'awards', 'certifications', 'evidence'], label: 'Accolades', kind: 'section', targetId: 'proof', shortcut: ['g', 'a'] },
+  { id: 'products', group: 'Sections', keywords: ['tools', 'builds', 'software'], label: 'Products', kind: 'section', targetId: 'products', shortcut: ['g', 'p'] },
   { id: 'brands', group: 'Sections', keywords: ['vendors', 'technologies', 'worked with'], label: 'Brands', kind: 'section', targetId: 'brands' },
-  { id: 'faq', group: 'Sections', keywords: ['questions', 'answers'], label: 'FAQ', kind: 'section', targetId: 'faq' },
-  { id: 'contact', group: 'Sections', keywords: ['email', 'connect', 'hire'], label: 'Contact', kind: 'section', targetId: 'contact' },
+  { id: 'faq', group: 'Sections', keywords: ['questions', 'answers'], label: 'FAQ', kind: 'section', targetId: 'faq', shortcut: ['g', 'f'] },
+  { id: 'contact', group: 'Sections', keywords: ['email', 'connect', 'hire'], label: 'Contact', kind: 'section', targetId: 'contact', shortcut: ['g', 'c'] },
 ];
 
 export function createCommandPaletteActions(
@@ -82,12 +85,15 @@ export function createCommandPaletteActions(
   return [
     ...SECTION_ACTIONS,
     { id: 'resume', group: 'Actions', keywords: ['cv', 'pdf', 'download'], label: 'Download resume', kind: 'link', href: '/media/resume.pdf', download: true },
+    { id: 'vcard', group: 'Actions', keywords: ['contact', 'vcf', 'download'], label: 'Download vCard', kind: 'link', href: '/zurielst.vcf', download: true },
     { id: 'terminal', group: 'Actions', keywords: ['console', 'shell', 'command line'], label: 'Open terminal', kind: 'terminal' },
-    { id: 'theme', group: 'Actions', keywords: ['dark', 'light', 'appearance'], label: 'Toggle theme', kind: 'theme' },
+    { id: 'light-theme', group: 'Actions', keywords: ['light', 'appearance'], label: 'Light theme', kind: 'theme', theme: 'light' },
+    { id: 'dark-theme', group: 'Actions', keywords: ['dark', 'appearance'], label: 'Dark theme', kind: 'theme', theme: 'dark' },
     { id: 'email', group: 'Actions', keywords: ['clipboard', 'contact', config.email], label: 'Copy email', kind: 'copy', email: config.email },
     { id: 'github', group: 'Links', keywords: ['code', 'repositories', 'profile'], label: 'GitHub', kind: 'link', href: config.githubUrl, external: true },
     { id: 'linkedin', group: 'Links', keywords: ['social', 'career', 'profile'], label: 'LinkedIn', kind: 'link', href: config.linkedInUrl, external: true },
     { id: 'source', group: 'Links', keywords: ['code', 'repository', 'website'], label: 'View source', kind: 'link', href: config.sourceUrl, external: true },
+    { id: 'llms', group: 'Links', keywords: ['ai', 'profile', 'text'], label: 'llms.txt', kind: 'link', href: '/llms.txt', external: false },
   ];
 }
 
@@ -183,7 +189,7 @@ export async function activateCommandPaletteAction(
   }
 
   if (action.kind === 'theme') {
-    dependencies.setTheme(dependencies.resolvedTheme === 'dark' ? 'light' : 'dark');
+    dependencies.setTheme(action.theme);
     dependencies.close();
     return;
   }

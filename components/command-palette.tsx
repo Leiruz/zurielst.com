@@ -50,7 +50,7 @@ export function CommandPalette({
   opener,
   sourceUrl,
 }: CommandPaletteProps) {
-  const { resolvedTheme, setTheme } = useTheme();
+  const { setTheme } = useTheme();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -77,7 +77,6 @@ export function CommandPalette({
       findSection: (id) => document.getElementById(id),
       navigate,
       reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-      resolvedTheme,
       setTheme,
       updateHash: (hash) => window.history.pushState(null, '', hash),
     });
@@ -201,13 +200,23 @@ export function CommandPalette({
                       className={optionClasses}
                     >
                       <span>{action.label}</span>
-                      <span aria-hidden="true" className="font-mono text-xs text-text-3">↵</span>
+                      {action.shortcut ? (
+                        <span aria-hidden="true" className="flex gap-1 font-mono text-[0.65rem] text-text-3">
+                          {action.shortcut.map((key) => <kbd key={key}>{key}</kbd>)}
+                        </span>
+                      ) : (
+                        <span aria-hidden="true" className="font-mono text-xs text-text-3">↵</span>
+                      )}
                     </button>
                   );
                 })}
               </div>
             );
           })}
+        </div>
+        <div className="flex items-center justify-between border-t border-line px-4 py-2 font-mono text-[0.65rem] text-text-3">
+          <span className="font-semibold tracking-[0.16em] text-text-1">ZST</span>
+          <span><kbd>Enter</kbd> Go to section</span>
         </div>
       </div>
     </div>

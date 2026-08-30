@@ -22,6 +22,7 @@ import { Products } from '@/components/sections/products';
 import { Faq } from '@/components/sections/faq';
 import { hasPublicMedia } from '@/lib/media';
 import { withSiteUtm } from '@/lib/outbound-links';
+import { GLOBAL_SECTION_SHORTCUTS } from '@/lib/section-shortcuts';
 
 const COPY_DISCLOSURE_STATE_SCRIPT = `(() => {
   document.querySelectorAll("details[data-copy-disclosure]").forEach((details) => {
@@ -57,8 +58,33 @@ const COPY_DISCLOSURE_STATE_SCRIPT = `(() => {
     const launcher = document.querySelector('.chat-launcher[aria-expanded="true"]');
     if (launcher instanceof HTMLButtonElement) launcher.click();
   };
+  const goTargets = ${JSON.stringify(GLOBAL_SECTION_SHORTCUTS)};
+  let goPrefix = false;
   window.addEventListener("keydown", (event) => {
-    const opensPalette = event.key.toLowerCase() === "k" && (event.ctrlKey || event.metaKey);
+    const key = event.key.toLowerCase();
+    const isEditable = event.target instanceof HTMLInputElement
+      || event.target instanceof HTMLTextAreaElement
+      || (event.target instanceof HTMLElement && event.target.isContentEditable);
+    if (isEditable) {
+      goPrefix = false;
+    } else if (key === "g") {
+      goPrefix = true;
+      return;
+    } else if (goPrefix) {
+      goPrefix = false;
+      const targetId = goTargets[key];
+      const section = targetId ? document.getElementById(targetId) : null;
+      if (section) {
+        event.preventDefault();
+        section.scrollIntoView({
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+          block: "start",
+        });
+        window.history.pushState(null, "", "#" + targetId);
+        return;
+      }
+    }
+    const opensPalette = key === "k" && (event.ctrlKey || event.metaKey);
     if (event.key === "Escape" || event.key === "\u0060" || opensPalette) {
       if (event.key === "Escape") event.preventDefault();
       closeOpenAssistant();

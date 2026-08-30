@@ -81,6 +81,34 @@ describe('page client boundaries', () => {
     expect(source).toContain('.chat-launcher[aria-expanded=');
   });
 
+  it('embeds the nine guarded global g-key section sequences in excluded inline code', () => {
+    const page = Home();
+    const shell = childWithType(page.props.children, 'div');
+    const script = childWithType(shell?.props.children, 'script');
+    const source = String(
+      (script?.props.dangerouslySetInnerHTML as { __html?: string } | undefined)?.__html,
+    );
+
+    for (const [key, targetId] of Object.entries({
+      i: 'identity',
+      w: 'work',
+      s: 'stack',
+      t: 'timeline',
+      e: 'education',
+      a: 'proof',
+      p: 'products',
+      f: 'faq',
+      c: 'contact',
+    })) {
+      expect(source).toContain(`"${key}":"${targetId}"`);
+    }
+    expect(source).toContain('event.key.toLowerCase()');
+    expect(source).toContain('event.target instanceof HTMLInputElement');
+    expect(source).toContain('event.target instanceof HTMLTextAreaElement');
+    expect(source).toContain('event.target.isContentEditable');
+    expect(source).toContain('goPrefix');
+  });
+
   it('passes tracked social profiles and untracked internal resources to the palette', () => {
     const page = Home();
     const shell = childWithType(page.props.children, 'div');
