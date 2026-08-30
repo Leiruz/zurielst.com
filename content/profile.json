@@ -1,0 +1,544 @@
+{
+  "identity": {
+    "name": "Zuriel Shanley Tanyory",
+    "roles": [
+      "Forward Deployed AI & Automation Security Engineer",
+      "Information Security Undergraduate",
+      "SOC Builder",
+      "Founder"
+    ],
+    "employer": "Singtel",
+    "tagline": "AI. Cyber. Defence.",
+    "bio_hook": "I started coding at 14.",
+    "metrics": [
+      { "value": "80%", "label": "lower SOC solution cost" },
+      { "value": "Up to 90%", "label": "threat detection uplift" },
+      { "value": "99.9%", "label": "security-tool uptime" },
+      { "value": "WAF telemetry", "label": "made readable for analysts" }
+    ],
+    "location": { "city": "Singapore", "timezone": "UTC+8" },
+    "email": "zurielst@u.nus.edu",
+    "socials": [
+      { "platform": "GitHub", "url": "https://github.com/Leiruz" },
+      { "platform": "LinkedIn", "url": "https://www.linkedin.com/in/zuriel-shanley/" }
+    ],
+    "portrait": {
+      "image": "/media/portrait.jpg",
+      "alt": "Portrait of Zuriel Shanley Tanyory"
+    },
+    "github": {
+      "username": "Leiruz",
+      "url": "https://github.com/Leiruz",
+      "data_policy": "The contribution heatmap renders from a committed build-time snapshot of public github.com/Leiruz data only. No private repository data can reach the page."
+    }
+  },
+  "capabilities": {
+    "acts": [
+      {
+        "id": "security",
+        "act": 1,
+        "title": "Security",
+        "narrative": "I learned security by doing the whole loop: attack, defend, investigate. I ran Lockheed's Cyber Kill Chain against lab targets, performed a Blueborne exploit on a vulnerable Android phone with Kali running on my own device, and pentested web applications with OWASP ZAP and Burp Suite, from DVWA to a live ASP.NET app. I wrote my own Python malware, obfuscated and encrypted it, then took it apart again with Ghidra and IDA to learn x86 from both sides of the fight. I hardened a CentOS file server with OSSEC, firewalld, a host IPS, ACLs and BIOS encryption, configured Palo Alto next-gen firewalls and VPN tunnels, and worked EnCase, Autopsy, FTK Imager and Memoryze through a full forensics case study. In my own time I run Suricata, Snort and Zeek.",
+        "skills": [
+          { "name": "Web application pentesting", "detail": "OWASP Top 10, OWASP ZAP, Burp Suite" },
+          { "name": "Reverse engineering", "detail": "Ghidra, IDA, x86 assembly" },
+          { "name": "Malware analysis", "detail": "Static and dynamic analysis" },
+          { "name": "Digital forensics", "detail": "EnCase, Autopsy, FTK Imager" },
+          { "name": "Secure web development", "since": "Jun 2020", "detail": "ASP.NET Razor Pages" },
+          { "name": "Web development", "since": "Oct 2019", "detail": "Self-taught HTML, CSS, JavaScript, wow.js" },
+          { "name": "Cryptography", "since": "Oct 2019", "detail": "An Enigma machine started it" },
+          { "name": "Network infrastructure", "detail": "Cisco, Palo Alto NGFW, FortiGate" },
+          { "name": "Server and cloud hardening", "detail": "CentOS, RedHat, OSSEC, firewalld" }
+        ]
+      },
+      {
+        "id": "ai-automation",
+        "act": 2,
+        "title": "AI & Automation",
+        "narrative": "Python has been mine since December 2016: Twilio, TensorFlow, Keras, Pandas, smtplib, sockets, cryptography. In 2020 I went deep on deep learning. I trained more than 40 CNN models to reach roughly 70% accuracy on food classification and emoji prediction, built an RNN autocorrect judged on word error rate, and published both write-ups. The same instinct now earns its keep at work: at Singtel I automated Akamai WAF reporting, turning alerts, logs and traffic data into reports analysts actually read. Underneath it all sit boring, load-bearing foundations: object-oriented programming in C# and functional programming.",
+        "skills": [
+          { "name": "Python", "since": "Dec 2016", "detail": "Twilio, TensorFlow, Keras, Pandas, smtplib, cryptography, sockets" },
+          { "name": "Deep learning", "since": "Apr 2020", "detail": "RNN, CNN, NLP" },
+          { "name": "Python automation", "detail": "Akamai WAF API reporting integration" },
+          { "name": "Programming foundations", "detail": "Object-oriented (C#) and functional programming" }
+        ]
+      },
+      {
+        "id": "founder",
+        "act": 3,
+        "title": "Founder",
+        "narrative": "CiTaDel started as a conviction that SMEs deserve industry-grade defence at a price they can pay. For three years I ran it: an affordable, open-source SOC with EDR and SOAR at the core, SOC solution cost down 80%, threat detection up by as much as 90%, and deep learning folded into SOC workflows to cut false positives by 20%. The founder muscle came from Genesis, where I served as Vice-President of Startup and was nominated into the Zero to One entrepreneurship program with Meet Ventures and NUS Business School. CiTaDel wound down in May 2026 when I joined Singtel; the lessons did not.",
+        "skills": [
+          { "name": "SOC architecture", "detail": "EDR and SOAR on open source" },
+          { "name": "AI in security operations", "detail": "Deep learning in SOC workflows" },
+          { "name": "Zero to One", "detail": "MVP building with Meet Ventures and NUS Business School" }
+        ]
+      }
+    ]
+  },
+  "work_cases": [
+    {
+      "id": "akamai-waf-automation",
+      "title": "Akamai WAF Automation",
+      "kicker": "Security reporting automation, Singtel",
+      "period": "May 2026 to Aug 2026",
+      "summary": "During my Singtel internship I built a Python automation that integrates Akamai WAF APIs to extract security risk alerts, logs and network traffic data, transforming raw security events into structured reports with technical documentation and visual diagrams. Analysts got better threat visibility, cleaner operations monitoring, and faster reporting.",
+      "stack": ["Python", "Akamai WAF APIs", "Technical documentation"],
+      "links": [],
+      "evidence": [],
+      "note": "Internal work, described at resume level."
+    },
+    {
+      "id": "citadel-soc",
+      "title": "CiTaDel SOC",
+      "kicker": "Founder, open-source SOC",
+      "period": "Mar 2023 to May 2026",
+      "summary": "I founded CiTaDel to bring industry-grade protection to SMEs and consumers through affordable, open-source security. I architected and ran a SOC with EDR and SOAR at its core, cut SOC solution cost by 80%, lifted threat detection by up to 90%, and integrated deep learning models into SOC workflows that shrank false positives by 20%.",
+      "stack": ["Open-source SOC", "EDR", "SOAR", "Deep learning"],
+      "links": [
+        { "label": "GitHub", "url": "https://github.com/Leiruz/CiTaDel" },
+        { "label": "citadel.zurielst.com", "url": "https://citadel.zurielst.com", "note": "Service wound down in May 2026; the site stays up as a record." }
+      ],
+      "evidence": [
+        { "type": "image", "media": "/media/cases/citadel.png", "alt": "CiTaDel landing page" }
+      ]
+    },
+    {
+      "id": "saf-digitization",
+      "title": "SAF Digitization App",
+      "kicker": "Full-stack lead under uniform",
+      "period": "Jan 2023 to Mar 2023",
+      "summary": "In the Singapore Armed Forces I led a four-person team building a 3-tier web application that digitized paper-based military processes. HTML, CSS, JavaScript, PHP, Bootstrap and MySQL; the result improved data accuracy, cut processing time and paper waste, and raised efficiency while lowering costs by up to 20%.",
+      "stack": ["HTML", "CSS", "JavaScript", "PHP", "Bootstrap", "MySQL"],
+      "links": [],
+      "evidence": [],
+      "note": "Internal system: no demo, no screenshots."
+    },
+    {
+      "id": "configproof-ai",
+      "title": "ConfigProof AI",
+      "kicker": "Vendor security risk assurance, Singtel",
+      "period": "May 2026 to Aug 2026",
+      "summary": "In the same Singtel internship I developed ConfigProof AI for vendor security risk assurance. This card deliberately stops at the resume line: internal work stays internal.",
+      "stack": [],
+      "links": [],
+      "evidence": [],
+      "note": "Described at resume level only."
+    }
+  ],
+  "timeline": [
+    {
+      "id": "singtel-fd-engineer",
+      "type": "role",
+      "org": "Singtel",
+      "title": "Forward Deployed AI & Automation Security Engineer",
+      "period": "Aug 2026 to present",
+      "summary": "I build customised AI and automation solutions for Singtel MSSP with SMEs."
+    },
+    {
+      "id": "singtel-intern",
+      "type": "role",
+      "org": "Singtel",
+      "title": "Cybersecurity Consultant Intern",
+      "period": "May 2026 to Aug 2026",
+      "summary": "Akamai WAF API automation for reporting; developed ConfigProof AI for vendor security risk assurance."
+    },
+    {
+      "id": "citadel-founder",
+      "type": "role",
+      "org": "CiTaDel Cybersecurity Solutions",
+      "title": "Founder",
+      "period": "Mar 2023 to May 2026",
+      "summary": "Affordable, open-source SOC for SMEs: 80% lower SOC cost, up to 90% detection uplift, deep learning in SOC workflows cutting false positives by 20%."
+    },
+    {
+      "id": "saf-developer",
+      "type": "role",
+      "org": "Singapore Armed Forces",
+      "title": "Full-Stack Web Developer",
+      "period": "Jan 2023 to Mar 2023",
+      "summary": "Led a four-person team digitizing paper-based processes with a 3-tier web application; efficiency and cost improved by up to 20%."
+    },
+    {
+      "id": "ncs-intern",
+      "type": "role",
+      "org": "NCS Pte Ltd",
+      "title": "Cybersecurity Consultant Intern",
+      "period": "Aug 2021 to Feb 2022",
+      "summary": "Installed, configured and troubleshot EDR for government-managed endpoints: 40% increase in threat detection, 99.9% uptime, and recognition as the Carbon Black subject matter expert."
+    },
+    {
+      "id": "nus",
+      "type": "education",
+      "org": "National University of Singapore",
+      "title": "Bachelor of Computing in Information Security",
+      "period": "Aug 2024 to May 2028",
+      "summary": "Reading Information Security while working at Singtel."
+    },
+    {
+      "id": "ngee-ann-poly",
+      "type": "education",
+      "org": "Ngee Ann Polytechnic",
+      "title": "Diploma in Cybersecurity & Digital Forensics",
+      "period": "Apr 2019 to May 2022",
+      "summary": "Graduated with a CGPA of 3.82/4, with a certification in Advanced Computing Mathematics."
+    },
+    {
+      "id": "nullsec",
+      "type": "cca",
+      "org": "NullSec",
+      "title": "Head of Publicity",
+      "period": "Apr 2019 to May 2021",
+      "summary": "Helped organize the Lag n Crash inter-poly CTF and plan the YCEP CTF and the annual Hack'n'Flag CTF."
+    },
+    {
+      "id": "genesis",
+      "type": "cca",
+      "org": "Genesis",
+      "title": "Vice-President of Startup",
+      "period": "Apr 2019 to May 2021",
+      "summary": "Nominated into the Zero to One Entrepreneurship Program with Meet Ventures and NUS Business School; the runway CiTaDel launched from."
+    },
+    {
+      "id": "homeless-hearts",
+      "type": "cca",
+      "org": "Homeless Hearts of Singapore",
+      "title": "Volunteer",
+      "period": "Jun 2021 to Dec 2022",
+      "summary": "Befriended and distributed food and basic necessities to people in need during the pandemic."
+    }
+  ],
+  "proof_wall": {
+    "certifications": [
+      {
+        "id": "cisco-cyber-threat-management",
+        "title": "Cisco Cyber Threat Management Certificate",
+        "issuer": "Cisco",
+        "caption": "Recognized vendor certification in cyber threat management."
+      },
+      {
+        "id": "fortinet-fcac",
+        "title": "Fortinet Certified Associate Cybersecurity",
+        "issuer": "Fortinet",
+        "validity": "20 Oct 2023 to 20 Oct 2025",
+        "image": "/media/proof/fortinet-fcac.png",
+        "caption": "Earned to stay sharp on network security; validity dates shown as they are."
+      },
+      {
+        "id": "fortigate-74-operator",
+        "title": "FortiGate 7.4 Operator Self-Paced Course",
+        "issuer": "Fortinet",
+        "image": "/media/proof/fortigate-74-operator.png",
+        "caption": "Taken during National Service to stay current; familiar ground after learning Palo Alto firewalls at poly."
+      },
+      {
+        "id": "cyberark-trustee",
+        "title": "CyberArk Certified Trustee",
+        "issuer": "CyberArk",
+        "year": "2021",
+        "image": "/media/proof/cyberark-trustee.png",
+        "caption": "Taken during my NCS internship; passed with 80% or higher on the first attempt."
+      },
+      {
+        "id": "cyberark-pam-intro",
+        "title": "CyberArk Introduction to Privileged Access Management",
+        "issuer": "CyberArk",
+        "year": "2021",
+        "image": "/media/proof/cyberark-pam-intro.png",
+        "caption": "Privileged access management fundamentals, completed during the NCS internship."
+      },
+      {
+        "id": "carbon-black-fundamentals",
+        "title": "VMware Carbon Black Cloud Fundamentals",
+        "issuer": "VMware",
+        "year": "2021",
+        "image": "/media/proof/carbon-black-fundamentals.png",
+        "caption": "Hands-on training on installing, upgrading and troubleshooting Carbon Black EDR. NCS recognized me as their Carbon Black subject matter expert."
+      },
+      {
+        "id": "nus-zero-to-one",
+        "title": "NUS Zero To One Entrepreneurship Program",
+        "issuer": "NUS Business School",
+        "year": "2021",
+        "image": "/media/proof/nus-zero-to-one.jpg",
+        "caption": "Selected through Genesis: six months of MVP building and founder networking with Meet Ventures and NUS Business School."
+      }
+    ],
+    "awards": [
+      {
+        "id": "fearless-find-2026",
+        "title": "First Place, Singtel BIG Fearless Find 2026 (Round 1)",
+        "issuer": "Singtel",
+        "year": "2026",
+        "caption": "The newest headline on the wall: first place in Round 1 of Singtel BIG Fearless Find 2026."
+      },
+      {
+        "id": "singtel-scholarship",
+        "title": "SingTel Cyber Security Cadet Scholarship",
+        "issuer": "SingTel",
+        "year": "2021 to 2022",
+        "image": "/media/proof/singtel-scholarship.jpg",
+        "caption": "Awarded in my second year at Ngee Ann Polytechnic. It opened the door to my NCS internship, and years later I joined Singtel for real. The arc completed itself."
+      },
+      {
+        "id": "mindef-bug-bounty",
+        "title": "MINDEF Bug Bounty Programme",
+        "issuer": "MINDEF Singapore",
+        "year": "2019",
+        "image": "/media/proof/mindef-bug-bounty-2019.png",
+        "caption": "Selected through NullSec to take part in MINDEF's bug bounty programme: finding, exploiting and reporting real vulnerabilities, ethically."
+      },
+      {
+        "id": "homeless-hearts-appreciation",
+        "title": "Homeless Hearts of Singapore, Certificate of Appreciation",
+        "issuer": "Homeless Hearts of Singapore",
+        "year": "2021",
+        "image": "/media/proof/homeless-hearts-appreciation.png",
+        "caption": "For volunteering through the pandemic: befriending people and distributing food and basic necessities."
+      },
+      {
+        "id": "cys-eae-hackathon",
+        "title": "Cyber Youth Singapore EAE Hackathon, Certificate of Appreciation",
+        "issuer": "Cyber Youth Singapore",
+        "year": "2020",
+        "image": "/media/proof/cys-eae-hackathon-2020.png",
+        "caption": "Volunteered as an EAE consultant and conference panelist, guiding youths through their early-admission applications into poly."
+      }
+    ],
+    "ctf_results": [
+      {
+        "id": "cddc-2020",
+        "title": "Cyber Defender Discovery Camp 2020",
+        "organizer": "DSTA",
+        "year": "2020",
+        "result": "41st of 237 teams (Senior category)",
+        "image": "/media/proof/cddc-2020-gold-reverse-engineering.png",
+        "caption": "Six certifications from one camp: Gold in Basic Reverse Engineering, Silver in Using Metasploit, Open Source Intelligence and Web Vulnerabilities, Bronze in Getting Started with Kali Linux, and recognition in Machine Learning in Cybersecurity."
+      },
+      {
+        "id": "stack-the-flag-2020",
+        "title": "GovTech Stack the Flag CTF",
+        "organizer": "GovTech CSG",
+        "year": "2020",
+        "result": "Participant, Polytechnic and University category",
+        "image": "/media/proof/govtech-stack-the-flag-2020.png",
+        "caption": "Teamed up with friends for GovTech's national CTF."
+      },
+      {
+        "id": "cys-camp-ctf-2019",
+        "title": "Cyber Youth Singapore Camp CTF",
+        "organizer": "Cyber Youth Singapore",
+        "year": "2019",
+        "result": "5th place",
+        "caption": "Four-day camp with talks and workshops by industry leaders. Held third in the CTF for a stretch and finished fifth. The trajectory started early."
+      },
+      {
+        "id": "shopee-code-league-2020",
+        "title": "Shopee Code League",
+        "organizer": "Shopee",
+        "year": "2020",
+        "result": "Participant",
+        "caption": "Competitive programming and data challenges outside the security lane."
+      },
+      {
+        "id": "ycep-2020",
+        "title": "Youth Cyber Exploration Programme (YCEP)",
+        "organizer": "CSA Singapore",
+        "year": "2020",
+        "result": "Participant",
+        "caption": "CSA's Youth Cyber Exploration Programme. I have been on both sides of YCEP: participant here, CTF planner with NullSec."
+      }
+    ],
+    "publications": [
+      {
+        "id": "pub-cnn-food",
+        "title": "Food Image Classification Using Convolutional Neural Network with LSTM and GRU",
+        "year": "2020",
+        "link": "https://drive.google.com/file/d/1exyLnYXMif0SoR70TCmoyX6WuxeUTSFT/view",
+        "format": "Report (DOCX)"
+      },
+      {
+        "id": "pub-rnn-emoji",
+        "title": "Emoji Prediction and Autocorrect Using Recurrent Neural Network",
+        "year": "2020",
+        "link": "https://drive.google.com/file/d/1PJjhYrP9lBMyRSK_nwDxmFuIBTQ7_W12/view",
+        "format": "Report (DOCX)"
+      }
+    ],
+    "extras": [
+      {
+        "id": "nullsec-promo-video",
+        "title": "NullSec promo video",
+        "type": "video",
+        "media": "/media/proof/nullsec-promo.mp4",
+        "caption": "A period artifact from the NullSec publicity days."
+      }
+    ]
+  },
+  "products": [
+    {
+      "id": "cinderella-shoes",
+      "name": "Cinderella Shoes",
+      "period": "Oct 2020 to Mar 2021",
+      "summary": "I led a team building a 3-tier secure e-commerce app on ASP.NET for our Secure Software Development assignment, wiring in Stripe for payments and reCAPTCHA for bot mitigation. We reported 0% transaction failure through payment.",
+      "stack": ["ASP.NET", "Razor Pages", "Stripe", "reCAPTCHA"],
+      "links": [
+        { "label": "GitHub", "url": "https://github.com/Leiruz/Project-Cinderella" }
+      ],
+      "media": [
+        { "type": "video", "media": "/media/products/cinderella-demo.mp4", "alt": "Cinderella Shoes demo walkthrough" }
+      ]
+    },
+    {
+      "id": "ngee-ann-badminton",
+      "name": "Ngee Ann Badminton Webpage",
+      "period": "Apr 2019 to Oct 2019",
+      "summary": "My first shipped site: a front-end webpage for the Ngee Ann Badminton CCA in HTML, CSS and JavaScript with Bootstrap and wow.js. It is not fancy, and that is the point: this is where the practice started.",
+      "stack": ["HTML", "CSS", "JavaScript", "Bootstrap", "wow.js"],
+      "links": [
+        { "label": "Website", "url": "https://ngeeannbadminton.zurielst.com" },
+        { "label": "GitHub", "url": "https://github.com/Leiruz/NgeeAnnBadminton" }
+      ],
+      "media": [
+        { "type": "image", "media": "/media/products/ngee-ann-badminton.png", "alt": "Ngee Ann Badminton webpage" }
+      ]
+    },
+    {
+      "id": "xynthea",
+      "name": "Project Xynthea",
+      "period": "Jan 2018 to May 2018",
+      "origin_story": true,
+      "summary": "My first security build: a three-factor authentication system in Python using Twilio one-time passwords with MD5 and SHA-256 hashing. MD5 reads dated on a security dossier today, which is exactly why this ships as an origin story. It marks where the obsession started, not where it ended.",
+      "stack": ["Python", "Twilio OTP", "MD5", "SHA-256"],
+      "links": [],
+      "media": [
+        { "type": "image", "media": "/media/products/xynthea.png", "alt": "Project Xynthea overview" }
+      ],
+      "note": "No public repository."
+    },
+    {
+      "id": "panpath-redactor",
+      "name": "PanPath-Redactor",
+      "summary": "Public tooling for redacting Palo Alto PAN-OS configuration exports before they are shared for review.",
+      "stack": ["Python", "PAN-OS"],
+      "links": [
+        { "label": "GitHub", "url": "https://github.com/Leiruz/PanPath-Redactor" }
+      ]
+    },
+    {
+      "id": "edl-akamai",
+      "name": "edl-akamai",
+      "summary": "A connector between External Dynamic List infrastructure and Akamai, published as a public repository.",
+      "stack": ["Python"],
+      "links": [
+        { "label": "GitHub", "url": "https://github.com/Leiruz/edl-akamai" }
+      ]
+    },
+    {
+      "id": "palo-alto-ioc-automation",
+      "name": "Palo Alto EDL IOC Manager",
+      "summary": "An add-only IOC manager for Palo Alto External Dynamic List servers: engineers add new indicators to local EDL text files while the script records the change, updates the trusted snapshot, and sends an email notification to the right people.",
+      "stack": ["Python", "PAN-OS EDL"],
+      "links": [
+        { "label": "GitHub", "url": "https://github.com/Leiruz/Palo-Alto-Firewall-IOC-Automation" }
+      ]
+    },
+    {
+      "id": "inscribe",
+      "name": "Inscribe",
+      "summary": "A one-command pipeline that turns YouTube videos into clean transcripts and Fabric-powered summaries and insights using local models. The AI & Automation act, working outside security.",
+      "stack": ["Python", "Whisper", "Fabric"],
+      "links": [
+        { "label": "GitHub", "url": "https://github.com/Leiruz/Inscribe" }
+      ]
+    },
+    {
+      "id": "facial-recognition",
+      "name": "Facial-Recognition-Project",
+      "summary": "Facial recognition built on the LBHF engine and TensorFlow: hands-on machine learning evidence with the code public.",
+      "stack": ["Python", "TensorFlow", "LBHF"],
+      "links": [
+        { "label": "GitHub", "url": "https://github.com/Leiruz/Facial-Recognition-Project" }
+      ]
+    },
+    {
+      "id": "contact-tracing-app",
+      "name": "Contact Tracing App",
+      "period": "2020",
+      "summary": "A Python contact tracing app built in 2020 while contact tracing was a live national problem, scoped as a beta for Ngee Ann Polytechnic. No public repo backs it, so it ships as a story, not a link.",
+      "stack": ["Python"],
+      "links": [],
+      "note": "No public repository."
+    }
+  ],
+  "faq": [
+    {
+      "id": "what-is-fdse",
+      "question": "What does a Forward Deployed AI & Automation Security Engineer do?",
+      "answer": "I sit with Singtel's managed security services business and build customised AI and automation solutions for the SMEs it protects. Forward deployed means I work close to the customer problem rather than in a back room: understand the security workflow first, then automate it."
+    },
+    {
+      "id": "nus-until-2028",
+      "question": "You work full-time and study at the same time?",
+      "answer": "Yes. I am reading Information Security at NUS (Bachelor of Computing, Aug 2024 to May 2028) while working at Singtel. The degree finishes in 2028; the work does not wait for it."
+    },
+    {
+      "id": "open-to",
+      "question": "What are you open to?",
+      "answer": "Good conversations. I am settled at Singtel and NUS through 2028, and I stay open to security community work, CTFs, speaking, and hard problems in AI and security operations. Email is the fastest way to reach me: zurielst@u.nus.edu."
+    },
+    {
+      "id": "languages",
+      "question": "Which languages do you speak?",
+      "answer": "English (native), Chinese (conversational), Bahasa Indonesia (basic)."
+    }
+  ],
+  "chat": {
+    "intent_chips": [
+      "What does a Forward Deployed AI & Automation Security Engineer do?",
+      "Tell me about CiTaDel.",
+      "What certifications and CTF results does he have?",
+      "Which projects show AI and automation?",
+      "How do I contact Zuriel?"
+    ],
+    "disclaimer": "Answers are generated only from this site's published profile. For anything beyond it, email zurielst@u.nus.edu."
+  },
+  "easter_eggs": {
+    "terminal": {
+      "commands": [
+        "help",
+        "about",
+        "experience",
+        "education",
+        "projects",
+        "skills",
+        "contact",
+        "resume",
+        "awards",
+        "products",
+        "games",
+        "certifications",
+        "clear"
+      ],
+      "source": "Ported from github.com/Leiruz/Zuriel",
+      "note": "Every command re-points at rebuilt, sanitized content: contact prints zurielst@u.nus.edu only, education starts at 2019, resume opens the current PDF, products opens the products section, and games opens TowerBlock."
+    },
+    "towerblock": {
+      "label": "TowerBlock",
+      "url": "https://towerblock.zurielst.com",
+      "repo": "https://github.com/Leiruz/TowerBlock",
+      "trigger": "games"
+    }
+  },
+  "meta": {
+    "title": "Zuriel Shanley Tanyory | AI. Cyber. Defence.",
+    "description": "Engineered dossier of Zuriel Shanley Tanyory: Forward Deployed AI & Automation Security Engineer at Singtel, Information Security undergraduate at NUS, and founder of CiTaDel.",
+    "og": {
+      "title": "Zuriel Shanley Tanyory | AI. Cyber. Defence.",
+      "description": "Security engineering, AI and automation, and founder work, with the proof to back it.",
+      "image": "/media/og-card.png",
+      "url": "https://zurielst.com",
+      "type": "website"
+    }
+  }
+}
