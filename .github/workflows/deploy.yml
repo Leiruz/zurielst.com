@@ -1,0 +1,56 @@
+﻿# Production deploy (plan rev 3): push to main (the owner's merge IS the
+# gate), plus the reviewer-protected environment holding the single deploy
+# token. Deploys the assets-only site worker; the chat-api worker deploy is
+# wired in only when M6 lands its full pipeline and tests.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency: deploy-production
+
+jobs:
+  production:
+    # Prerequisite: repo Settings -> Environments -> deploy must exist with a required reviewer and the CLOUDFLARE_* secrets; this workflow cannot create it.
+    runs-on: ubuntu-latest
+    environment: deploy
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      # Release evidence: verify the required-reviewers protection rule before deploying.
+      - name: Verify deploy environment protection
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if ! gh api --method GET "repos/${{ github.repository }}/environments/deploy" --jq '.protection_rules[]?.type' | grep -Fx 'required_reviewers' >/dev/null; then
+            echo "::error::Configure repository environment 'deploy' in Settings > Environments with at least one required reviewer before deploying."
+            exit 1
+          fi
+      - name: Deploy site worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --config workers/site/wrangler.jsonc
+      - name: Record artifact hash and deployment id (paired rollback evidence)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          cd out
+          find . -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | tee -a "$GITHUB_STEP_SUMMARY"
+          cd ..
+          npx wrangler deployments list --config workers/site/wrangler.jsonc | sed -n '1,12p' | tee -a "$GITHUB_STEP_SUMMARY"

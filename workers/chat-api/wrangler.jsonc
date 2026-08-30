@@ -1,0 +1,24 @@
+﻿{
+  // zurielst-chat-api: exact-route API worker. Holds the AI binding and the
+  // DailyBudget Durable Object, so it deliberately has NO preview URLs (plan
+  // rev 3, F1). Routes are attached only at the M12 cutover (zurielst.com/api/chat)
+  // and at the staging rehearsal; nothing is routed before that.
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "zurielst-chat-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-09-06",
+  "workers_dev": false,
+  "preview_urls": false,
+  "ai": { "binding": "AI" },
+  "durable_objects": {
+    "bindings": [{ "name": "DAILY_BUDGET", "class_name": "DailyBudget" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DailyBudget"] }],
+  "vars": {
+    // Hard daily chat cap. Placeholder until M6 derives the real value from
+    // measured worst-case neurons (cap = min(200, derived)); the unit test
+    // asserts the budget inequality against this var.
+    "DAILY_CAP": "200",
+    "ALLOWED_HOSTS": "zurielst.com,staging.zurielst.com"
+  }
+}

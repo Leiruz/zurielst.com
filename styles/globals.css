@@ -1,0 +1,229 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Engineered Dossier tokens. Dark is the design-primary theme; light is a
+  first-class sibling. Theme switching uses next-themes with the class
+  strategy (html.dark), the shadcn v4 convention, so vendored registry
+  components (bg-background, text-muted-foreground, ring, ...) work unchanged.
+  Values trace to the approved design research: Linear grey ramp, GitHub
+  heatmap greens, one blue verification accent.
+*/
+
+:root {
+  /* dossier: light */
+  --canvas: #fafafa;
+  --canvas-raised: #f4f4f5;
+  --surface: #ffffff;
+  --surface-hover: #f0f0f2;
+  --text-1: #101114;
+  --text-2: #3f4249;
+  --text-3: #6e7480;
+  --line: rgba(0, 0, 0, 0.08);
+  --line-strong: rgba(0, 0, 0, 0.16);
+  --blueprint: rgba(0, 0, 0, 0.05);
+  --hatch: rgba(0, 0, 0, 0.06);
+  --heat-0: #ebedf0;
+  --heat-1: #9be9a8;
+  --heat-2: #40c463;
+  --heat-3: #30a14e;
+  --heat-4: #216e39;
+
+  /* shadcn bridge: light */
+  --background: var(--canvas);
+  --foreground: var(--text-1);
+  --popover: var(--surface);
+  --popover-foreground: var(--text-1);
+  --card: var(--surface);
+  --card-foreground: var(--text-1);
+  --primary: #101114;
+  --primary-foreground: #fafafa;
+  --secondary: var(--surface-hover);
+  --secondary-foreground: var(--text-2);
+  --muted: var(--canvas-raised);
+  --muted-foreground: var(--text-3);
+  --accent: var(--surface-hover);
+  --accent-foreground: var(--text-1);
+  --destructive: #d92d20;
+  --border: var(--line-strong);
+  --input: rgba(0, 0, 0, 0.2);
+  --ring: #2f5fe0;
+  --radius: 0.625rem;
+}
+
+.dark {
+  /* dossier: dark (design primary) */
+  --canvas: #09090a;
+  --canvas-raised: #0c0d10;
+  --surface: #131417;
+  --surface-hover: #1a1b1f;
+  --text-1: #f7f8f8;
+  --text-2: #d0d6e0;
+  --text-3: #8a8f98;
+  --line: rgba(255, 255, 255, 0.06);
+  --line-strong: rgba(255, 255, 255, 0.12);
+  --blueprint: rgba(255, 255, 255, 0.045);
+  --hatch: rgba(255, 255, 255, 0.05);
+  --heat-0: #151619;
+  --heat-1: #0e4429;
+  --heat-2: #006d32;
+  --heat-3: #26a641;
+  --heat-4: #39d353;
+
+  /* shadcn bridge: dark */
+  --background: var(--canvas);
+  --foreground: var(--text-1);
+  --popover: var(--surface);
+  --popover-foreground: var(--text-1);
+  --card: var(--surface);
+  --card-foreground: var(--text-1);
+  --primary: #f7f8f8;
+  --primary-foreground: #09090a;
+  --secondary: var(--surface-hover);
+  --secondary-foreground: var(--text-2);
+  --muted: var(--surface);
+  --muted-foreground: var(--text-3);
+  --accent: var(--surface-hover);
+  --accent-foreground: var(--text-1);
+  --destructive: #ff5c5c;
+  --border: var(--line-strong);
+  --input: rgba(255, 255, 255, 0.16);
+  --ring: #4b7bff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-canvas: var(--canvas);
+  --color-canvas-raised: var(--canvas-raised);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-text-1: var(--text-1);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-heat-0: var(--heat-0);
+  --color-heat-1: var(--heat-1);
+  --color-heat-2: var(--heat-2);
+  --color-heat-3: var(--heat-3);
+  --color-heat-4: var(--heat-4);
+
+  --font-sans: 'Geist', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+html {
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+* {
+  border-color: var(--border);
+}
+
+/* Blueprint linework primitives */
+.bp-grid {
+  background:
+    linear-gradient(var(--blueprint) 1px, transparent 1px) 0 0 / 100% 96px,
+    linear-gradient(90deg, var(--blueprint) 1px, transparent 1px) 0 0 / 96px 100%;
+}
+
+.bp-hatch {
+  background: repeating-linear-gradient(45deg, var(--hatch) 0 1px, transparent 1px 7px);
+}
+
+.fig-label {
+  font-family: var(--font-mono);
+  font-style: italic;
+  font-size: 0.72rem;
+  color: var(--text-3);
+}
+
+@keyframes apple-hello-draw {
+  from {
+    opacity: 0;
+    stroke-dashoffset: 1;
+  }
+  to {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+.apple-hello-stroke {
+  animation: apple-hello-draw var(--hello-duration) ease-in-out var(--hello-delay) forwards;
+  opacity: 0;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+@keyframes theme-switcher-reveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.theme-switcher-reveal {
+  animation: theme-switcher-reveal 0.3s ease-out;
+}
+
+/* Motion restraint: global reduced-motion kill switch */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes accordion-down {
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
+}
+
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
+}
+
+@utility animate-accordion-down {
+  animation: accordion-down 0.2s ease-out;
+}
+
+@utility animate-accordion-up {
+  animation: accordion-up 0.2s ease-out;
+}

@@ -1,0 +1,45 @@
+{
+  "name": "zurielst-com",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "npm@10.9.0",
+  "description": "Engineered Dossier portfolio, Next.js static export on Cloudflare Workers",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run && node --test scripts/perf-gate.test.mjs scripts/workflow-config.test.mjs",
+    "perf": "node scripts/perf-gate.mjs",
+    "worker:dev": "wrangler dev --config workers/chat-api/wrangler.jsonc",
+    "site:deploy": "wrangler deploy --config workers/site/wrangler.jsonc",
+    "site:preview": "wrangler versions upload --config workers/site/wrangler.jsonc"
+  },
+  "dependencies": {
+    "@c15t/nextjs": "^1.8.6",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.37.0",
+    "motion": "^13.1.1",
+    "next": "^16.3.3",
+    "next-themes": "^0.4.6",
+    "radix-ui": "^1.6.7",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.8.19",
+    "@tailwindcss/postcss": "^4.1.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.2.0",
+    "lighthouse": "12.8.2",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.2.0",
+    "wrangler": "4.127.1"
+  }
+}
