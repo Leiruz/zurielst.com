@@ -756,5 +756,12 @@
         "context": "Offensive tooling for lab exploitation work"
       }
     ]
+  },
+  "intro": {
+    "bullets": [
+      "I am Zuriel Shanley Tanyory, a Forward Deployed AI and Automation Security Engineer at Singtel, turning security operations into deterministic, auditable automation.",
+      "I founded and ran CiTaDel Cybersecurity Solutions for three years, bringing industry-grade SOC defence to SMEs at a price they could pay.",
+      "First Place at Singtel BIG Fearless Find 2026 (Round 1), reading Information Security at NUS, and shipping to production the whole way."
+    ]
   }
 }

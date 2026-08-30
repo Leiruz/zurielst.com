@@ -362,9 +362,16 @@ const StackBrandsSchema = z
 // Root schema
 // ---------------------------------------------------------------------------
 
+const IntroSchema = z
+  .object({
+    bullets: z.array(z.string().min(20).max(240)).min(2).max(4),
+  })
+  .strict();
+
 const ProfileObjectSchema = z
   .object({
     identity: IdentitySchema,
+    intro: IntroSchema,
     capabilities: CapabilitiesSchema,
     work_cases: z.array(WorkCaseSchema).min(3).max(4),
     timeline: z.array(TimelineEntrySchema).min(1),
