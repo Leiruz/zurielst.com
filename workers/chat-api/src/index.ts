@@ -144,7 +144,10 @@ const worker = {
     }
 
     const contentLength = request.headers.get('content-length');
-    if (contentLength !== null && Number(contentLength) > MAX_BODY_BYTES) {
+    if (
+      contentLength !== null
+      && (!/^\d+$/.test(contentLength) || Number(contentLength) > MAX_BODY_BYTES)
+    ) {
       return json(413, ERROR_REPLIES.payloadTooLarge);
     }
 
@@ -171,6 +174,10 @@ const worker = {
     }
 
     const message = normalizeText(parsed.data.message);
+    const normalizedMessageLength = Array.from(message).length;
+    if (normalizedMessageLength < 1 || normalizedMessageLength > 500) {
+      return json(400, ERROR_REPLIES.badRequest);
+    }
     if (findInjection(message).matched) {
       return json(200, DEFLECTION_REPLY);
     }

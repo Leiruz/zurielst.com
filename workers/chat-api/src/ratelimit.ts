@@ -11,18 +11,27 @@ interface FixedWindow {
   count: number;
 }
 
+const DEFAULT_MAX_TRACKED_KEYS = 1_024;
+
 export class FixedWindowRateLimiter {
   private readonly windows = new Map<string, FixedWindow>();
+  private activeWindowStart: number | undefined;
 
   constructor(
     private readonly limit = 10,
     private readonly windowMs = 60_000,
+    private readonly maxTrackedKeys = DEFAULT_MAX_TRACKED_KEYS,
   ) {}
 
   allow(key: string, now = Date.now()): boolean {
     const windowStart = Math.floor(now / this.windowMs) * this.windowMs;
+    if (this.activeWindowStart !== windowStart) {
+      this.windows.clear();
+      this.activeWindowStart = windowStart;
+    }
     const current = this.windows.get(key);
     if (current === undefined || current.startedAt !== windowStart) {
+      if (this.windows.size >= this.maxTrackedKeys) return false;
       this.windows.set(key, { startedAt: windowStart, count: 1 });
       return true;
     }

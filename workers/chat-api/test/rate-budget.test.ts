@@ -33,6 +33,33 @@ describe('rate limiting', () => {
       checkRateLimit({ RATE_LIMITER: broken }, '198.51.100.3', new FixedWindowRateLimiter(), 0),
     ).resolves.toBe(false);
   });
+
+  it('evicts IP state from expired fixed windows', () => {
+    const limiter = new FixedWindowRateLimiter(10, 60_000);
+    const trackedWindows = () => (
+      limiter as unknown as { windows: Map<string, unknown> }
+    ).windows.size;
+
+    expect(limiter.allow('192.0.2.1', 0)).toBe(true);
+    expect(limiter.allow('192.0.2.2', 0)).toBe(true);
+    expect(trackedWindows()).toBe(2);
+
+    expect(limiter.allow('192.0.2.3', 60_000)).toBe(true);
+    expect(trackedWindows()).toBe(1);
+  });
+
+  it('fails closed for unseen IPs when current-window state is full', () => {
+    const limiter = new FixedWindowRateLimiter(10, 60_000, 2);
+    const trackedWindows = () => (
+      limiter as unknown as { windows: Map<string, unknown> }
+    ).windows.size;
+
+    expect(limiter.allow('192.0.2.1', 0)).toBe(true);
+    expect(limiter.allow('192.0.2.2', 0)).toBe(true);
+    expect(limiter.allow('192.0.2.1', 0)).toBe(true);
+    expect(limiter.allow('192.0.2.3', 0)).toBe(false);
+    expect(trackedWindows()).toBe(2);
+  });
 });
 
 describe('daily Durable Object budget', () => {
@@ -70,10 +97,16 @@ describe('daily Durable Object budget', () => {
   });
 
   it('addresses different UTC dates as fresh budget objects', async () => {
-    const first = await reserveDailyBudget(env, new Date('2099-02-03T23:59:59.999Z'));
-    const second = await reserveDailyBudget(env, new Date('2099-02-04T00:00:00.000Z'));
+    const dateA = new Date('2099-02-03T23:59:59.999Z');
+    const dateB = new Date('2099-02-04T00:00:00.000Z');
+    const dateAReservations = await Promise.all(
+      Array.from({ length: DAILY_CAP }, () => reserveDailyBudget(env, dateA)),
+    );
+    const exhaustedDateA = await reserveDailyBudget(env, dateA);
+    const firstOnDateB = await reserveDailyBudget(env, dateB);
 
-    expect(first).toEqual({ allowed: true, remaining: DAILY_CAP - 1 });
-    expect(second).toEqual({ allowed: true, remaining: DAILY_CAP - 1 });
+    expect(dateAReservations.every(({ allowed }) => allowed)).toBe(true);
+    expect(exhaustedDateA).toEqual({ allowed: false, remaining: 0 });
+    expect(firstOnDateB).toEqual({ allowed: true, remaining: DAILY_CAP - 1 });
   });
 });

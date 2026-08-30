@@ -18,6 +18,7 @@ const HOMOGLYPHS: Readonly<Record<string, string>> = {
   '\u041e': 'O',
   '\u03a1': 'P',
   '\u0420': 'P',
+  '\u0421': 'C',
   '\u03a4': 'T',
   '\u0422': 'T',
   '\u03a5': 'Y',
@@ -27,6 +28,7 @@ const HOMOGLYPHS: Readonly<Record<string, string>> = {
   '\u0430': 'a',
   '\u03b5': 'e',
   '\u0435': 'e',
+  '\u0441': 'c',
   '\u03bf': 'o',
   '\u043e': 'o',
   '\u03c1': 'p',
@@ -45,9 +47,12 @@ const HOMOGLYPHS: Readonly<Record<string, string>> = {
   '\u0433': 'r',
 };
 
+const DEFAULT_IGNORABLES = /\p{Default_Ignorable_Code_Point}+/gu;
+
 /** Canonicalizes confusable Latin text before security checks. */
 export function normalizeText(value: string): string {
-  return Array.from(value.normalize('NFKC'), (character) => HOMOGLYPHS[character] ?? character)
+  const visible = value.normalize('NFKC').replace(DEFAULT_IGNORABLES, '');
+  return Array.from(visible, (character) => HOMOGLYPHS[character] ?? character)
     .join('')
     .replace(/\s+/gu, ' ')
     .trim();

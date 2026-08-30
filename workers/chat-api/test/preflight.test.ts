@@ -1,9 +1,8 @@
 import { SELF, env } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { UNAVAILABLE_REPLY } from '../src/index';
-
 const BASE = 'https://zurielst.com';
+const EXPECTED_UNAVAILABLE_REPLY = 'The assistant is unavailable right now. Everything it knows is on this page, or email zurielst@u.nus.edu.';
 
 describe('chat-api preflight contract', () => {
   beforeEach(() => {
@@ -48,6 +47,6 @@ describe('chat-api preflight contract', () => {
     });
     expect(res.status).toBe(503);
     expect(res.headers.get('cache-control')).toBe('no-store');
-    await expect(res.json()).resolves.toEqual({ answer: UNAVAILABLE_REPLY });
+    await expect(res.json()).resolves.toEqual({ answer: EXPECTED_UNAVAILABLE_REPLY });
   });
 });

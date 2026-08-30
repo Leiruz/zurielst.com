@@ -3,9 +3,13 @@ import { normalizeText } from './normalize';
 
 const MAX_ANSWER_CHARACTERS = 4000;
 const SG_PHONE_PATTERN = /(\+?65[ -]?)?[89]\d{3}[ -]?\d{4}/u;
-const EMAIL_PATTERN = /[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)*/giu;
-const URL_PATTERN = /[a-z][a-z\d+.-]*:\/\/[^\s<>"']+/giu;
+const URL_PATTERN = /(?:\b[a-z][a-z\d+.-]*:[^\s<>"']+|\/\/[^\s<>"']+)/giu;
 const ALLOWED_EMAIL = 'zurielst@u.nus.edu';
+const ALLOWED_EMAIL_LOCAL = 'zurielst';
+const URL_BASE = 'https://zurielst.com/';
+const EMAIL_LOCAL_CHARACTER = /[\p{L}\p{N}\p{M}.!#$%&'*+/=?^_`{|}~-]/u;
+const DOMAIN_LABEL_CHARACTER = /[\p{L}\p{N}\p{M}-]/u;
+const DOMAIN_SEPARATOR_CHARACTER = /[.\u3002\uFF0E\uFF61]/u;
 
 interface AllowedUrlPrefix {
   origin: string;
@@ -53,12 +57,44 @@ function hasDisallowedUrl(value: string): boolean {
   for (const match of value.matchAll(URL_PATTERN)) {
     const allowed = urlCandidates(match[0]).some((candidate) => {
       try {
-        return isAllowedUrl(new URL(candidate));
+        const parsed = candidate.startsWith('//')
+          ? new URL(candidate, URL_BASE)
+          : new URL(candidate);
+        return isAllowedUrl(parsed);
       } catch {
         return false;
       }
     });
     if (!allowed) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function hasDisallowedEmail(value: string): boolean {
+  const lower = value.toLowerCase();
+  for (let at = lower.indexOf('@'); at !== -1; at = lower.indexOf('@', at + 1)) {
+    const start = at - ALLOWED_EMAIL_LOCAL.length;
+    const end = start + ALLOWED_EMAIL.length;
+    const before = start > 0 ? lower[start - 1] : undefined;
+    const after = lower[end];
+    const afterNext = lower[end + 1];
+    const hasDomainContinuation = after !== undefined && (
+      DOMAIN_LABEL_CHARACTER.test(after)
+      || (
+        DOMAIN_SEPARATOR_CHARACTER.test(after)
+        && afterNext !== undefined
+        && DOMAIN_LABEL_CHARACTER.test(afterNext)
+      )
+    );
+
+    if (
+      start < 0
+      || lower.slice(start, end) !== ALLOWED_EMAIL
+      || (before !== undefined && EMAIL_LOCAL_CHARACTER.test(before))
+      || hasDomainContinuation
+    ) {
       return true;
     }
   }
@@ -76,10 +112,8 @@ export function guardAnswer(answer: string): GuardResult {
     return { safe: false, reason: 'phone' };
   }
 
-  for (const email of normalized.matchAll(EMAIL_PATTERN)) {
-    if (email[0].toLowerCase() !== ALLOWED_EMAIL) {
-      return { safe: false, reason: 'email' };
-    }
+  if (hasDisallowedEmail(normalized) || hasDisallowedEmail(answer)) {
+    return { safe: false, reason: 'email' };
   }
 
   if (hasDisallowedUrl(normalized) || hasDisallowedUrl(answer)) {
