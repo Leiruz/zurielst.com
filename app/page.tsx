@@ -10,6 +10,9 @@ import { CapabilityActs } from '@/components/sections/capability-acts';
 import { ContributionHeatmap, type ContributionSnapshot } from '@/components/sections/contribution-heatmap';
 import { SelectedWork } from '@/components/sections/selected-work';
 import { Timeline } from '@/components/sections/timeline';
+import { ProofWall } from '@/components/sections/proof-wall';
+import { Products } from '@/components/sections/products';
+import { Faq } from '@/components/sections/faq';
 import { hasPublicMedia } from '@/lib/media';
 
 export default function Home() {
@@ -27,6 +30,9 @@ export default function Home() {
         <CapabilityActs profile={profile} />
         <SelectedWork profile={profile} />
         <Timeline profile={profile} />
+        <ProofWall profile={profile} />
+        <Products profile={profile} />
+        <Faq profile={profile} />
         <Contact profile={profile} />
       </main>
       <Footer name={profile.identity.name} />
