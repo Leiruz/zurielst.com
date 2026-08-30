@@ -29,6 +29,19 @@ export const DEFLECTION_REPLY = "Nice try. I only answer questions about Zuriel'
 export const BUDGET_REPLY = 'The assistant has reached its daily conversation budget. It resets at midnight UTC. Meanwhile, everything I know is on this page, or email zurielst@u.nus.edu.';
 export const UNAVAILABLE_REPLY = 'The assistant is unavailable right now. Everything it knows is on this page, or email zurielst@u.nus.edu.';
 export const GUARD_REPLY = "I could not produce a safe answer for that. Ask me about Zuriel's published profile, or email zurielst@u.nus.edu.";
+export const PROFILE_REFUSAL_REPLY = 'That is not something my profile covers. Email zurielst@u.nus.edu and Zuriel will answer directly.';
+
+const NO_PROFILE_ANSWER = 'NO_PROFILE_ANSWER';
+const TRIVIAL_SENTINEL_FORMS = new Set([
+  NO_PROFILE_ANSWER,
+  `"${NO_PROFILE_ANSWER}"`,
+  `'${NO_PROFILE_ANSWER}'`,
+  `\`${NO_PROFILE_ANSWER}\``,
+  `**${NO_PROFILE_ANSWER}**`,
+  `__${NO_PROFILE_ANSWER}__`,
+  `“${NO_PROFILE_ANSWER}”`,
+  `‘${NO_PROFILE_ANSWER}’`,
+]);
 
 const CHAT_PATH = '/api/chat';
 const MAX_BODY_BYTES = 8_192;
@@ -87,6 +100,19 @@ function isAllowedOrigin(request: Request, url: URL, localRequest: boolean): boo
   } catch {
     return false;
   }
+}
+
+function mapProfileRefusal(answer: string): string {
+  // Strict matcher on purpose: plain trim, no NFKC or homoglyph folding, so
+  // only the exact documented sentinel forms map (full-width or zero-width
+  // variants stay unmapped per the projection contract).
+  const trimmed = answer.trim();
+  const unpunctuated = /[.!]$/u.test(trimmed)
+    ? trimmed.slice(0, -1)
+    : trimmed;
+  return TRIVIAL_SENTINEL_FORMS.has(unpunctuated)
+    ? PROFILE_REFUSAL_REPLY
+    : answer;
 }
 
 type BodyReadResult =
@@ -213,7 +239,7 @@ const worker = {
       return json(503, UNAVAILABLE_REPLY);
     }
 
-    const guarded = guardAnswer(answer);
+    const guarded = guardAnswer(mapProfileRefusal(answer));
     if (!guarded.safe) {
       return json(200, GUARD_REPLY);
     }

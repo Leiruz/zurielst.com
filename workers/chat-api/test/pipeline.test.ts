@@ -1,6 +1,7 @@
 import { SELF, env, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import projectionMarkdown from '../../../content/chat-projection.md?raw';
 import profileData from '../../../content/profile.json';
 import type { AiBinding, ChatMessage } from '../src/ai';
 import { DAILY_CAP, type DailyBudget } from '../src/budget';
@@ -18,6 +19,12 @@ const EXPECTED_DEFLECTION_REPLY = "Nice try. I only answer questions about Zurie
 const EXPECTED_BUDGET_REPLY = 'The assistant has reached its daily conversation budget. It resets at midnight UTC. Meanwhile, everything I know is on this page, or email zurielst@u.nus.edu.';
 const EXPECTED_UNAVAILABLE_REPLY = 'The assistant is unavailable right now. Everything it knows is on this page, or email zurielst@u.nus.edu.';
 const EXPECTED_GUARD_REPLY = "I could not produce a safe answer for that. Ask me about Zuriel's published profile, or email zurielst@u.nus.edu.";
+const EXPECTED_PROFILE_REFUSAL_REPLY = projectionMarkdown.match(
+  /## Worker-side sentinel mapping[\s\S]*?```\r?\n([^\r\n]+)\r?\n```/u,
+)?.[1];
+if (EXPECTED_PROFILE_REFUSAL_REPLY === undefined) {
+  throw new Error('Projection is missing the worker-side canonical refusal.');
+}
 let ipSequence = 20;
 
 beforeEach(() => {
@@ -574,6 +581,39 @@ describe('chat pipeline ordering and model messages', () => {
 });
 
 describe('chat pipeline complete-answer guard and SSE framing', () => {
+  it.each([
+    ['exactly', 'NO_PROFILE_ANSWER'],
+    ['with surrounding whitespace', ' \n\tNO_PROFILE_ANSWER\r\n '],
+    ['inside double quotes', '"NO_PROFILE_ANSWER"'],
+    ['inside single quotes with punctuation', "'NO_PROFILE_ANSWER'!"],
+    ['inside a trivial inline-code wrapper', '`NO_PROFILE_ANSWER`.'],
+    ['inside bold emphasis', '**NO_PROFILE_ANSWER**'],
+    ['inside underscore emphasis', '__NO_PROFILE_ANSWER__'],
+    ['inside curly double quotes', '“NO_PROFILE_ANSWER”'],
+    ['inside curly single quotes with punctuation', '‘NO_PROFILE_ANSWER’!'],
+  ])('maps a sentinel response %s to the canonical profile refusal', async (_label, answer) => {
+    const run = vi.fn<AiBinding['run']>().mockResolvedValue({ response: answer });
+    const response = await worker.fetch(post(), fakeEnv({ run }));
+
+    expect(await readSse(response)).toMatchObject({ text: EXPECTED_PROFILE_REFUSAL_REPLY });
+    expect(run).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['an embedded sentinel', 'The model returned NO_PROFILE_ANSWER while describing the protocol.'],
+    ['a real answer with the literal', 'Zuriel uses the literal string NO_PROFILE_ANSWER in this example.'],
+    ['mismatched quote wrappers', '"NO_PROFILE_ANSWER\''],
+    ['question punctuation', 'NO_PROFILE_ANSWER?'],
+    ['a full-width variant', 'ＮＯ＿ＰＲＯＦＩＬＥ＿ＡＮＳＷＥＲ'],
+    ['a zero-width-embedded variant', 'NO_PROFILE​_ANSWER'],
+  ])('does not map %s', async (_label, answer) => {
+    const run = vi.fn<AiBinding['run']>().mockResolvedValue({ response: answer });
+    const response = await worker.fetch(post(), fakeEnv({ run }));
+
+    expect(await readSse(response)).toMatchObject({ text: answer });
+    expect(run).toHaveBeenCalledTimes(1);
+  });
+
   it.each([
     ['phone', 'Contact him at +65 8123 4567.'],
     ['foreign URL', 'Read https://evil.example/private for more.'],
