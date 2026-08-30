@@ -34,5 +34,7 @@ describe('LiveClock', () => {
     expect(markup).toContain('aria-label="Current time in Test City: --:--:-- -05"');
     expect(markup).toContain('>--:--:-- -05</time>');
     expect(markup).not.toContain('datetime=');
+    expect(markup).not.toContain('ahead of you');
+    expect(markup).not.toContain('behind you');
   });
 });

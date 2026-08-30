@@ -9,6 +9,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import Home from '@/app/page';
 import { ChatAssistant } from '@/components/chat/chat-assistant';
+import { CommandPaletteLoader } from '@/components/command-palette-loader';
 import { Contact } from '@/components/sections/contact';
 import { Terminal } from '@/components/terminal';
 import profileJson from '@/content/profile.json';
@@ -78,5 +79,51 @@ describe('page client boundaries', () => {
     expect(source).toContain('dossier:command-palette-open');
     expect(source).toContain('dossier:terminal-open');
     expect(source).toContain('.chat-launcher[aria-expanded=');
+  });
+
+  it('embeds the nine guarded global g-key section sequences in excluded inline code', () => {
+    const page = Home();
+    const shell = childWithType(page.props.children, 'div');
+    const script = childWithType(shell?.props.children, 'script');
+    const source = String(
+      (script?.props.dangerouslySetInnerHTML as { __html?: string } | undefined)?.__html,
+    );
+
+    for (const [key, targetId] of Object.entries({
+      i: 'identity',
+      w: 'work',
+      s: 'stack',
+      t: 'timeline',
+      e: 'education',
+      a: 'proof',
+      p: 'products',
+      f: 'faq',
+      c: 'contact',
+    })) {
+      expect(source).toContain(`"${key}":"${targetId}"`);
+    }
+    expect(source).toContain('event.key.toLowerCase()');
+    expect(source).toContain('target instanceof HTMLInputElement');
+    expect(source).toContain('target instanceof HTMLTextAreaElement');
+    expect(source).toContain('target.isContentEditable');
+    expect(source).toContain('dataset.intro !== "done"');
+    expect(source).toContain('[role="dialog"][aria-modal="true"]');
+    expect(source).toContain('#dossier-chat-dialog[data-state="open"]');
+    for (const guard of ['event.ctrlKey', 'event.altKey', 'event.metaKey', 'event.shiftKey', 'event.repeat']) {
+      expect(source).toContain(guard);
+    }
+    expect(source).toContain('goPrefix');
+  });
+
+  it('passes tracked social profiles and untracked internal resources to the palette', () => {
+    const page = Home();
+    const shell = childWithType(page.props.children, 'div');
+    const palette = childWithType(shell?.props.children, CommandPaletteLoader);
+
+    expect(palette?.props.githubUrl).toBe('https://github.com/Leiruz?utm_source=zurielst.com');
+    expect(palette?.props.linkedInUrl).toBe(
+      'https://www.linkedin.com/in/zuriel-shanley/?utm_source=zurielst.com',
+    );
+    expect(palette?.props.sourceUrl).toBe('https://github.com/Leiruz/zurielst.com');
   });
 });

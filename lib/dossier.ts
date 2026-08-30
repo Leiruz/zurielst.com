@@ -72,6 +72,25 @@ export function createLocationClockFallback(location: ClockLocation) {
   };
 }
 
+export function formatVisitorRelativeOffset(
+  timezone: string,
+  visitorOffsetMinutes: number,
+) {
+  const deltaMinutes = parseUtcOffset(timezone).hours * 60 + visitorOffsetMinutes;
+  if (deltaMinutes === 0) return 'same time as you';
+
+  const absoluteMinutes = Math.abs(deltaMinutes);
+  const hours = Math.floor(absoluteMinutes / 60);
+  const minutes = absoluteMinutes % 60;
+  const duration = [hours ? `${hours}h` : '', minutes ? `${minutes}m` : '']
+    .filter(Boolean)
+    .join(' ');
+
+  return deltaMinutes > 0
+    ? `${duration} ahead of you`
+    : `${duration} behind you`;
+}
+
 export function deriveInitials(name: string): string {
   const nameParts = name.trim().split(/\s+/).filter(Boolean);
   const firstInitial = nameParts[0]?.[0] ?? '';

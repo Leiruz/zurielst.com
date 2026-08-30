@@ -829,6 +829,118 @@ export function validateLandingPageContract(html) {
   }
 }
 
+export function validateStructuredData(html) {
+  const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)]
+    .filter((match) => /\btype\s*=\s*(["'])application\/ld\+json\1/i.test(match[1]));
+
+  if (scripts.length !== 1) {
+    throw new Error(
+      "JSON-LD must contain exactly one script with Person, WebSite, and ProfilePage",
+    );
+  }
+
+  let structuredData;
+  try {
+    structuredData = JSON.parse(scripts[0][2]);
+  } catch {
+    throw new Error(
+      "JSON-LD must contain exactly one script with Person, WebSite, and ProfilePage",
+    );
+  }
+
+  const graph = structuredData?.["@graph"];
+  const requiredTypes = ["Person", "WebSite", "ProfilePage"];
+  if (
+    structuredData?.["@context"] !== "https://schema.org" ||
+    !Array.isArray(graph) ||
+    requiredTypes.some((type) => graph.filter((entry) => entry?.["@type"] === type).length !== 1)
+  ) {
+    throw new Error(
+      "JSON-LD must contain exactly one script with Person, WebSite, and ProfilePage",
+    );
+  }
+
+  const person = graph.find((entry) => entry["@type"] === "Person");
+  const website = graph.find((entry) => entry["@type"] === "WebSite");
+  const profilePage = graph.find((entry) => entry["@type"] === "ProfilePage");
+  const expectedSameAs = [
+    "https://github.com/Leiruz",
+    "https://www.linkedin.com/in/zuriel-shanley/",
+  ];
+
+  if (
+    person.name !== "Zuriel Shanley Tanyory" ||
+    person.url !== PRODUCTION_ORIGIN.origin ||
+    typeof person.jobTitle !== "string" ||
+    JSON.stringify(person.sameAs) !== JSON.stringify(expectedSameAs) ||
+    profilePage.mainEntity?.["@id"] !== person["@id"] ||
+    profilePage.isPartOf?.["@id"] !== website["@id"] ||
+    typeof profilePage.dateModified !== "string" ||
+    !Number.isFinite(Date.parse(profilePage.dateModified))
+  ) {
+    throw new Error("JSON-LD profile graph contains invalid public-profile values");
+  }
+}
+
+export function validateNotFoundPage(html) {
+  const head = html.match(/<head\b[^>]*>([\s\S]*?)<\/head>/i)?.[1] ?? "";
+  const titles = [...head.matchAll(/<title\b[^>]*>([\s\S]*?)<\/title>/gi)]
+    .map((match) => match[1].trim());
+
+  if (titles.at(-1) !== "Page Not Found") {
+    throw new Error("404.html must use Page Not Found as its effective head title");
+  }
+  if (
+    !html.includes("FIG. 404. MISSING DOCUMENT") ||
+    !/<a\b[^>]*\bhref=(["'])\/\1[^>]*>[\s\S]*?Return to the dossier[\s\S]*?<\/a>/i.test(html)
+  ) {
+    throw new Error("404.html must contain the branded dossier return route");
+  }
+}
+
+async function readRequiredExportFile(outputDirectory, relativePath) {
+  const filePath = path.join(outputDirectory, relativePath);
+  let fileStatus;
+  try {
+    fileStatus = await stat(filePath);
+  } catch (error) {
+    if (error?.code === "ENOENT") throw new Error(`${filePath} is missing`);
+    throw error;
+  }
+  if (!fileStatus.isFile()) throw new Error(`${filePath} is not a file`);
+  return readFile(filePath, "utf8");
+}
+
+async function validateCapstoneExports(outputDirectory) {
+  const [dossier, llms, vcard, notFound] = await Promise.all([
+    readRequiredExportFile(outputDirectory, "dossier.md"),
+    readRequiredExportFile(outputDirectory, "llms.txt"),
+    readRequiredExportFile(outputDirectory, "zurielst.vcf"),
+    readRequiredExportFile(outputDirectory, "404.html"),
+  ]);
+
+  if (
+    !dossier.includes("Zuriel Shanley Tanyory") ||
+    !dossier.includes("Forward Deployed AI & Automation Security Engineer")
+  ) {
+    throw new Error("dossier.md must contain Zuriel Shanley Tanyory and the primary role");
+  }
+  if (!llms.includes("https://zurielst.com/dossier.md")) {
+    throw new Error("llms.txt must point to https://zurielst.com/dossier.md");
+  }
+  for (const value of [
+    "BEGIN:VCARD",
+    "FN:Zuriel Shanley Tanyory",
+    "TITLE:Forward Deployed AI & Automation Security Engineer",
+    "EMAIL:zurielst@u.nus.edu",
+    "URL:https://zurielst.com",
+    "https://www.linkedin.com/in/zuriel-shanley/",
+  ]) {
+    if (!vcard.includes(value)) throw new Error(`zurielst.vcf must contain ${value}`);
+  }
+  validateNotFoundPage(notFound);
+}
+
 export async function verifyBuildOutput(outputDirectory = path.resolve("out")) {
   const resolvedOutputDirectory = path.resolve(outputDirectory);
   const headersPath = path.join(resolvedOutputDirectory, "_headers");
@@ -881,7 +993,9 @@ export async function verifyBuildOutput(outputDirectory = path.resolve("out")) {
     throw new Error(`CSP compatibility check failed:\n${violations.join("\n")}`);
   }
 
-  validateLandingPageContract(await readFile(indexPath, "utf8"));
+  const landingPage = await readFile(indexPath, "utf8");
+  validateLandingPageContract(landingPage);
+  validateStructuredData(landingPage);
 
   const resumePath = path.join(resolvedOutputDirectory, "media", "resume.pdf");
   let resumeStatus;
@@ -894,6 +1008,8 @@ export async function verifyBuildOutput(outputDirectory = path.resolve("out")) {
     throw error;
   }
   if (!resumeStatus.isFile()) throw new Error(`${resumePath} is not a file`);
+
+  await validateCapstoneExports(resolvedOutputDirectory);
 
   return { cssFileCount: cssFiles.length, htmlFileCount: htmlFiles.length, headersPath };
 }

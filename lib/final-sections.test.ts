@@ -66,6 +66,11 @@ describe('final dossier sections', () => {
     expect(markup).not.toContain('Artifacts');
     expect(markup).not.toContain('Video artifact');
     expect(markup).not.toContain('Image artifact');
+    expect(markup).toMatch(/href="\/zurielst\.vcf"[^>]*download=""/);
+    for (const social of profile.identity.socials) {
+      expect(markup).toContain(`href="${social.url}?utm_source=zurielst.com"`);
+    }
+    expect(markup).not.toContain('/zurielst.vcf?utm_source=');
   });
 
   it('keeps one exact figure label inside each top-level section', () => {

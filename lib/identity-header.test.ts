@@ -42,6 +42,19 @@ describe('identity header', () => {
     expect(markup).toContain('download=""');
   });
 
+  it('tracks only outbound social profile links', () => {
+    const markup = renderToStaticMarkup(
+      createElement(IdentityHeader, { profile }),
+    );
+
+    for (const social of profile.identity.socials) {
+      expect(markup).toContain(`href="${social.url}?utm_source=zurielst.com"`);
+      expect(markup).not.toContain(`href="${social.url}"`);
+    }
+    expect(markup).toContain('href="/media/resume.pdf"');
+    expect(markup).not.toContain('/media/resume.pdf?utm_source=');
+  });
+
   it('renders an accessible xl-only isometric ZST blueprint mark', () => {
     const markup = renderToStaticMarkup(
       createElement(IdentityHeader, { profile }),

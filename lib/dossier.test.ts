@@ -77,6 +77,22 @@ describe('contributionHeatBucket', () => {
   });
 });
 
+describe('formatVisitorRelativeOffset', () => {
+  it.each([
+    [-360, '2h ahead of you'],
+    [-600, '2h behind you'],
+    [-480, 'same time as you'],
+    [-330, '2h 30m ahead of you'],
+  ])('formats a visitor offset of %i minutes', (visitorOffsetMinutes, expected) => {
+    const formatter = Reflect.get(dossier, 'formatVisitorRelativeOffset') as unknown;
+
+    expect(formatter).toBeTypeOf('function');
+    if (typeof formatter !== 'function') return;
+
+    expect(formatter('UTC+8', visitorOffsetMinutes)).toBe(expected);
+  });
+});
+
 describe('greetingForHour', () => {
   it.each([
     [0, 'Good morning'],

@@ -4,6 +4,7 @@ import { LiveClock } from '@/components/dossier/live-clock';
 import { RoleRotator } from '@/components/dossier/role-rotator';
 import { ZstHeroMark } from '@/components/dossier/zst-hero-mark';
 import { PortraitAvatar } from '@/components/sections/portrait-avatar';
+import { withSiteUtm } from '@/lib/outbound-links';
 
 export function IdentityHeader({ profile }: { profile: Profile }) {
   const { identity } = profile;
@@ -45,7 +46,7 @@ export function IdentityHeader({ profile }: { profile: Profile }) {
 
             <div className="mt-9 flex flex-wrap gap-x-6 gap-y-3">
               {identity.socials.map((social) => (
-                <a key={social.platform} href={social.url} target="_blank" rel="noopener noreferrer" className="font-mono text-sm text-text-2 underline decoration-line-strong underline-offset-4 transition-colors duration-150 hover:text-text-1">
+                <a key={social.platform} href={withSiteUtm(social.url)} target="_blank" rel="noopener noreferrer" className="font-mono text-sm text-text-2 underline decoration-line-strong underline-offset-4 transition-colors duration-150 hover:text-text-1">
                   {social.platform} ↗
                 </a>
               ))}

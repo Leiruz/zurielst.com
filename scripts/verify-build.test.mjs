@@ -11,7 +11,122 @@ try {
   if (error?.code !== "ERR_MODULE_NOT_FOUND") throw error;
 }
 
+const nextConfigModule = await import("../next.config.mjs");
+
 const temporaryDirectories = new Set();
+
+test("prefers BUILD_SHA over other environment sources and Git", () => {
+  const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
+  let gitCallCount = 0;
+  const successfulGit = () => {
+    gitCallCount += 1;
+    return "git-sha\n";
+  };
+
+  assert.equal(typeof resolveBuildSha, "function");
+  if (typeof resolveBuildSha !== "function") return;
+
+  assert.equal(resolveBuildSha(successfulGit, {
+    BUILD_SHA: " build-sha ",
+    GITHUB_SHA: "github-sha",
+    CF_PAGES_COMMIT_SHA: "cloudflare-sha",
+  }), "build-sha");
+  assert.equal(gitCallCount, 0);
+});
+
+test("prefers GITHUB_SHA after skipping an empty BUILD_SHA", () => {
+  const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
+  let gitCallCount = 0;
+  const successfulGit = () => {
+    gitCallCount += 1;
+    return "git-sha\n";
+  };
+
+  assert.equal(typeof resolveBuildSha, "function");
+  if (typeof resolveBuildSha !== "function") return;
+
+  assert.equal(resolveBuildSha(successfulGit, {
+    BUILD_SHA: " ",
+    GITHUB_SHA: " github-sha ",
+    CF_PAGES_COMMIT_SHA: "cloudflare-sha",
+  }), "github-sha");
+  assert.equal(gitCallCount, 0);
+});
+
+test("uses CF_PAGES_COMMIT_SHA after skipping empty higher-priority values", () => {
+  const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
+  let gitCallCount = 0;
+  const successfulGit = () => {
+    gitCallCount += 1;
+    return "git-sha\n";
+  };
+
+  assert.equal(typeof resolveBuildSha, "function");
+  if (typeof resolveBuildSha !== "function") return;
+
+  assert.equal(resolveBuildSha(successfulGit, {
+    BUILD_SHA: "",
+    GITHUB_SHA: "\t",
+    CF_PAGES_COMMIT_SHA: " cloudflare-sha ",
+  }), "cloudflare-sha");
+  assert.equal(gitCallCount, 0);
+});
+
+test("falls back to Git after skipping empty environment values", () => {
+  const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
+  const successfulGit = () => "git-sha\n";
+
+  assert.equal(typeof resolveBuildSha, "function");
+  if (typeof resolveBuildSha !== "function") return;
+
+  assert.equal(resolveBuildSha(successfulGit, {
+    BUILD_SHA: " ",
+    GITHUB_SHA: "",
+    CF_PAGES_COMMIT_SHA: "\n",
+  }), "git-sha");
+});
+
+test("invokes Git with the exact rev-parse contract when all environment values are empty", () => {
+  const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
+  const gitCalls = [];
+  const successfulGit = (...arguments_) => {
+    gitCalls.push(arguments_);
+    return "git-sha\n";
+  };
+
+  assert.equal(typeof resolveBuildSha, "function");
+  if (typeof resolveBuildSha !== "function") return;
+
+  assert.equal(resolveBuildSha(successfulGit, {
+    BUILD_SHA: "",
+    GITHUB_SHA: "",
+    CF_PAGES_COMMIT_SHA: "",
+  }), "git-sha");
+  assert.deepEqual(gitCalls, [
+    ["git", ["rev-parse", "HEAD"], { encoding: "utf8" }],
+  ]);
+});
+
+test("returns unknown when Git discovery produces only whitespace", () => {
+  const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
+
+  assert.equal(typeof resolveBuildSha, "function");
+  if (typeof resolveBuildSha !== "function") return;
+
+  assert.equal(resolveBuildSha(() => " \t\n", {}), "unknown");
+});
+
+test("returns unknown when Git discovery throws and no environment value exists", () => {
+  const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
+  const throwingGit = () => {
+    throw new Error("git unavailable");
+  };
+
+  assert.equal(typeof resolveBuildSha, "function");
+  if (typeof resolveBuildSha !== "function") return;
+
+  assert.equal(resolveBuildSha(throwingGit, {}), "unknown");
+});
 
 const validHeaders = `/*
   X-Content-Type-Options: nosniff
@@ -25,8 +140,40 @@ https://:version.:subdomain.workers.dev/*
   X-Robots-Tag: noindex
 `;
 
+const validStructuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "https://zurielst.com/#person",
+      name: "Zuriel Shanley Tanyory",
+      url: "https://zurielst.com",
+      jobTitle: "Forward Deployed AI & Automation Security Engineer",
+      sameAs: [
+        "https://github.com/Leiruz",
+        "https://www.linkedin.com/in/zuriel-shanley/",
+      ],
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://zurielst.com/#website",
+      url: "https://zurielst.com",
+    },
+    {
+      "@type": "ProfilePage",
+      "@id": "https://zurielst.com/#profile",
+      url: "https://zurielst.com",
+      dateModified: "2026-08-31T04:05:06.000Z",
+      mainEntity: { "@id": "https://zurielst.com/#person" },
+      isPartOf: { "@id": "https://zurielst.com/#website" },
+    },
+  ],
+};
+
+const validStructuredDataMarkup = `<script type="application/ld+json">${JSON.stringify(validStructuredData)}</script>`;
+
 const validLandingPage = `<!doctype html>
-  <head><link rel="icon" type="image/svg+xml" href="/favicon.svg"></head>
+  <head><link rel="icon" type="image/svg+xml" href="/favicon.svg">${validStructuredDataMarkup}</head>
   <main>
     <section id="identity"><p class="fig-label">Fig. 1. Identity</p></section>
     <section id="intro"><p class="fig-label">Fig. 2. Introduction</p></section>
@@ -56,6 +203,30 @@ async function createTemporaryDirectory() {
   const directory = await mkdtemp(path.join(tmpdir(), "verify-build-"));
   temporaryDirectories.add(directory);
   return directory;
+}
+
+async function writeValidCapstoneExport(
+  outputDirectory,
+  { landingPage = validLandingPage, omit = [] } = {},
+) {
+  const omitted = new Set(omit);
+  await writeFile(path.join(outputDirectory, "_headers"), validHeaders);
+  await writeFile(path.join(outputDirectory, "index.html"), landingPage);
+  await mkdir(path.join(outputDirectory, "media"), { recursive: true });
+  await writeFile(path.join(outputDirectory, "media", "resume.pdf"), "resume");
+
+  const files = new Map([
+    ["404.html", '<!doctype html><html><head><title>Page Not Found</title></head><body><p>FIG. 404. MISSING DOCUMENT</p><a href="/">Return to the dossier</a></body></html>'],
+    ["dossier.md", "# Zuriel Shanley Tanyory\n\nForward Deployed AI & Automation Security Engineer\n"],
+    ["llms.txt", "# zurielst.com\n\n- [Full public dossier](https://zurielst.com/dossier.md)\n"],
+    ["zurielst.vcf", "BEGIN:VCARD\nFN:Zuriel Shanley Tanyory\nTITLE:Forward Deployed AI & Automation Security Engineer\nEMAIL:zurielst@u.nus.edu\nURL:https://zurielst.com\nURL;TYPE=LinkedIn:https://www.linkedin.com/in/zuriel-shanley/\nEND:VCARD\n"],
+  ]);
+
+  await Promise.all(
+    [...files].filter(([name]) => !omitted.has(name)).map(([name, contents]) =>
+      writeFile(path.join(outputDirectory, name), contents),
+    ),
+  );
 }
 
 after(async () => {
@@ -445,6 +616,67 @@ test("requires the exported resume PDF to be a file", async () => {
     verifyBuildOutput(outputDirectory),
     /media[\\/]resume\.pdf.*missing/i,
   );
+});
+
+for (const requiredFile of ["dossier.md", "llms.txt", "zurielst.vcf", "404.html"]) {
+  test(`requires the exported ${requiredFile} capstone artifact`, async () => {
+    const verifyBuildOutput = requireSubjectFunction("verifyBuildOutput");
+    const outputDirectory = await createTemporaryDirectory();
+    await writeValidCapstoneExport(outputDirectory, { omit: [requiredFile] });
+
+    await assert.rejects(
+      verifyBuildOutput(outputDirectory),
+      new RegExp(requiredFile.replace(".", "\\."), "i"),
+    );
+  });
+}
+
+test("requires one valid Person, WebSite, and ProfilePage JSON-LD graph", async () => {
+  const verifyBuildOutput = requireSubjectFunction("verifyBuildOutput");
+  const outputDirectory = await createTemporaryDirectory();
+  await writeValidCapstoneExport(outputDirectory, {
+    landingPage: validLandingPage.replace(validStructuredDataMarkup, ""),
+  });
+
+  await assert.rejects(
+    verifyBuildOutput(outputDirectory),
+    /JSON-LD.*Person.*WebSite.*ProfilePage/i,
+  );
+});
+
+test("requires the effective exported 404 head title", async () => {
+  const verifyBuildOutput = requireSubjectFunction("verifyBuildOutput");
+  const outputDirectory = await createTemporaryDirectory();
+  await writeValidCapstoneExport(outputDirectory);
+  await writeFile(
+    path.join(outputDirectory, "404.html"),
+    "<!doctype html><html><head><title>Wrong title</title></head><body>FIG. 404. MISSING DOCUMENT</body></html>",
+  );
+
+  await assert.rejects(
+    verifyBuildOutput(outputDirectory),
+    /404.*Page Not Found/i,
+  );
+});
+
+test("requires key public-profile strings in the generated artifacts", async () => {
+  const verifyBuildOutput = requireSubjectFunction("verifyBuildOutput");
+  const outputDirectory = await createTemporaryDirectory();
+  await writeValidCapstoneExport(outputDirectory);
+  await writeFile(path.join(outputDirectory, "dossier.md"), "# Incomplete dossier\n");
+
+  await assert.rejects(
+    verifyBuildOutput(outputDirectory),
+    /dossier\.md.*Zuriel Shanley Tanyory/i,
+  );
+});
+
+test("accepts a complete capstone static export", async () => {
+  const verifyBuildOutput = requireSubjectFunction("verifyBuildOutput");
+  const outputDirectory = await createTemporaryDirectory();
+  await writeValidCapstoneExport(outputDirectory);
+
+  await assert.doesNotReject(verifyBuildOutput(outputDirectory));
 });
 
 test("verifies every exported HTML file, not only the landing page", async () => {

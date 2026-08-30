@@ -43,14 +43,14 @@ afterEach(() => {
 });
 
 describe('command palette action model', () => {
-  it('exposes exactly 20 actions in the required groups and page order', () => {
+  it('exposes exactly 23 actions in the required groups and page order', () => {
     const actions = createCommandPaletteActions(config);
 
-    expect(actions).toHaveLength(20);
+    expect(actions).toHaveLength(23);
     expect(actions.map((item) => item.group)).toEqual([
       ...Array<string>(13).fill('Sections'),
-      ...Array<string>(4).fill('Actions'),
-      ...Array<string>(3).fill('Links'),
+      ...Array<string>(6).fill('Actions'),
+      ...Array<string>(4).fill('Links'),
     ]);
     expect(actions.slice(0, 13).map((item) => item.label)).toEqual([
       'Identity',
@@ -69,20 +69,63 @@ describe('command palette action model', () => {
     ]);
     expect(actions.slice(13).map((item) => item.label)).toEqual([
       'Download resume',
+      'Download vCard',
       'Open terminal',
-      'Toggle theme',
+      'Light theme',
+      'Dark theme',
       'Copy email',
       'GitHub',
       'LinkedIn',
       'View source',
+      'llms.txt',
     ]);
   });
 
-  it('gives the resume action its public href and download semantics', () => {
+  it('gives the public downloads and llms file their exact internal hrefs', () => {
     expect(action('Download resume')).toMatchObject({
       href: '/media/resume.pdf',
       download: true,
     });
+    expect(action('Download vCard')).toMatchObject({
+      href: '/zurielst.vcf',
+      download: true,
+    });
+    expect(action('llms.txt')).toMatchObject({
+      href: '/llms.txt',
+      external: false,
+    });
+  });
+
+  it('provides only explicit light and dark theme commands', () => {
+    const themeActions = createCommandPaletteActions(config).filter(
+      (item) => item.kind === 'theme',
+    );
+
+    expect(themeActions).toEqual([
+      expect.objectContaining({ label: 'Light theme', theme: 'light' }),
+      expect.objectContaining({ label: 'Dark theme', theme: 'dark' }),
+    ]);
+    expect(themeActions.map((item) => item.label)).not.toContain('System theme');
+    expect(themeActions.map((item) => item.label)).not.toContain('Toggle theme');
+  });
+
+  it('maps the nine global g sequences onto their stable section rows', () => {
+    const shortcuts = createCommandPaletteActions(config)
+      .filter((item): item is Extract<CommandPaletteAction, { kind: 'section' }> =>
+        item.kind === 'section' && Boolean(item.shortcut))
+      .map((item) => [item.shortcut?.join(' '), item.targetId]);
+
+    expect(shortcuts).toEqual([
+      ['g i', 'identity'],
+      ['g s', 'stack'],
+      ['g w', 'work'],
+      ['g t', 'timeline'],
+      ['g e', 'education'],
+      ['g a', 'proof'],
+      ['g p', 'products'],
+      ['g f', 'faq'],
+      ['g c', 'contact'],
+    ]);
   });
 
   it('filters case-insensitively across labels and keywords', () => {
@@ -137,7 +180,6 @@ describe('command palette activation', () => {
       findSection: (id) => (id === 'work' ? { scrollIntoView } : null),
       navigate: vi.fn(),
       reducedMotion: false,
-      resolvedTheme: 'light',
       setTheme: vi.fn(),
       updateHash,
     });
@@ -157,7 +199,6 @@ describe('command palette activation', () => {
       findSection: () => ({ scrollIntoView }),
       navigate: vi.fn(),
       reducedMotion: true,
-      resolvedTheme: 'light',
       setTheme: vi.fn(),
       updateHash: vi.fn(),
     });
@@ -176,7 +217,6 @@ describe('command palette activation', () => {
       findSection: vi.fn(),
       navigate: vi.fn(),
       reducedMotion: false,
-      resolvedTheme: 'light',
       setTheme: vi.fn(),
       updateHash: vi.fn(),
     });
@@ -195,7 +235,6 @@ describe('command palette activation', () => {
       findSection: vi.fn(),
       navigate: vi.fn(),
       reducedMotion: false,
-      resolvedTheme: 'light',
       setTheme: vi.fn(),
       updateHash: vi.fn(),
     });
@@ -203,22 +242,24 @@ describe('command palette activation', () => {
     expect(copyText).toHaveBeenCalledWith(config.email);
   });
 
-  it('toggles the resolved theme through next-themes setTheme', async () => {
+  it.each([
+    ['Light theme', 'light'],
+    ['Dark theme', 'dark'],
+  ])('sets the explicit %s command through next-themes', async (label, theme) => {
     const setTheme = vi.fn();
 
-    await activateCommandPaletteAction(action('Toggle theme'), {
+    await activateCommandPaletteAction(action(label), {
       close: vi.fn(),
       copyText: vi.fn(),
       dispatchTerminalOpen: vi.fn(),
       findSection: vi.fn(),
       navigate: vi.fn(),
       reducedMotion: false,
-      resolvedTheme: 'dark',
       setTheme,
       updateHash: vi.fn(),
     });
 
-    expect(setTheme).toHaveBeenCalledWith('light');
+    expect(setTheme).toHaveBeenCalledWith(theme);
   });
 
   it.each(['Download resume', 'GitHub'])(
@@ -233,7 +274,6 @@ describe('command palette activation', () => {
         findSection: vi.fn(),
         navigate: vi.fn(),
         reducedMotion: false,
-        resolvedTheme: 'light',
         setTheme: vi.fn(),
         updateHash: vi.fn(),
       });
@@ -264,7 +304,6 @@ describe('command palette keyboard and focus lifecycle', () => {
           findSection: () => ({ scrollIntoView }),
           navigate: vi.fn(),
           reducedMotion: false,
-          resolvedTheme: 'light',
           setTheme: vi.fn(),
           updateHash,
         }),
@@ -495,8 +534,14 @@ describe('command palette markup', () => {
     expect(markup).toMatch(/<input(?=[^>]*role="combobox")(?=[^>]*aria-controls="command-palette-listbox")(?=[^>]*aria-expanded="true")(?=[^>]*aria-autocomplete="list")(?=[^>]*aria-activedescendant="command-palette-option-)/);
     expect(markup).toMatch(/role="listbox"/);
     expect(markup).not.toMatch(/role="listbox"[^>]*aria-activedescendant/);
-    expect(markup.match(/role="option"/g)).toHaveLength(20);
+    expect(markup.match(/role="option"/g)).toHaveLength(23);
     expect(markup).toMatch(/href="\/media\/resume\.pdf"[^>]*download=""/);
+    expect(markup).toMatch(/href="\/zurielst\.vcf"[^>]*download=""/);
+    expect(markup).toMatch(/href="\/llms\.txt"/);
     expect(markup).toMatch(/href="https:\/\/github\.com\/Leiruz"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
+    expect(markup).toContain('<kbd>g</kbd>');
+    expect(markup).toContain('<kbd>i</kbd>');
+    expect(markup).toContain('>ZST</span>');
+    expect(markup).toContain('<kbd>Enter</kbd> Go to section');
   });
 });

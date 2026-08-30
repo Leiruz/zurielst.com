@@ -21,6 +21,13 @@ import { ProofWall } from '@/components/sections/proof-wall';
 import { Products } from '@/components/sections/products';
 import { Faq } from '@/components/sections/faq';
 import { hasPublicMedia } from '@/lib/media';
+import { withSiteUtm } from '@/lib/outbound-links';
+import {
+  GLOBAL_SECTION_SHORTCUTS,
+  installGlobalSectionShortcuts,
+} from '@/lib/section-shortcuts';
+
+const GLOBAL_SECTION_SHORTCUTS_SCRIPT = `(${installGlobalSectionShortcuts.toString()})(${JSON.stringify(GLOBAL_SECTION_SHORTCUTS)});`;
 
 const COPY_DISCLOSURE_STATE_SCRIPT = `(() => {
   document.querySelectorAll("details[data-copy-disclosure]").forEach((details) => {
@@ -56,8 +63,10 @@ const COPY_DISCLOSURE_STATE_SCRIPT = `(() => {
     const launcher = document.querySelector('.chat-launcher[aria-expanded="true"]');
     if (launcher instanceof HTMLButtonElement) launcher.click();
   };
+  ${GLOBAL_SECTION_SHORTCUTS_SCRIPT}
   window.addEventListener("keydown", (event) => {
-    const opensPalette = event.key.toLowerCase() === "k" && (event.ctrlKey || event.metaKey);
+    const key = event.key.toLowerCase();
+    const opensPalette = key === "k" && (event.ctrlKey || event.metaKey);
     if (event.key === "Escape" || event.key === "\u0060" || opensPalette) {
       if (event.key === "Escape") event.preventDefault();
       closeOpenAssistant();
@@ -102,8 +111,8 @@ export default function Home() {
   const profile = profileJson as Profile;
   const contributions = contributionJson as ContributionSnapshot;
   const resumeAvailable = hasPublicMedia('/media/resume.pdf');
-  const githubUrl = profile.identity.socials.find((social) => social.platform === 'GitHub')?.url ?? profile.identity.github.url;
-  const linkedInUrl = profile.identity.socials.find((social) => social.platform === 'LinkedIn')?.url ?? '';
+  const githubUrl = withSiteUtm(profile.identity.socials.find((social) => social.platform === 'GitHub')?.url ?? profile.identity.github.url);
+  const linkedInUrl = withSiteUtm(profile.identity.socials.find((social) => social.platform === 'LinkedIn')?.url ?? '');
   const taglineKeywords = profile.identity.tagline.split('.').map((word) => word.trim()).filter(Boolean);
 
   return (
