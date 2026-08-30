@@ -59,6 +59,7 @@ describe('core dossier sections', () => {
     const productsStart = markup.indexOf('id="products"');
     const brandsStart = markup.indexOf('id="brands"');
     const faqStart = markup.indexOf('id="faq"');
+    const navMarkup = markup.slice(markup.indexOf('<nav'), markup.indexOf('</nav>') + '</nav>'.length);
     const introMarkup = markup.slice(introStart, contributionsStart);
     const stackMarkup = markup.slice(stackStart, workStart);
     const brandsMarkup = markup.slice(brandsStart, faqStart);
@@ -93,12 +94,15 @@ describe('core dossier sections', () => {
       expectRenderedText(brandsMarkup, brand.context);
     }
     expectRenderedText(brandsMarkup, profile.stack_brands.disclaimer);
-    expect(brandsMarkup).not.toMatch(/<(?:img|svg)\b/);
+    expect(brandsMarkup).not.toMatch(/<img\b/);
+    expect(brandsMarkup.match(/<svg\b(?=[^>]*aria-hidden="true")/g)).toHaveLength(4);
+    expect(brandsMarkup.match(/<path d="M5 12h14"><\/path>/g)).toHaveLength(4);
+    expect(brandsMarkup.match(/<path d="M12 5v14"><\/path>/g)).toHaveLength(4);
 
     expect(markup).toContain('href="#stack"');
     expect(markup).toContain('>Stack</a>');
-    expect(markup).not.toContain('href="#intro"');
-    expect(markup).not.toContain('href="#brands"');
+    expect(navMarkup).not.toContain('href="#intro"');
+    expect(navMarkup).not.toContain('href="#brands"');
     expect(markup).toContain('href="#proof"');
     expect(markup).toContain('>Accolades</a>');
     expect(markup).not.toContain('>Proof</a>');

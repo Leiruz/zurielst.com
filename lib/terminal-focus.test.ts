@@ -256,6 +256,8 @@ describe('SiteNav terminal opener', () => {
     expect(markup).not.toContain('md:flex');
     expect(markup).toContain('data-terminal-trigger="true"');
     expect(markup).toContain('data-command-palette-trigger="true"');
+    expect(markup).toMatch(/<kbd[^>]*>Ctrl<\/kbd>/);
+    expect(markup).toMatch(/<kbd[^>]*>K<\/kbd>/);
     expect(markup).toContain('data-mobile-nav-link="true"');
     expect(markup).toContain('id="site-nav-enhancement"');
   });
