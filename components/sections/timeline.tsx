@@ -1,5 +1,6 @@
 import { CopyDisclosure } from '@/components/dossier/copy-disclosure';
 import { Reveal } from '@/components/dossier/reveal';
+import { SectionAnchor } from '@/components/dossier/section-anchor';
 import type { Profile, TimelineEntry } from '@/content/schema';
 
 interface TimelineProps {
@@ -14,11 +15,13 @@ const TAG_STYLES: Record<TimelineEntry['type'], string> = {
 
 export function Timeline({ profile }: TimelineProps) {
   return (
-    <section id="timeline" className="dossier-section bg-canvas" aria-labelledby="timeline-title">
+    <section id="timeline" className="bp-nodes dossier-section bg-canvas" aria-labelledby="timeline-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
           <p className="fig-label">Fig. 7. Timeline</p>
-          <h2 id="timeline-title" className="dossier-title mt-4 text-text-1">Timeline</h2>
+          <h2 id="timeline-title" className="dossier-title mt-4 text-text-1">
+            Timeline <SectionAnchor href="#timeline" label="timeline" />
+          </h2>
         </Reveal>
 
         <ol className="relative mt-12 ml-2 border-l border-line-strong sm:ml-3">

@@ -1,5 +1,6 @@
 import { LocalGreeting } from '@/components/dossier/local-greeting';
 import { Reveal } from '@/components/dossier/reveal';
+import { SectionAnchor } from '@/components/dossier/section-anchor';
 import type { Profile } from '@/content/schema';
 
 interface IntroductionProps {
@@ -8,7 +9,7 @@ interface IntroductionProps {
 
 export function Introduction({ profile }: IntroductionProps) {
   return (
-    <section id="intro" className="dossier-section bg-canvas-raised" aria-labelledby="intro-title">
+    <section id="intro" className="bp-nodes dossier-section bg-canvas-raised" aria-labelledby="intro-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
           <p className="fig-label">Fig. 2. Introduction</p>
@@ -16,7 +17,8 @@ export function Introduction({ profile }: IntroductionProps) {
             id="intro-title"
             className="mt-4 min-h-[1.15em] text-[clamp(2.5rem,7vw,5rem)] font-light italic leading-[1.15] tracking-tight text-text-1"
           >
-            <LocalGreeting />
+            <LocalGreeting />{' '}
+            <SectionAnchor href="#intro" label="introduction" />
           </h2>
         </Reveal>
 

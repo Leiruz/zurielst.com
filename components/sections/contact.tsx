@@ -1,3 +1,4 @@
+import { SectionAnchor } from '@/components/dossier/section-anchor';
 import type { Social } from '@/content/schema';
 
 export function ContactAssistantButton() {
@@ -21,11 +22,11 @@ interface ContactProps {
 
 export function Contact({ email, socials }: ContactProps) {
   return (
-    <section id="contact" className="dossier-section bg-canvas" aria-labelledby="contact-title">
+    <section id="contact" className="bp-nodes dossier-section bg-canvas" aria-labelledby="contact-title">
       <div className="dossier-shell">
         <p className="fig-label">Fig. 13. Contact</p>
         <h2 id="contact-title" className="dossier-title mt-4 text-text-1">
-          The dossier is open.
+          The dossier is open. <SectionAnchor href="#contact" label="contact" />
         </h2>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
