@@ -8,7 +8,11 @@ import { reserveDailyBudget, type DailyBudget as DailyBudgetObject } from './bud
 import { guardAnswer } from './guard';
 import { findInjection } from './inject';
 import { normalizeText } from './normalize';
-import { buildChatMessages } from './prompt';
+import {
+  MAX_SERIALIZED_PROMPT_BYTES,
+  buildChatMessages,
+  serializedPromptByteLength,
+} from './prompt';
 import { checkRateLimit, type RateLimitBinding } from './ratelimit';
 import { ChatRequestSchema } from './schema';
 import { createSseResponse } from './sse';
@@ -18,7 +22,7 @@ export interface Env {
   DAILY_BUDGET: DurableObjectNamespace<DailyBudgetObject>;
   DAILY_CAP: string;
   ALLOWED_HOSTS: string;
-  RATE_LIMITER?: RateLimitBinding;
+  RATE_LIMITER: RateLimitBinding;
 }
 
 export const DEFLECTION_REPLY = "Nice try. I only answer questions about Zuriel's published profile. Ask me about his work, projects, or how to reach him.";
@@ -65,7 +69,10 @@ function isAllowedOrigin(request: Request, url: URL, localRequest: boolean): boo
   }
 
   const origin = request.headers.get('origin');
-  if (origin === null || PRODUCTION_ORIGINS.has(origin)) {
+  if (origin === null) {
+    return localRequest;
+  }
+  if (PRODUCTION_ORIGINS.has(origin)) {
     return true;
   }
   if (!localRequest) {
@@ -139,7 +146,8 @@ const worker = {
     }
 
     const contentType = request.headers.get('content-type');
-    if (contentType === null || !contentType.toLowerCase().includes('application/json')) {
+    const mediaType = contentType?.split(';', 1)[0]?.trim().toLowerCase();
+    if (mediaType !== 'application/json') {
       return json(415, ERROR_REPLIES.unsupportedMediaType);
     }
 
@@ -182,6 +190,11 @@ const worker = {
       return json(200, DEFLECTION_REPLY);
     }
 
+    const chatMessages = buildChatMessages(message, parsed.data.history);
+    if (serializedPromptByteLength(chatMessages) > MAX_SERIALIZED_PROMPT_BYTES) {
+      return json(400, ERROR_REPLIES.badRequest);
+    }
+
     const ip = request.headers.get('cf-connecting-ip') ?? 'unknown';
     if (!await checkRateLimit(env, ip)) {
       return json(429, ERROR_REPLIES.rateLimited, { 'retry-after': '30' });
@@ -194,7 +207,7 @@ const worker = {
 
     const answer = await runChatCompletion(
       env.AI,
-      buildChatMessages(message, parsed.data.history),
+      chatMessages,
     );
     if (answer === null) {
       return json(503, UNAVAILABLE_REPLY);

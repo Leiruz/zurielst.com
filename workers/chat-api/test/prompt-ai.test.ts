@@ -4,7 +4,14 @@ import projectionMarkdown from '../../../content/chat-projection.md?raw';
 import profileData from '../../../content/profile.json';
 import type { Profile } from '../../../content/schema';
 import { runChatCompletion, type AiBinding } from '../src/ai';
-import { buildChatMessages, buildProfileBlock, buildSystemPrompt } from '../src/prompt';
+import {
+  MAX_SERIALIZED_PROMPT_BYTES,
+  buildChatMessages,
+  buildProfileBlock,
+  buildSystemPrompt,
+  serializedPromptByteLength,
+} from '../src/prompt';
+import { ChatRequestSchema } from '../src/schema';
 
 describe('grounded prompt', () => {
   it('reproduces the curated projection blocks exactly', () => {
@@ -272,6 +279,23 @@ describe('grounded prompt', () => {
     );
     expect(messages[1]?.content).toContain(
       `UNTRUSTED CURRENT USER TEXT: ${JSON.stringify('What did he build?')}`,
+    );
+  });
+
+  it('keeps the maximum JSON-expanding admitted prompt within the byte ceiling', () => {
+    const expanding = '\\'.repeat(500);
+    const parsed = ChatRequestSchema.parse({
+      message: expanding,
+      history: Array.from({ length: 4 }, () => ({
+        role: 'assistant' as const,
+        content: expanding,
+      })),
+    });
+    const messages = buildChatMessages(parsed.message, parsed.history);
+
+    expect(serializedPromptByteLength(messages)).toBe(15_955);
+    expect(serializedPromptByteLength(messages)).toBeLessThanOrEqual(
+      MAX_SERIALIZED_PROMPT_BYTES,
     );
   });
 });

@@ -5,10 +5,12 @@ export interface ChatMessage {
   content: string;
 }
 
+export const MAX_OUTPUT_TOKENS = 384;
+
 interface AiRequest {
   messages: ChatMessage[];
   stream: false;
-  max_tokens: 384;
+  max_tokens: typeof MAX_OUTPUT_TOKENS;
   temperature: 0.3;
 }
 
@@ -45,7 +47,7 @@ export async function runChatCompletion(
         {
           messages,
           stream: false,
-          max_tokens: 384,
+          max_tokens: MAX_OUTPUT_TOKENS,
           temperature: 0.3,
         },
         { signal: AbortSignal.timeout(25_000) },

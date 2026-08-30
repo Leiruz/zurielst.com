@@ -1,8 +1,7 @@
 import { DurableObject } from 'cloudflare:workers';
 
-import { buildSystemPrompt } from './prompt';
-
-export const DAILY_CAP = 120;
+import { MAX_OUTPUT_TOKENS } from './ai';
+import { MAX_SERIALIZED_PROMPT_BYTES } from './prompt';
 
 // Cloudflare pricing: 4,625 neurons per 1,000,000 input tokens. https://developers.cloudflare.com/workers-ai/platform/pricing/
 export const LLAMA_3B_IN = 4_625;
@@ -13,16 +12,22 @@ export const LLAMA_1B_IN = 2_457;
 // Cloudflare pricing: 18,252 neurons per 1,000,000 output tokens. https://developers.cloudflare.com/workers-ai/platform/pricing/
 export const LLAMA_1B_OUT = 18_252;
 
-const WORST_USER_INPUT_TOKENS = Math.ceil((4 * 500 + 500) / 4);
-const WORST_INPUT_TOKENS = Math.ceil(buildSystemPrompt().length / 4) + WORST_USER_INPUT_TOKENS;
-const MAX_OUTPUT_TOKENS = 384;
-
+/**
+ * The full JSON-serialized prompt is hard-capped in UTF-8 bytes. A byte-level
+ * BPE token emits at least one byte, so that byte count safely upper-bounds
+ * input tokens. This includes maximum output for the primary and fallback.
+ */
 export const NEURONS_PER_CHAT_WORST = (
-  WORST_INPUT_TOKENS * LLAMA_3B_IN
+  MAX_SERIALIZED_PROMPT_BYTES * LLAMA_3B_IN
   + MAX_OUTPUT_TOKENS * LLAMA_3B_OUT
-  + WORST_INPUT_TOKENS * LLAMA_1B_IN
+  + MAX_SERIALIZED_PROMPT_BYTES * LLAMA_1B_IN
   + MAX_OUTPUT_TOKENS * LLAMA_1B_OUT
 ) / 1_000_000;
+
+export const DAILY_CAP = Math.min(
+  200,
+  Math.floor(4_000 / NEURONS_PER_CHAT_WORST),
+);
 
 export interface BudgetReservation {
   allowed: boolean;

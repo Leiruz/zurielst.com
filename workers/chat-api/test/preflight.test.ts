@@ -42,6 +42,7 @@ describe('chat-api preflight contract', () => {
       headers: {
         'content-type': 'application/json',
         'cf-connecting-ip': '192.0.2.10',
+        origin: 'https://zurielst.com',
       },
       body: JSON.stringify({ message: 'What does Zuriel do?' }),
     });

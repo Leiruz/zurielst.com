@@ -591,6 +591,13 @@ export interface UntrustedHistoryItem {
   content: string;
 }
 
+export const MAX_SERIALIZED_PROMPT_BYTES = 16_384;
+
+/** Returns the UTF-8 size of the complete JSON-serialized model messages. */
+export function serializedPromptByteLength(messages: ChatMessage[]): number {
+  return new TextEncoder().encode(JSON.stringify(messages)).byteLength;
+}
+
 export function buildSystemPrompt(): string {
   return `${buildProfileBlock()}\n\n${INSTRUCTIONS}`;
 }

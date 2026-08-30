@@ -48,12 +48,24 @@ const HOMOGLYPHS: Readonly<Record<string, string>> = {
 };
 
 const DEFAULT_IGNORABLES = /\p{Default_Ignorable_Code_Point}+/gu;
+const DISALLOWED_INPUT_CONTROLS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/u;
 
-/** Canonicalizes confusable Latin text before security checks. */
-export function normalizeText(value: string): string {
-  const visible = value.normalize('NFKC').replace(DEFAULT_IGNORABLES, '');
+function normalizeCompatibleText(value: string): string {
+  const visible = value.replace(DEFAULT_IGNORABLES, '');
   return Array.from(visible, (character) => HOMOGLYPHS[character] ?? character)
     .join('')
     .replace(/\s+/gu, ' ')
     .trim();
+}
+
+/** Canonicalizes confusable Latin text before security checks. */
+export function normalizeText(value: string): string {
+  return normalizeCompatibleText(value.normalize('NFKC'));
+}
+
+/** Normalizes untrusted chat text and rejects non-whitespace C0/C1 controls. */
+export function normalizeInputText(value: string): string | null {
+  const compatible = value.normalize('NFKC');
+  if (DISALLOWED_INPUT_CONTROLS.test(compatible)) return null;
+  return normalizeCompatibleText(compatible);
 }

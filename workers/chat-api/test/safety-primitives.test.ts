@@ -26,6 +26,35 @@ describe('chat request schema', () => {
     expect(() => ChatRequestSchema.parse({ message: 'Hi', history: Array(5).fill({ role: 'user', content: 'Hello' }) })).toThrow();
     expect(() => ChatRequestSchema.parse({ message: 'Hi', history: [{ role: 'assistant', content: ' '.repeat(3) }] })).toThrow();
   });
+
+  it('normalizes every admitted text before applying schema length limits', () => {
+    const parsed = ChatRequestSchema.parse({
+      message: '  \uff28i\tthere\r\n  ',
+      history: [{ role: 'assistant', content: '\t\uff28ello\nthere\r' }],
+    });
+
+    expect(parsed).toEqual({
+      message: 'Hi there',
+      history: [{ role: 'assistant', content: 'Hello there' }],
+    });
+
+    const expandsPastLimit = '\uFDFA'.repeat(28);
+    expect(() => ChatRequestSchema.parse({ message: expandsPastLimit })).toThrow();
+    expect(() => ChatRequestSchema.parse({
+      message: 'Hi',
+      history: [{ role: 'user', content: expandsPastLimit }],
+    })).toThrow();
+  });
+
+  it('rejects C0 and C1 controls in the message and every history content', () => {
+    for (const control of ['\u0000', '\u001B', '\u0085']) {
+      expect(() => ChatRequestSchema.parse({ message: `Hello${control}` })).toThrow();
+      expect(() => ChatRequestSchema.parse({
+        message: 'Hello',
+        history: [{ role: 'assistant', content: `World${control}` }],
+      })).toThrow();
+    }
+  });
 });
 
 describe('shared normalization and injection filtering', () => {
@@ -117,6 +146,78 @@ describe('output guard', () => {
     });
   });
 
+  it('rejects bare and www-prefixed non-allowlisted domains', () => {
+    for (const value of [
+      'See attacker.test.',
+      'See attacker.test/private.',
+      'See www.attacker.test.',
+      'See www.attacker.test/private.',
+      'See github.com/Leiruz-typo.',
+    ]) {
+      expect(guardAnswer(value)).toMatchObject({ safe: false, reason: 'url' });
+    }
+  });
+
+  it('rejects bare hosts with alternate separators or non-alphabetic shapes', () => {
+    for (const value of [
+      'See zurielst.com\u3002evil/private.',
+      'See zurielst.com\uFF0Eevil/private.',
+      'See zurielst.com\uFF61evil/private.',
+      'See attacker.test./private.',
+      'See github.com.xn--p1ai/private.',
+      'See attacker.xn--p1ai/private.',
+      'See \u4F8B\u5B50.\u516C\u53F8/private.',
+      'See \u{1F4A9}.la/private.',
+      'See 192.0.2.1.',
+      'See 192.0.2.1/private.',
+      'See 127.1/private.',
+      'See 127.1:80/private.',
+      'See 0177.1/private.',
+      'See 0x7f000001/private.',
+      'See 0x7f000001:80/private.',
+      'See 2130706433/private.',
+      'See 2130706433:80/private.',
+      'See [2001:4860:4860:0:0:0:0:8888]/private.',
+      'See [::1]/private.',
+      'See attacker%2Etest/private.',
+      'See zurielst.com%2Eevil/private.',
+      'See attacker.%74est/private.',
+      'See %61ttacker.%74est/private.',
+      'See evil%E3%80%82test/private.',
+      'See evil%EF%BC%8Etest/private.',
+      'See evil%EF%BD%A1test/private.',
+      'See evil.%E5%85%AC%E5%8F%B8/private.',
+      'See %E4%BE%8B%E5%AD%90.%E5%85%AC%E5%8F%B8/private.',
+      'See evil.\u516C%E5%8F%B8/private.',
+      'See evil.\u4E2D%E5%9B%BD/private.',
+      'See evil.\u0E44%E0%B8%97%E0%B8%A2/private.',
+      'See evil.\u092D%E0%A4%BE%E0%A4%B0%E0%A4%A4/private.',
+      'See -evil.example/private.',
+      'See evil-.example/private.',
+      'See evil_test.example/private.',
+      'See \u0909\u0926\u093E\u0939\u0930\u0923.\u092D\u093E\u0930\u0924/private.',
+      'See zurielst@u.nus.edu/private.',
+    ]) {
+      expect(guardAnswer(value)).toMatchObject({ safe: false, reason: 'url' });
+    }
+  });
+
+  it('allows the bare public GitHub path without flagging dotted prose', () => {
+    for (const value of [
+      'Read github.com/Leiruz/PanPath-Redactor.',
+      'Read github.com/Leiruz/docs/README.md.',
+      'Read https://github.com/Leiruz/docs/README.md.',
+      'Read https://github.com:443/Leiruz.',
+      'v1.2 released.',
+      'Use e.g. this example.',
+      'He used ASP.NET Razor Pages.',
+      'He built it with Node.js.',
+      'He built the first site with wow.js.',
+    ]) {
+      expect(guardAnswer(value)).toMatchObject({ safe: true });
+    }
+  });
+
   it('rejects non-allowlisted URLs with any valid scheme length', () => {
     for (const scheme of ['a', 'a'.repeat(33)]) {
       expect(guardAnswer(`See ${scheme}:evil.example/private.`)).toMatchObject({
@@ -128,10 +229,30 @@ describe('output guard', () => {
 
   it('rejects an original URL that normalization turns into an allowlisted URL', () => {
     expect(guardAnswer('See https://g\u0456thub.com/Leiruz.')).toMatchObject({ safe: false, reason: 'url' });
+    expect(guardAnswer('See g\u0456thub.com/Leiruz.')).toMatchObject({ safe: false, reason: 'url' });
   });
 
   it('rejects encoded separators at an allowlisted path boundary', () => {
     expect(guardAnswer('See https://github.com/Leiruz%2Fevil.')).toMatchObject({ safe: false, reason: 'url' });
+    expect(guardAnswer('See https://github.com/Leiruz/%2e%2e%2Fevil.')).toMatchObject({ safe: false, reason: 'url' });
+  });
+
+  it('checks every URL candidate even when candidates are adjacent', () => {
+    for (const value of [
+      'Read https://github.com/Leiruz/),https://evil.example/private.',
+      'Read https://github.com/Leiruz/),//evil.example/private.',
+      'Read https://github.com/Leiruz/),evil.example/private.',
+      'Read //github.com/Leiruz/),//evil.example/private.',
+    ]) {
+      expect(guardAnswer(value)).toMatchObject({ safe: false, reason: 'url' });
+    }
+  });
+
+  it('does not trim path-significant colons into an allowlisted URL', () => {
+    expect(guardAnswer('<https://github.com/Leiruz:>')).toMatchObject({
+      safe: false,
+      reason: 'url',
+    });
   });
 
   it('allows only the documented public origins and publication links', () => {

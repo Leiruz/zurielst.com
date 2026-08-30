@@ -50,7 +50,7 @@ export async function checkRateLimit(
   now = Date.now(),
 ): Promise<boolean> {
   if (!local.allow(key, now)) return false;
-  if (env.RATE_LIMITER === undefined) return true;
+  if (env.RATE_LIMITER === undefined) return false;
 
   try {
     const result = await env.RATE_LIMITER.limit({ key });

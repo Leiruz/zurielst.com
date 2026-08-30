@@ -1,15 +1,25 @@
 import { z } from 'zod';
 
+import { normalizeInputText } from './normalize';
+
+const ChatTextSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== 'string') return value;
+    return normalizeInputText(value) ?? undefined;
+  },
+  z.string().min(1).max(500),
+);
+
 const HistoryItemSchema = z
   .object({
     role: z.enum(['user', 'assistant']),
-    content: z.string().trim().min(1).max(500),
+    content: ChatTextSchema,
   })
   .strict();
 
 export const ChatRequestSchema = z
   .object({
-    message: z.string().trim().min(1).max(500),
+    message: ChatTextSchema,
     history: z.array(HistoryItemSchema).max(4).optional(),
   })
   .strict();
