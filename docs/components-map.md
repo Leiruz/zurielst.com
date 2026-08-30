@@ -72,6 +72,7 @@ registryDependencies legend: plain name = shadcn base component (ui.shadcn.com);
 ## Adaptation flags (Next.js coupling)
 
 - consent-manager: imports @c15t/nextjs.
+- consent-manager: local component overrides registry copy with site-specific measurement-only privacy wording.
 - theme-switcher: imports next-themes.
 - line-nav: imports next/link.
 - npm-level: @c15t/nextjs declared by consent-manager.

@@ -6,6 +6,7 @@ import {
   CookieBanner,
 } from "@c15t/nextjs"
 
+import { CONSENT_TRANSLATIONS } from "@/components/registry/consent-copy"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
@@ -15,6 +16,7 @@ export function ConsentManager({ children }: { children: React.ReactNode }) {
       options={{
         mode: "offline",
         consentCategories: ["necessary", "measurement"],
+        translations: CONSENT_TRANSLATIONS,
         // ignoreGeoLocation: process.env.NODE_ENV === "development", // Useful for development to always view the banner.
       }}
     >
