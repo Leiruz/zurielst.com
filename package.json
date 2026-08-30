@@ -2,15 +2,16 @@
   "name": "zurielst-com",
   "private": true,
   "version": "0.1.0",
+  "packageManager": "npm@10.9.0",
   "description": "Engineered Dossier portfolio, Next.js static export on Cloudflare Workers",
   "engines": {
-    "node": ">=22"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run && node --test scripts/perf-gate.test.mjs",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run && node --test scripts/perf-gate.test.mjs scripts/workflow-config.test.mjs",
     "perf": "node scripts/perf-gate.mjs",
     "worker:dev": "wrangler dev --config workers/chat-api/wrangler.jsonc",
     "site:deploy": "wrangler deploy --config workers/site/wrangler.jsonc",

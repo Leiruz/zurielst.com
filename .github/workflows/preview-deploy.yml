@@ -18,6 +18,7 @@ permissions:
 
 jobs:
   preview:
+    # Prerequisite: repo Settings -> Environments -> deploy must exist with a required reviewer and the CLOUDFLARE_* secrets; this workflow cannot create it.
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.head_repository.full_name == github.repository &&
@@ -47,6 +48,16 @@ jobs:
           fi
           cd dist-artifact/out
           sha256sum -c ../out.manifest --quiet
+      # Release evidence: verify the required-reviewers protection rule before uploading.
+      - name: Verify deploy environment protection
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if ! gh api --method GET "repos/${{ github.repository }}/environments/deploy" --jq '.protection_rules[]?.type' | grep -Fx 'required_reviewers' >/dev/null; then
+            echo "::error::Configure repository environment 'deploy' in Settings > Environments with at least one required reviewer before deploying."
+            exit 1
+          fi
       - name: Upload preview version (trusted base-branch config)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
