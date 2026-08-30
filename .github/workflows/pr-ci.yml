@@ -1,0 +1,40 @@
+﻿# Secretless PR pipeline (plan rev 3, F2/R2-F2): builds and tests every PR,
+# publishes the static output as an artifact. It never sees a secret; the
+# trusted preview-deploy workflow picks the artifact up afterwards.
+name: pr-ci
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Build manifest (hash every built file)
+        run: |
+          cd out
+          find . -type f -print0 | sort -z | xargs -0 sha256sum > ../out.manifest
+          cd ..
+          sha256sum out.manifest | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: site-dist
+          # Built output + manifest ONLY. Wrangler config is deliberately NOT
+          # shipped in the artifact; the preview workflow uses the trusted
+          # base-branch config (R2-F2-WORKFLOW).
+          path: |
+            out/
+            out.manifest
+          retention-days: 7

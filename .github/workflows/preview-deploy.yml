@@ -1,0 +1,65 @@
+﻿# Trusted preview deployer (plan rev 3, F1/F2/R2-F2/R2-F12): runs from the
+# base branch after a successful same-repository pr-ci run, downloads the built
+# artifact bound to that run, validates it, and uploads a preview VERSION of
+# the assets-only site worker. The deploy token lives only in the
+# reviewer-protected "deploy" environment, so every preview takes one explicit
+# owner approval. Fork PRs never reach this workflow's deploy condition.
+name: preview-deploy
+
+on:
+  workflow_run:
+    workflows: [pr-ci]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: write
+
+jobs:
+  preview:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.actor.login == 'Leiruz'
+    runs-on: ubuntu-latest
+    environment: deploy
+    steps:
+      # Trusted ref: the default branch, never the PR head.
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - name: Download the artifact from the triggering run (bound by run id)
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8, zip-slip safe extraction
+        with:
+          name: site-dist
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: dist-artifact
+      - name: Validate the artifact against its manifest
+        run: |
+          test -f dist-artifact/out.manifest
+          if find dist-artifact -type l | grep -q .; then
+            echo "symlink in artifact, refusing"; exit 1
+          fi
+          cd dist-artifact/out
+          sha256sum -c ../out.manifest --quiet
+      - name: Upload preview version (trusted base-branch config)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          rm -rf out && cp -r dist-artifact/out out
+          npx wrangler versions upload --config workers/site/wrangler.jsonc 2>&1 | tee upload.log
+          url=$(grep -oE 'https://[^ ]*workers\.dev[^ ]*' upload.log | head -1 || true)
+          echo "PREVIEW_URL=$url" >> "$GITHUB_ENV"
+      - name: Comment the preview URL on the PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pr=$(gh api "repos/${{ github.repository }}/commits/${{ github.event.workflow_run.head_sha }}/pulls" --jq '.[0].number')
+          test -n "$pr"
+          gh pr comment "$pr" -R "${{ github.repository }}" --body "Preview for ${{ github.event.workflow_run.head_sha }}: ${PREVIEW_URL:-see the preview-deploy run log} (unlisted; robots noindex hardening lands with M8)"

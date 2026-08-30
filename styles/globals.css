@@ -1,0 +1,104 @@
+@import 'tailwindcss';
+
+/*
+  Engineered Dossier tokens. Dark is the primary theme; light is a first-class
+  sibling, both defined here from day one. Values trace to the approved design
+  research (Linear grey ramp, GitHub heatmap greens, one blue verification accent).
+*/
+
+:root {
+  /* dark (default) */
+  --canvas: #09090a;
+  --canvas-raised: #0c0d10;
+  --surface: #131417;
+  --surface-hover: #1a1b1f;
+  --text-1: #f7f8f8;
+  --text-2: #d0d6e0;
+  --text-3: #8a8f98;
+  --line: rgba(255, 255, 255, 0.06);
+  --line-strong: rgba(255, 255, 255, 0.12);
+  --blueprint: rgba(255, 255, 255, 0.045);
+  --hatch: rgba(255, 255, 255, 0.05);
+  --accent: #4b7bff;
+  --heat-0: #151619;
+  --heat-1: #0e4429;
+  --heat-2: #006d32;
+  --heat-3: #26a641;
+  --heat-4: #39d353;
+}
+
+:root[data-theme='light'] {
+  --canvas: #fafafa;
+  --canvas-raised: #f4f4f5;
+  --surface: #ffffff;
+  --surface-hover: #f0f0f2;
+  --text-1: #101114;
+  --text-2: #3f4249;
+  --text-3: #6e7480;
+  --line: rgba(0, 0, 0, 0.08);
+  --line-strong: rgba(0, 0, 0, 0.16);
+  --blueprint: rgba(0, 0, 0, 0.05);
+  --hatch: rgba(0, 0, 0, 0.06);
+  --accent: #2f5fe0;
+  --heat-0: #ebedf0;
+  --heat-1: #9be9a8;
+  --heat-2: #40c463;
+  --heat-3: #30a14e;
+  --heat-4: #216e39;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-canvas-raised: var(--canvas-raised);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-text-1: var(--text-1);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-accent: var(--accent);
+  --font-sans: 'Geist', 'Geist Fallback', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback', ui-monospace, monospace;
+}
+
+html {
+  background: var(--canvas);
+  color: var(--text-1);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--text-1);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+/* Blueprint linework primitives */
+.bp-grid {
+  background:
+    linear-gradient(var(--blueprint) 1px, transparent 1px) 0 0 / 100% 96px,
+    linear-gradient(90deg, var(--blueprint) 1px, transparent 1px) 0 0 / 96px 100%;
+}
+
+.bp-hatch {
+  background: repeating-linear-gradient(45deg, var(--hatch) 0 1px, transparent 1px 7px);
+}
+
+.fig-label {
+  font-family: var(--font-mono);
+  font-style: italic;
+  font-size: 0.72rem;
+  color: var(--text-3);
+}
+
+/* Motion restraint: global reduced-motion kill switch */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
