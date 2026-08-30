@@ -1,0 +1,20 @@
+{
+  // CUTOVER OVERLAY for zurielst-site (phase 1, plan M12 phased).
+  // Identical to wrangler.jsonc plus the route list. Deployed ONCE per phase
+  // by the operator locally with wrangler OAuth (the CI token deliberately
+  // lacks route permissions); CI keeps deploying the routeless wrangler.jsonc,
+  // which leaves routes attached. Rollback: delete the route in the dashboard
+  // or deploy this file with the pattern removed.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "zurielst-site",
+  "compatibility_date": "2025-09-06",
+  "assets": {
+    "directory": "../../out",
+    "not_found_handling": "404-page"
+  },
+  "workers_dev": false,
+  "preview_urls": true,
+  "routes": [
+    { "pattern": "staging.zurielst.com/*", "zone_name": "zurielst.com" }
+  ]
+}
