@@ -4,6 +4,7 @@ import type { Profile } from '@/content/schema';
 import { Footer } from '@/components/footer';
 import { SiteNav } from '@/components/site-nav';
 import { Terminal } from '@/components/terminal';
+import { CommandPaletteLoader } from '@/components/command-palette-loader';
 import { Contact } from '@/components/sections/contact';
 import { IdentityHeader } from '@/components/sections/identity-header';
 import { CapabilityActs } from '@/components/sections/capability-acts';
@@ -30,6 +31,8 @@ export default function Home() {
   const profile = profileJson as Profile;
   const contributions = contributionJson as ContributionSnapshot;
   const resumeAvailable = hasPublicMedia('/media/resume.pdf');
+  const githubUrl = profile.identity.socials.find((social) => social.platform === 'GitHub')?.url ?? profile.identity.github.url;
+  const linkedInUrl = profile.identity.socials.find((social) => social.platform === 'LinkedIn')?.url ?? '';
 
   return (
     <div className="bp-grid min-h-screen overflow-x-clip">
@@ -62,6 +65,12 @@ export default function Home() {
         email={profile.identity.email}
         gamesUrl={profile.easter_eggs.towerblock.url}
         resumeAvailable={resumeAvailable}
+      />
+      <CommandPaletteLoader
+        email={profile.identity.email}
+        githubUrl={githubUrl}
+        linkedInUrl={linkedInUrl}
+        sourceUrl="https://github.com/Leiruz/zurielst.com"
       />
     </div>
   );

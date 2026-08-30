@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 
 import { DeferredThemeSwitcher } from '@/components/registry/client-enhancements';
+import { COMMAND_PALETTE_OPEN_EVENT } from '@/components/command-palette-loader';
 
 const LINKS = [
   ['Work', '#work'],
@@ -19,6 +20,12 @@ export function SiteNav() {
 
   function closeMobileMenu() {
     if (mobileMenuRef.current) mobileMenuRef.current.open = false;
+  }
+
+  function openCommandPalette(event: React.MouseEvent<HTMLButtonElement>) {
+    window.dispatchEvent(
+      new CustomEvent(COMMAND_PALETTE_OPEN_EVENT, { detail: event.currentTarget }),
+    );
   }
 
   return (
@@ -54,6 +61,14 @@ export function SiteNav() {
           </div>
         </details>
 
+        <button
+          type="button"
+          onClick={openCommandPalette}
+          aria-label="Open command palette"
+          className="inline-flex h-8 items-center rounded-full border border-line bg-surface px-2.5 font-mono text-[0.65rem] text-text-2 transition-colors duration-150 hover:bg-surface-hover hover:text-text-1 motion-reduce:transition-none"
+        >
+          Ctrl K
+        </button>
         <DeferredThemeSwitcher />
       </div>
     </nav>

@@ -143,6 +143,39 @@ test("consent dialog code loads only when Customize opens the automatic banner",
   assert.match(bannerSource, /onAccept/);
 });
 
+test("command palette code loads only from an explicit open interaction", async () => {
+  const [loaderSource, enhancementsSource, modelSource] = await Promise.all(
+    [
+      "../components/command-palette-loader.tsx",
+      "../components/registry/client-enhancements.tsx",
+      "../lib/command-palette.ts",
+    ].map((relativePath) => readFile(new URL(relativePath, import.meta.url), "utf8")),
+  );
+
+  const importExpression = "import('@/components/command-palette')";
+  const openHandlerStart = loaderSource.indexOf("async function openCommandPalette");
+  const effectsStart = loaderSource.indexOf("useEffect(", openHandlerStart);
+  const openHandlerSource = loaderSource.slice(openHandlerStart, effectsStart);
+  const modelImportLines = loaderSource
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.includes("@/lib/command-palette"));
+
+  assert.ok(openHandlerStart >= 0, "the loader must define an explicit open handler");
+  assert.equal(loaderSource.split(importExpression).length - 1, 1);
+  assert.match(openHandlerSource, /import\(['"]@\/components\/command-palette['"]\)/);
+  assert.doesNotMatch(loaderSource, /from ['"]@\/components\/command-palette['"]/);
+  assert.doesNotMatch(loaderSource, /scheduleAfterPaint/);
+  assert.doesNotMatch(enhancementsSource, /command-palette/);
+  assert.deepEqual(
+    modelImportLines,
+    ["import type { CommandPaletteConfig } from '@/lib/command-palette';"],
+    "the always-loaded listener must not import the palette runtime model",
+  );
+  assert.doesNotMatch(`${loaderSource}\n${modelSource}`, /toLocaleLowerCase/);
+  assert.match(`${loaderSource}\n${modelSource}`, /toLowerCase/);
+});
+
 test(
   "collects and measures a dynamic import observed by a real cold Lighthouse run",
   { timeout: 120_000 },
