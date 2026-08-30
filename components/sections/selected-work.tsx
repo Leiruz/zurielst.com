@@ -1,5 +1,6 @@
 import { CopyDisclosure } from '@/components/dossier/copy-disclosure';
 import { Reveal } from '@/components/dossier/reveal';
+import { SectionAnchor } from '@/components/dossier/section-anchor';
 import type { MediaRef, Profile, WorkCase } from '@/content/schema';
 import { splitDisclosureCopy } from '@/lib/dossier';
 import { hasPublicMedia } from '@/lib/media';
@@ -10,11 +11,13 @@ interface SelectedWorkProps {
 
 export function SelectedWork({ profile }: SelectedWorkProps) {
   return (
-    <section id="work" className="dossier-section bg-canvas-raised" aria-labelledby="work-title">
+    <section id="work" className="bp-nodes dossier-section bg-canvas-raised" aria-labelledby="work-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
           <p className="fig-label">Fig. 6. Selected work</p>
-          <h2 id="work-title" className="dossier-title mt-4 text-text-1">Selected work</h2>
+          <h2 id="work-title" className="dossier-title mt-4 text-text-1">
+            Selected work <SectionAnchor href="#work" label="selected work" />
+          </h2>
         </Reveal>
 
         <div className="mt-10 grid min-w-0 grid-cols-1 gap-5 md:grid-cols-2">
@@ -42,7 +45,7 @@ function WorkCard({ workCase }: { workCase: WorkCase }) {
         <p className="dossier-eyebrow">{workCase.kicker}</p>
         <div className="mt-3 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <h3 className="min-w-0 text-xl font-semibold tracking-tight text-text-1">{workCase.title}</h3>
-          <p className="shrink-0 font-mono text-xs text-text-3">{workCase.period}</p>
+          <p className="dim-mark shrink-0 font-mono text-xs text-text-3">{workCase.period}</p>
         </div>
         {shouldCollapseSummary ? (
           <>

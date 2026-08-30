@@ -29,7 +29,7 @@ export function ContributionHeatmap({ data }: ContributionHeatmapProps) {
   const summary = `${data.total_contributions} contributions in the last year, shown across ${data.weeks.length} weeks.`;
 
   return (
-    <section id="contributions" className="dossier-section bg-canvas" aria-labelledby="contributions-title">
+    <section id="contributions" className="bp-nodes dossier-section bg-canvas" aria-labelledby="contributions-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
           <p className="fig-label">Fig. 3. Contributions</p>

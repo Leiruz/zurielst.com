@@ -1,4 +1,5 @@
 import { Reveal } from '@/components/dossier/reveal';
+import { SectionAnchor } from '@/components/dossier/section-anchor';
 import type {
   Award,
   Certification,
@@ -16,42 +17,44 @@ export function ProofWall({ profile }: ProofWallProps) {
   const proof = profile.proof_wall;
 
   return (
-    <section id="proof" className="dossier-section bg-canvas-raised" aria-labelledby="proof-title">
+    <section id="proof" className="bp-nodes dossier-section bg-canvas-raised" aria-labelledby="proof-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
           <p className="fig-label">Fig. 9. Accolades</p>
-          <h2 id="proof-title" className="dossier-title mt-4 text-text-1">Accolades</h2>
+          <h2 id="proof-title" className="dossier-title mt-4 text-text-1">
+            Accolades <SectionAnchor href="#proof" label="accolades" />
+          </h2>
         </Reveal>
 
         <ProofGroup title="Certifications">
           {proof.certifications.map((item, index) => (
-            <Reveal key={item.id} delayIndex={index} className="h-full">
+            <ProofCell key={item.id} delayIndex={index}>
               <CertificationTile item={item} />
-            </Reveal>
+            </ProofCell>
           ))}
         </ProofGroup>
 
         <ProofGroup title="Awards">
           {proof.awards.map((item, index) => (
-            <Reveal key={item.id} delayIndex={index} className="h-full">
+            <ProofCell key={item.id} delayIndex={index}>
               <AwardTile item={item} />
-            </Reveal>
+            </ProofCell>
           ))}
         </ProofGroup>
 
         <ProofGroup title="CTF results">
           {proof.ctf_results.map((item, index) => (
-            <Reveal key={item.id} delayIndex={index} className="h-full">
+            <ProofCell key={item.id} delayIndex={index}>
               <CtfTile item={item} />
-            </Reveal>
+            </ProofCell>
           ))}
         </ProofGroup>
 
         <ProofGroup title="Publications">
           {proof.publications.map((item, index) => (
-            <Reveal key={item.id} delayIndex={index} className="h-full">
+            <ProofCell key={item.id} delayIndex={index}>
               <PublicationTile item={item} />
-            </Reveal>
+            </ProofCell>
           ))}
         </ProofGroup>
 
@@ -66,7 +69,7 @@ function ProofGroup({ title, children }: { title: string; children: React.ReactN
       <h3 id={`proof-${title.toLowerCase().replaceAll(' ', '-')}`} className="border-b border-line pb-3 font-mono text-xs font-medium uppercase tracking-[0.14em] text-text-3">
         {title}
       </h3>
-      <div className="mt-5 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-5 grid min-w-0 grid-cols-1 gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
         {children}
       </div>
     </section>
@@ -75,9 +78,25 @@ function ProofGroup({ title, children }: { title: string; children: React.ReactN
 
 function ProofTile({ children }: { children: React.ReactNode }) {
   return (
-    <article data-proof-tile="true" className="flex h-full min-w-0 flex-col overflow-hidden rounded-[14px] border border-line bg-surface">
+    <article data-proof-tile="true" className="flex h-full min-w-0 flex-col overflow-hidden">
       {children}
     </article>
+  );
+}
+
+function ProofCell({
+  children,
+  delayIndex,
+}: {
+  children: React.ReactNode;
+  delayIndex: number;
+}) {
+  return (
+    <div className="h-full bg-surface transition-colors duration-150 hover:bg-surface-hover">
+      <Reveal delayIndex={delayIndex} className="h-full">
+        {children}
+      </Reveal>
+    </div>
   );
 }
 

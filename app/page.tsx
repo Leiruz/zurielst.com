@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import profileJson from '@/content/profile.json';
 import contributionJson from '@/content/github-contributions.json';
 import type { Profile } from '@/content/schema';
@@ -103,13 +104,15 @@ export default function Home() {
   const resumeAvailable = hasPublicMedia('/media/resume.pdf');
   const githubUrl = profile.identity.socials.find((social) => social.platform === 'GitHub')?.url ?? profile.identity.github.url;
   const linkedInUrl = profile.identity.socials.find((social) => social.platform === 'LinkedIn')?.url ?? '';
+  const taglineKeywords = profile.identity.tagline.split('.').map((word) => word.trim()).filter(Boolean);
 
   return (
     <>
       <div className="bp-grid min-h-screen overflow-x-clip">
         <SiteNav />
-        <main>
+        <main className="bp-rails relative">
           <IdentityHeader profile={profile} />
+          <div aria-hidden="true" className="bp-stitch" />
           <Introduction profile={profile} />
           <ContributionHeatmap data={contributions} />
           <CapabilityActs profile={profile} />
@@ -120,11 +123,43 @@ export default function Home() {
           <ProofWall profile={profile} />
           <Products profile={profile} />
           <BrandsWall profile={profile} />
+          <div aria-hidden="true" className="bp-stitch" />
           <Faq profile={profile} />
           <Contact
             email={profile.identity.email}
             socials={profile.identity.socials}
           />
+          <div aria-hidden="true" className="bp-stitch" />
+          <div
+            data-bookend-cta="true"
+            className="bp-nodes relative border-t border-line bg-canvas py-14 md:py-16"
+          >
+            <div className="dossier-shell flex flex-col items-center gap-6 text-center">
+              <h2 className="text-xl font-semibold tracking-tight text-text-3 md:text-3xl">
+                <span className="text-text-3">One dossier. </span>
+                {taglineKeywords.map((keyword, index) => (
+                  <Fragment key={keyword}>
+                    <span className="text-text-1">{keyword}.</span>
+                    {index < taglineKeywords.length - 1 ? ' ' : null}
+                  </Fragment>
+                ))}
+              </h2>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <a
+                  href="#contact"
+                  className="rounded-full bg-primary px-4 py-2 font-mono text-xs text-primary-foreground transition-opacity duration-150 hover:opacity-90"
+                >
+                  Get in touch
+                </a>
+                <a
+                  href="#work"
+                  className="rounded-full border border-line-strong bg-surface px-4 py-2 font-mono text-xs text-text-2 transition-colors duration-150 hover:bg-surface-hover hover:text-text-1"
+                >
+                  Selected work
+                </a>
+              </div>
+            </div>
+          </div>
         </main>
         <script
           id="copy-disclosure-state"

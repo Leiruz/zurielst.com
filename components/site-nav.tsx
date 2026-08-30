@@ -117,9 +117,12 @@ export function SiteNav() {
           type="button"
           aria-label="Open command palette"
           data-command-palette-trigger="true"
-          className="inline-flex h-8 items-center rounded-full border border-line bg-surface px-2.5 font-mono text-[0.65rem] text-text-2 transition-colors duration-150 hover:bg-surface-hover hover:text-text-1 motion-reduce:transition-none"
+          className="inline-flex h-8 items-center gap-1 rounded-full border border-line bg-surface px-2.5 font-mono text-[0.65rem] text-text-2 transition-colors duration-150 hover:bg-surface-hover hover:text-text-1 motion-reduce:transition-none"
         >
-          Ctrl K
+          <span aria-hidden="true" className="inline-flex items-center gap-1">
+            <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded-sm border border-line bg-canvas-raised px-1 font-mono text-[0.65rem] text-text-3">Ctrl</kbd>
+            <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded-sm border border-line bg-canvas-raised px-1 font-mono text-[0.65rem] text-text-3">K</kbd>
+          </span>
         </button>
         <DeferredThemeSwitcher />
       </div>

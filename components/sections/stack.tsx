@@ -1,4 +1,5 @@
 import { Reveal } from '@/components/dossier/reveal';
+import { SectionAnchor } from '@/components/dossier/section-anchor';
 import type { Profile } from '@/content/schema';
 
 interface StackProps {
@@ -7,11 +8,13 @@ interface StackProps {
 
 export function Stack({ profile }: StackProps) {
   return (
-    <section id="stack" className="dossier-section bg-canvas-raised" aria-labelledby="stack-title">
+    <section id="stack" className="bp-nodes dossier-section bg-canvas-raised" aria-labelledby="stack-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
           <p className="fig-label">Fig. 5. Stack</p>
-          <h2 id="stack-title" className="dossier-title mt-4 text-text-1">Stack</h2>
+          <h2 id="stack-title" className="dossier-title mt-4 text-text-1">
+            Stack <SectionAnchor href="#stack" label="stack" />
+          </h2>
         </Reveal>
 
         <ol className="mt-10 divide-y divide-line border-y border-line">
