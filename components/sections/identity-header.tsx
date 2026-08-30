@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import type { Profile } from '@/content/schema';
 import { CountUpMetric } from '@/components/dossier/count-up-metric';
 import { LiveClock } from '@/components/dossier/live-clock';
@@ -29,7 +28,16 @@ export function IdentityHeader({ profile, portraitAvailable }: IdentityHeaderPro
           <div className="min-w-0">
             <div className="mb-7 flex size-24 items-center justify-center overflow-hidden rounded-full border border-line-strong bg-surface font-mono text-2xl font-semibold text-text-1">
               {portraitAvailable ? (
-                <Image src={identity.portrait.image} alt={identity.portrait.alt} width={192} height={192} priority className="size-full object-cover" />
+                <img
+                  src={identity.portrait.image}
+                  alt={identity.portrait.alt}
+                  width={192}
+                  height={192}
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
+                  className="size-full object-cover"
+                />
               ) : (
                 <span role="img" aria-label={`${identity.name} monogram`}>{monogram}</span>
               )}

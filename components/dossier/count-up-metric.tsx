@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { parseMetric } from '@/lib/dossier';
-import { cn } from '@/lib/utils';
 import { usePrefersReducedMotion } from './use-prefers-reduced-motion';
 
 interface CountUpMetricProps {
@@ -65,13 +64,13 @@ export function CountUpMetric({ value, className }: CountUpMetricProps) {
   }, [parsedMetric, prefersReducedMotion]);
 
   if (!parsedMetric) {
-    return <span className={cn('tabular-nums', className)}>{value}</span>;
+    return <span className={['tabular-nums', className].filter(Boolean).join(' ')}>{value}</span>;
   }
 
   const display = `${parsedMetric.prefix}${displayedValue.toFixed(parsedMetric.fractionDigits)}${parsedMetric.suffix}`;
 
   return (
-    <span ref={elementRef} className={cn('tabular-nums', className)}>
+    <span ref={elementRef} className={['tabular-nums', className].filter(Boolean).join(' ')}>
       <span className="sr-only">{value}</span>
       <span className="dossier-count-up-static" aria-hidden="true" data-count-up-static>
         {value}

@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { Reveal } from '@/components/dossier/reveal';
 import type { MediaRef, Product, Profile } from '@/content/schema';
 import { hasPublicMedia } from '@/lib/media';
@@ -77,5 +76,5 @@ function ProductMedia({ item }: { item: MediaRef }) {
     return <video src={item.media} aria-label={item.alt} controls preload="metadata" className="aspect-video w-full object-cover" />;
   }
 
-  return <Image src={item.media} alt={item.alt} width={720} height={405} className="aspect-video w-full object-cover" />;
+  return <img src={item.media} alt={item.alt} width={720} height={405} loading="lazy" decoding="async" className="aspect-video w-full object-cover" />;
 }

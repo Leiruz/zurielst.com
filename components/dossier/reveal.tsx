@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { cn } from '@/lib/utils';
 import { usePrefersReducedMotion } from './use-prefers-reduced-motion';
 
 interface RevealProps {
@@ -42,7 +41,7 @@ export function Reveal({ children, className, delayIndex = 0 }: RevealProps) {
   return (
     <div
       ref={elementRef}
-      className={cn('dossier-reveal', className)}
+      className={['dossier-reveal', className].filter(Boolean).join(' ')}
       data-reveal-state={isVisible ? 'visible' : 'hidden'}
       style={style}
     >

@@ -1,4 +1,4 @@
-import { createElement, type ComponentProps } from 'react';
+import { createElement } from 'react';
 // @ts-expect-error The installed react-dom runtime has no declaration package in this project.
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
@@ -8,9 +8,6 @@ import type { Profile } from '@/content/schema';
 
 vi.mock('server-only', () => ({}));
 vi.mock('@/lib/media', () => ({ hasPublicMedia: (mediaPath: string | undefined) => Boolean(mediaPath) }));
-vi.mock('next/image', () => ({
-  default: (props: ComponentProps<'img'>) => createElement('img', props),
-}));
 
 const sourceProfile = profileJson as Profile;
 

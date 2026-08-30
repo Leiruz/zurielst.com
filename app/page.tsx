@@ -33,10 +33,20 @@ export default function Home() {
         <ProofWall profile={profile} />
         <Products profile={profile} />
         <Faq profile={profile} />
-        <Contact profile={profile} />
+        <Contact
+          email={profile.identity.email}
+          socials={profile.identity.socials}
+          disclaimer={profile.chat.disclaimer}
+        />
       </main>
       <Footer name={profile.identity.name} />
-      <Terminal profile={profile} resumeAvailable={resumeAvailable} />
+      <Terminal
+        commands={profile.easter_eggs.terminal.commands}
+        source={profile.easter_eggs.terminal.source}
+        email={profile.identity.email}
+        gamesUrl={profile.easter_eggs.towerblock.url}
+        resumeAvailable={resumeAvailable}
+      />
     </div>
   );
 }

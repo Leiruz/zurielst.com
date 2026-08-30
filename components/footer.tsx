@@ -1,5 +1,7 @@
 'use client';
 
+import type { MouseEvent } from 'react';
+
 export const TERMINAL_OPEN_EVENT = 'dossier:terminal-open';
 
 interface FooterProps {
@@ -7,8 +9,10 @@ interface FooterProps {
 }
 
 export function Footer({ name }: FooterProps) {
-  function openTerminal() {
-    window.dispatchEvent(new Event(TERMINAL_OPEN_EVENT));
+  function openTerminal(event: MouseEvent<HTMLButtonElement>) {
+    window.dispatchEvent(
+      new CustomEvent(TERMINAL_OPEN_EVENT, { detail: event.currentTarget }),
+    );
   }
 
   return (

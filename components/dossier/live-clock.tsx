@@ -7,7 +7,6 @@ import {
   type ClockLocation,
   type LocationClock,
 } from '@/lib/dossier';
-import { cn } from '@/lib/utils';
 
 interface LiveClockProps {
   location: ClockLocation;
@@ -30,7 +29,7 @@ export function LiveClock({ location, className }: LiveClockProps) {
 
   return (
     <time
-      className={cn('font-mono tabular-nums', className)}
+      className={['font-mono tabular-nums', className].filter(Boolean).join(' ')}
       aria-label={clock?.accessibleLabel ?? fallback.accessibleLabel}
       dateTime={clock?.dateTime}
     >

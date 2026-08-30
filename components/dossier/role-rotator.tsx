@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { cn } from '@/lib/utils';
 import { usePrefersReducedMotion } from './use-prefers-reduced-motion';
 
 interface RoleRotatorProps {
@@ -31,7 +30,7 @@ export function RoleRotator({ roles, className }: RoleRotatorProps) {
   if (roles.length === 0) return null;
 
   return (
-    <span className={cn('inline-block', className)} aria-live="off">
+    <span className={['inline-block', className].filter(Boolean).join(' ')} aria-live="off">
       {roles[activeIndex]}
     </span>
   );

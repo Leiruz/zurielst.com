@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { Reveal } from '@/components/dossier/reveal';
 import type {
   Award,
@@ -95,7 +94,7 @@ function ProofTile({ children }: { children: React.ReactNode }) {
 function ProofImage({ src, alt }: { src: string | undefined; alt: string }) {
   if (!hasPublicMedia(src)) return null;
 
-  return <Image src={src!} alt={alt} width={720} height={405} className="aspect-video w-full object-cover object-top" />;
+  return <img src={src} alt={alt} width={720} height={405} loading="lazy" decoding="async" className="aspect-video w-full object-cover object-top" />;
 }
 
 function CertificationTile({ item }: { item: Certification }) {
@@ -162,7 +161,7 @@ function ExtraTile({ item }: { item: ProofExtra }) {
         <video src={item.media} aria-label={`${item.title} video`} controls preload="metadata" className="aspect-video w-full object-cover" />
       )}
       {mediaAvailable && item.type === 'image' && (
-        <Image src={item.media} alt={`${item.title} artifact`} width={720} height={405} className="aspect-video w-full object-cover object-top" />
+        <img src={item.media} alt={`${item.title} artifact`} width={720} height={405} loading="lazy" decoding="async" className="aspect-video w-full object-cover object-top" />
       )}
       <div className="flex flex-1 flex-col p-5">
         <p className="dossier-eyebrow">{item.type === 'video' ? 'Video artifact' : 'Image artifact'}</p>

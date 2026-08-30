@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { Reveal } from '@/components/dossier/reveal';
 import type { MediaRef, Profile, WorkCase } from '@/content/schema';
 import { hasPublicMedia } from '@/lib/media';
@@ -76,5 +75,5 @@ function Evidence({ item }: { item: MediaRef }) {
     return <video src={item.media} aria-label={item.alt} controls preload="metadata" className="aspect-video w-full object-cover" />;
   }
 
-  return <Image src={item.media} alt={item.alt} width={960} height={540} className="aspect-video w-full object-cover" />;
+  return <img src={item.media} alt={item.alt} width={960} height={540} loading="lazy" decoding="async" className="aspect-video w-full object-cover" />;
 }
