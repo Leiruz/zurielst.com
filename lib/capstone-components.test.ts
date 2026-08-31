@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { Footer } from '@/components/footer';
 import { enhanceContributionGraph } from '@/components/registry/contribution-graph';
 import type { ContributionSnapshot } from '@/components/registry/github-contributions';
-import { GitHubContributionsSection } from '@/components/sections/github-contributions';
+import { GitHubContributionsFigure } from '@/components/sections/github-contributions';
 import contributionJson from '@/content/github-contributions.json';
 
 const notFoundModule = await import('@/app/not-found').catch(() => ({}));
@@ -33,7 +33,7 @@ describe('branded not found page', () => {
 describe('registry contribution graph finishers', () => {
   it('renders month labels, dossier legend, labelled cells, and the exact snapshot caption', () => {
     const data = contributionJson as ContributionSnapshot;
-    const markup = renderToStaticMarkup(createElement(GitHubContributionsSection, { snapshot: data }));
+    const markup = renderToStaticMarkup(createElement(GitHubContributionsFigure, { snapshot: data }));
     const monthLabels = [...markup.matchAll(/data-month-label="true"[^>]*>([^<]+)</g)]
       .map((match) => match[1]);
     const contributionDays = data.weeks.flatMap((week) => week.contributionDays);
@@ -56,8 +56,9 @@ describe('registry contribution graph finishers', () => {
     expect(regionTag).not.toContain('tabindex=');
     expect(regionTag).toContain('304 contributions in the last year, shown across 53 weeks.');
     expect(markup).toContain(
-      'Fig. 3. 304 contributions in the last year. Source: github.com/Leiruz, committed build-time snapshot.',
+      'Fig. 2. 304 contributions in the last year. Source: github.com/Leiruz, committed build-time snapshot.',
     );
+    expect(markup).not.toContain('<section');
   });
 
   it('moves the roving tab stop with arrow keys and keeps boundary focus in place', () => {

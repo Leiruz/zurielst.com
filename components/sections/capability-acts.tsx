@@ -29,7 +29,7 @@ export function CapabilityActs({ profile }: CapabilityActsProps) {
                         <h2 id="capabilities-title" className="dossier-title text-text-1">
                           {act.title} <SectionAnchor href="#capabilities" label="capabilities" />
                         </h2>
-                        <p className="fig-label ml-auto">Fig. 5. Capabilities</p>
+                        <p className="fig-label ml-auto">Fig. 4. Capabilities</p>
                       </div>
                     ) : (
                       <h3 className="dossier-title text-text-1">{act.title}</h3>

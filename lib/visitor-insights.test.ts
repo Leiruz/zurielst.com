@@ -20,17 +20,17 @@ describe('visitor insights section', () => {
     const busiest = snapshotJson.days.reduce((current, day) => (
       day.visits > current.visits ? day : current
     ));
-    const contributionsStart = markup.indexOf('<section id="contributions"');
+    const faqStart = markup.indexOf('<section id="faq"');
     const insightsStart = markup.indexOf('<section id="insights"');
-    const capabilitiesStart = markup.indexOf('<section id="capabilities"');
-    const insightsMarkup = markup.slice(insightsStart, capabilitiesStart);
+    const contactStart = markup.indexOf('<section id="contact"');
+    const insightsMarkup = markup.slice(insightsStart, contactStart);
 
-    expect(insightsStart).toBeGreaterThan(contributionsStart);
-    expect(capabilitiesStart).toBeGreaterThan(insightsStart);
+    expect(insightsStart).toBeGreaterThan(faqStart);
+    expect(contactStart).toBeGreaterThan(insightsStart);
     expect(insightsMarkup).toContain('aria-labelledby="insights-title"');
     expect(insightsMarkup).toContain('id="insights-title"');
     expect(insightsMarkup).toContain('>Visitor insights <a');
-    expect(insightsMarkup).toContain('Fig. 4. Insights');
+    expect(insightsMarkup).toContain('Fig. 13. Insights');
 
     expect(insightsMarkup).toContain('data-insight-metric="visits"');
     expect(insightsMarkup).toContain('>30-day visits</dt>');
@@ -60,26 +60,21 @@ describe('visitor insights section', () => {
     expect(insightsMarkup).not.toContain('unique');
   });
 
-  it('precedes the hidden chart with a summary and exposes all days in a collapsed table', () => {
+  it('precedes the hidden chart with a summary and omits the daily data table', () => {
     const markup = renderToStaticMarkup(createElement(Home));
     const insightsStart = markup.indexOf('<section id="insights"');
-    const capabilitiesStart = markup.indexOf('<section id="capabilities"');
-    const insightsMarkup = markup.slice(insightsStart, capabilitiesStart);
-    const detailsTag = insightsMarkup.match(/<details[^>]*data-analytics-table="true"[^>]*>/)?.[0] ?? '';
+    const contactStart = markup.indexOf('<section id="contact"');
+    const insightsMarkup = markup.slice(insightsStart, contactStart);
 
     expect(insightsMarkup).toMatch(
       /<p[^>]*data-analytics-summary="true"[^>]*class="[^"]*sr-only[^"]*"[^>]*>[^<]+<\/p>\s*<svg/,
     );
-    expect(detailsTag).not.toBe('');
-    expect(detailsTag).not.toMatch(/\sopen(?:=|\s|>)/);
-    expect(insightsMarkup).toContain('<summary');
-    expect(insightsMarkup).toContain('Daily data table');
-    expect(insightsMarkup).toContain('<caption class="sr-only">Daily Cloudflare Web Analytics observations</caption>');
-    expect(insightsMarkup.match(/data-analytics-day="true"/g)).toHaveLength(30);
-    expect(insightsMarkup.match(/scope="col"/g)).toHaveLength(4);
-    expect(insightsMarkup.match(/scope="row"/g)).toHaveLength(30);
+    expect(insightsMarkup).not.toContain('data-analytics-table="true"');
+    expect(insightsMarkup).not.toContain('Daily data table');
+    expect(insightsMarkup).not.toContain('<table');
+    expect(insightsMarkup).not.toContain('data-analytics-day="true"');
     expect(insightsMarkup).toContain(
-      'Fig. 4. Daily visits and views, trailing 30 days. Source: Cloudflare Web Analytics, committed snapshot.',
+      'Fig. 13. Daily visits and views, trailing 30 days. Source: Cloudflare Web Analytics, committed snapshot.',
     );
     expect(insightsMarkup).toContain('Sampled estimate:');
   });
@@ -113,8 +108,8 @@ describe('visitor insights section', () => {
   it('keeps date labels outside the scaled SVG at readable CSS pixels', () => {
     const markup = renderToStaticMarkup(createElement(Home));
     const insightsStart = markup.indexOf('<section id="insights"');
-    const capabilitiesStart = markup.indexOf('<section id="capabilities"');
-    const insightsMarkup = markup.slice(insightsStart, capabilitiesStart);
+    const contactStart = markup.indexOf('<section id="contact"');
+    const insightsMarkup = markup.slice(insightsStart, contactStart);
     const svgStart = insightsMarkup.indexOf('<svg');
     const svgEnd = insightsMarkup.indexOf('</svg>', svgStart);
     const labelsStart = insightsMarkup.indexOf('data-analytics-axis-labels="true"');

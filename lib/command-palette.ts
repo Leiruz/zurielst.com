@@ -66,8 +66,7 @@ interface CommandDialogKeyDependencies {
 const SECTION_ACTIONS: readonly CommandPaletteAction[] = [
   { id: 'identity', group: 'Sections', keywords: ['home', 'about'], label: 'Identity', kind: 'section', targetId: 'identity', shortcut: ['g', 'i'] },
   { id: 'intro', group: 'Sections', keywords: ['hello', 'about', 'bio'], label: 'Introduction', kind: 'section', targetId: 'intro' },
-  { id: 'contributions', group: 'Sections', keywords: ['github', 'activity', 'heatmap'], label: 'Contributions', kind: 'section', targetId: 'contributions' },
-  { id: 'insights', group: 'Sections', keywords: ['analytics'], label: 'Insights', kind: 'section', targetId: 'insights' },
+  { id: 'brands', group: 'Sections', keywords: ['vendors', 'technologies', 'worked with'], label: 'Brands', kind: 'section', targetId: 'brands' },
   { id: 'capabilities', group: 'Sections', keywords: ['skills', 'security', 'engineering'], label: 'Capabilities', kind: 'section', targetId: 'capabilities' },
   { id: 'stack', group: 'Sections', keywords: ['skills', 'tools', 'technologies'], label: 'Stack', kind: 'section', targetId: 'stack', shortcut: ['g', 's'] },
   { id: 'work', group: 'Sections', keywords: ['projects', 'case studies', 'portfolio'], label: 'Selected work', kind: 'section', targetId: 'work', shortcut: ['g', 'w'] },
@@ -75,8 +74,9 @@ const SECTION_ACTIONS: readonly CommandPaletteAction[] = [
   { id: 'education', group: 'Sections', keywords: ['school', 'university', 'learning'], label: 'Education', kind: 'section', targetId: 'education', shortcut: ['g', 'e'] },
   { id: 'proof', group: 'Sections', keywords: ['proof', 'awards', 'certifications', 'evidence'], label: 'Accolades', kind: 'section', targetId: 'proof', shortcut: ['g', 'a'] },
   { id: 'products', group: 'Sections', keywords: ['tools', 'builds', 'software'], label: 'Products', kind: 'section', targetId: 'products', shortcut: ['g', 'p'] },
-  { id: 'brands', group: 'Sections', keywords: ['vendors', 'technologies', 'worked with'], label: 'Brands', kind: 'section', targetId: 'brands' },
+  { id: 'testimonials', group: 'Sections', keywords: ['reviews', 'clients', 'endorsements'], label: 'Testimonials', kind: 'section', targetId: 'testimonials' },
   { id: 'faq', group: 'Sections', keywords: ['questions', 'answers'], label: 'FAQ', kind: 'section', targetId: 'faq', shortcut: ['g', 'f'] },
+  { id: 'insights', group: 'Sections', keywords: ['analytics'], label: 'Insights', kind: 'section', targetId: 'insights' },
   { id: 'contact', group: 'Sections', keywords: ['email', 'connect', 'hire'], label: 'Contact', kind: 'section', targetId: 'contact', shortcut: ['g', 'c'] },
 ];
 

@@ -12,6 +12,9 @@
 */
 
 :root {
+  --section-line-nav-width: 10rem;
+  --section-line-nav-gutter: 12rem;
+
   /* dossier: light */
   --canvas: #fafafa;
   --canvas-raised: #f4f4f5;
@@ -256,6 +259,19 @@ canvas {
   width: min(100%, 80rem);
   margin-inline: auto;
   padding-inline: clamp(1rem, 3vw, 2rem);
+}
+
+@media (min-width: 80rem) {
+  .section-line-nav {
+    width: var(--section-line-nav-width);
+    overflow: hidden;
+  }
+
+  .dossier-page .dossier-shell {
+    width: min(calc(100% - var(--section-line-nav-gutter)), 80rem);
+    margin-left: max(var(--section-line-nav-gutter), calc((100% - 80rem) / 2));
+    margin-right: auto;
+  }
 }
 
 .dossier-section {

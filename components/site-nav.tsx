@@ -2,6 +2,7 @@ import { DeferredThemeSwitcher } from '@/components/registry/client-enhancements
 import { SpotlightLogo } from '@/components/registry/spotlight-logo';
 
 const LINKS = [
+  ['Brands', '#brands'],
   ['Stack', '#stack'],
   ['Work', '#work'],
   ['Timeline', '#timeline'],
@@ -9,6 +10,7 @@ const LINKS = [
   ['Accolades', '#proof'],
   ['Products', '#products'],
   ['FAQ', '#faq'],
+  ['Insights', '#insights'],
   ['Contact', '#contact'],
 ] as const;
 

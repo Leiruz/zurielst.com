@@ -4,6 +4,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
 import Home from '@/app/page';
+import NotFound from '@/app/not-found';
+import { SECTION_LINE_NAV_ITEMS } from '@/components/section-line-nav';
 import * as carouselEnhancement from '@/components/registry/logos-carousel-enhancement';
 import profileJson from '@/content/profile.json';
 import type { Profile } from '@/content/schema';
@@ -16,8 +18,7 @@ const profile = profileJson as Profile;
 const sections = [
   ['identity', 'Identity'],
   ['intro', 'Introduction'],
-  ['contributions', 'Contributions'],
-  ['insights', 'Insights'],
+  ['brands', 'Worked with'],
   ['capabilities', 'Capabilities'],
   ['stack', 'Stack'],
   ['work', 'Selected work'],
@@ -25,9 +26,9 @@ const sections = [
   ['education', 'Education'],
   ['proof', 'Accolades'],
   ['products', 'Products'],
-  ['brands', 'Worked with'],
   ['testimonials', 'Testimonials'],
   ['faq', 'FAQ'],
+  ['insights', 'Insights'],
   ['contact', 'Contact'],
 ] as const;
 
@@ -100,9 +101,48 @@ describe('final registry sections', () => {
     }
   });
 
+  it.each([1280, 1440, 1920])(
+    'reserves a non-overlapping line-nav gutter at %ipx',
+    (viewportWidth) => {
+      const rootFontSize = 16;
+      const navRect = {
+        left: 0,
+        right: 10 * rootFontSize,
+      };
+      const shellRect = {
+        left: Math.max(12 * rootFontSize, (viewportWidth - 80 * rootFontSize) / 2),
+      };
+      const contentRect = {
+        left: shellRect.left + 2 * rootFontSize,
+      };
+
+      expect(styles).toMatch(/--section-line-nav-width:\s*10rem/);
+      expect(styles).toMatch(/--section-line-nav-gutter:\s*12rem/);
+      expect(styles).toMatch(/@media\s*\(min-width:\s*80rem\)[\s\S]*\.section-line-nav\s*\{[^}]*width:\s*var\(--section-line-nav-width\)/);
+      expect(styles).toMatch(/@media\s*\(min-width:\s*80rem\)[\s\S]*\.dossier-page\s+\.dossier-shell\s*\{[^}]*margin-left:\s*max\(var\(--section-line-nav-gutter\),\s*calc\(\(100%\s*-\s*80rem\)\s*\/\s*2\)\)/);
+      expect(navRect.right).toBeLessThan(contentRect.left);
+    },
+  );
+
+  it('scopes the line-nav gutter to the landing dossier', () => {
+    const homeMarkup = renderToStaticMarkup(createElement(Home));
+    const notFoundMarkup = renderToStaticMarkup(createElement(NotFound));
+
+    expect(homeMarkup).toContain('class="dossier-page bp-grid');
+    expect(notFoundMarkup).not.toContain('dossier-page');
+    expect(styles).not.toMatch(
+      /@media\s*\(min-width:\s*80rem\)[\s\S]*?^\s{2}\.dossier-shell\s*\{/m,
+    );
+  });
+
+  it('keeps line-nav items in the exact top-level section order', () => {
+    expect(SECTION_LINE_NAV_ITEMS.map((item) => item.href.slice(1)))
+      .toEqual(sections.map(([id]) => id));
+  });
+
   it('renders all ten meaningful brand items once with pinned monochrome SVGs', () => {
     const markup = renderToStaticMarkup(createElement(Home));
-    const brands = between(markup, '<section id="brands"', '<section id="testimonials"');
+    const brands = between(markup, '<section id="brands"', '<section id="capabilities"');
 
     expect(brands.match(/data-brand-item="true"/g)).toHaveLength(10);
     expect(brands.match(/data-brand-icon="true"/g)).toHaveLength(10);

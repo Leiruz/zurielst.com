@@ -13,8 +13,8 @@ vi.mock('server-only', () => ({}));
 
 const profile = profileJson as Profile;
 const sectionIds = [
-  'identity', 'intro', 'contributions', 'insights', 'capabilities', 'stack', 'work',
-  'timeline', 'education', 'proof', 'products', 'brands', 'testimonials', 'faq', 'contact',
+  'identity', 'intro', 'brands', 'capabilities', 'stack', 'work', 'timeline',
+  'education', 'proof', 'products', 'testimonials', 'faq', 'insights', 'contact',
 ] as const;
 
 function sectionMarkup(markup: string, id: (typeof sectionIds)[number]) {
@@ -61,8 +61,8 @@ describe('chanhdai dossier direction', () => {
 
     const markup = renderToStaticMarkup(createElement(Home));
     const anchoredIds = [
-      'intro', 'insights', 'capabilities', 'stack', 'work', 'timeline', 'education',
-      'proof', 'products', 'brands', 'testimonials', 'faq', 'contact',
+      'intro', 'brands', 'capabilities', 'stack', 'work', 'timeline', 'education',
+      'proof', 'products', 'testimonials', 'faq', 'insights', 'contact',
     ] as const;
     for (const id of anchoredIds) {
       expect(sectionMarkup(markup, id)).toMatch(
