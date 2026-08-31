@@ -3,13 +3,14 @@
 /**
  * IntroGate (ours, not vendored): plays the apple-hello-effect once per
  * session as a fixed overlay. Plan rev 3 contract:
- * - session-gated (sessionStorage), explicitly entered for every motion mode
+ * - session-gated (sessionStorage), with reduced-motion sessions bypassed
  * - the identity content underneath is prerendered, so LCP never waits on it
  * - storage failures degrade to "show nothing"
  */
 
 import { useEffect, useRef, useState } from 'react';
 import { AppleHelloEffectEnglish } from '@/components/registry/apple-hello-effect-english';
+import { ShimmeringText } from '@/components/registry/shimmering-text';
 import {
   SlideToUnlock,
   SlideToUnlockHandle,
@@ -44,6 +45,22 @@ export function hasSeenIntro(
 
 export function getIntroLeavingDelay(reducedMotion: boolean) {
   return reducedMotion ? 0 : 500;
+}
+
+interface IntroEligibilityState {
+  coverAvailable: boolean;
+  reducedMotion: boolean;
+  seen: boolean;
+  stampedPending: boolean;
+}
+
+export function shouldShowIntro({
+  coverAvailable,
+  reducedMotion,
+  seen,
+  stampedPending,
+}: IntroEligibilityState) {
+  return coverAvailable && stampedPending && !seen && !reducedMotion;
 }
 
 const INTRO_ANIMATION_FALLBACK_DELAY = 4_500;
@@ -106,7 +123,12 @@ export function IntroGate() {
       // A missing media-query API fails closed just like unavailable storage.
     }
 
-    if (!stampedPending || seen || !cover) {
+    if (!shouldShowIntro({
+      coverAvailable: Boolean(cover),
+      reducedMotion: reduced,
+      seen,
+      stampedPending,
+    })) {
       root.dataset.intro = 'done';
       cover?.remove();
       return;
@@ -250,7 +272,9 @@ export function IntroOverlay({
         >
           <SlideToUnlockTrack>
             <SlideToUnlockText className="font-mono text-xs font-normal tracking-[0.12em] text-white">
-              <span>slide to enter</span>
+              <ShimmeringText className="intro-entry-shimmer">
+                Slide to unlock
+              </ShimmeringText>
             </SlideToUnlockText>
             <SlideToUnlockHandle autoFocus disabled={leaving} />
           </SlideToUnlockTrack>

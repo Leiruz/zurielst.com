@@ -163,6 +163,12 @@ html[data-intro='leaving'] .intro-cover {
   display: flex;
 }
 
+html[data-intro='pending'],
+html[data-intro='active'],
+html[data-intro='leaving'] {
+  overflow: hidden;
+}
+
 html[data-intro='leaving'] .intro-cover {
   opacity: 0;
   pointer-events: none;
@@ -179,6 +185,11 @@ html[data-intro='leaving'] .intro-cover {
 
 .intro-entry-control {
   animation: intro-entry-fade-in 300ms ease-out both;
+}
+
+.intro-entry-shimmer {
+  --text-1: #fff;
+  --text-3: rgba(255, 255, 255, 0.42);
 }
 
 .intro-static-hello path:first-of-type {
