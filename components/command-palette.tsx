@@ -24,6 +24,10 @@ interface CommandPaletteProps extends CommandPaletteConfig {
 
 const GROUPS: readonly CommandPaletteGroup[] = ['Sections', 'Actions', 'Links'];
 
+function focusInput(input: HTMLInputElement | null) {
+  input?.focus({ preventScroll: true });
+}
+
 function navigate(action: Extract<CommandPaletteAction, { kind: 'link' }>) {
   if (action.download) {
     const anchor = document.createElement('a');
@@ -118,7 +122,7 @@ export function CommandPalette({
         <div className="flex items-center gap-3 border-b border-line px-4">
           <span aria-hidden="true" className="font-mono text-sm text-text-3">/</span>
           <input
-            autoFocus
+            ref={focusInput}
             value={query}
             onChange={(event) => {
               setQuery(event.target.value);

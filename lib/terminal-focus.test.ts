@@ -7,6 +7,8 @@ import { FooterTerminalTrigger } from '@/components/footer-terminal-trigger';
 import { SiteNav } from '@/components/site-nav';
 import * as siteNavModule from '@/components/site-nav';
 import * as terminalModule from '@/components/terminal';
+// @ts-expect-error Vite exposes source files with the raw query as text.
+import terminalSource from '@/components/terminal.tsx?raw';
 import { TERMINAL_OPEN_EVENT } from '@/lib/terminal-events';
 
 interface FocusTarget {
@@ -68,6 +70,13 @@ afterEach(() => {
 });
 
 describe('terminal focus lifecycle', () => {
+  it('focuses its command input without scrolling and keeps focus-visible styling', () => {
+    expect(terminalSource).not.toMatch(/\bautoFocus\b/);
+    expect(terminalSource).toContain('.focus({ preventScroll: true })');
+    expect(terminalSource).toContain('focus-visible:outline-2');
+    expect(terminalSource).not.toContain(' focus:outline-');
+  });
+
   it('opens, closes on Escape, and restores the actual opener', () => {
     const openTerminalDialog = terminalExport<OpenTerminalDialog>(
       'openTerminalDialog',

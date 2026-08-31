@@ -4,6 +4,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { CommandPalette } from '@/components/command-palette';
+// @ts-expect-error Vite exposes source files with the raw query as text.
+import commandPaletteSource from '@/components/command-palette.tsx?raw';
 import * as siteNavModule from '@/components/site-nav';
 import {
   COMMAND_PALETTE_OPEN_EVENT,
@@ -22,6 +24,8 @@ import {
   trapCommandPaletteTab,
   type CommandPaletteAction,
 } from '@/lib/command-palette';
+// @ts-expect-error The Vitest config exposes the stylesheet source as a virtual text module.
+import styles from 'virtual:globals-css-source';
 
 const config = {
   email: 'zurielst@u.nus.edu',
@@ -521,6 +525,12 @@ describe('command palette keyboard and focus lifecycle', () => {
 });
 
 describe('command palette markup', () => {
+  it('focuses its input without scrolling and leaves the ring to focus-visible', () => {
+    expect(commandPaletteSource).not.toMatch(/\bautoFocus\b/);
+    expect(commandPaletteSource).toContain('.focus({ preventScroll: true })');
+    expect(styles).toMatch(/:where\([^)]*input[^)]*\):focus-visible\s*\{/);
+  });
+
   it('renders labelled dialog, listbox, options, active descendant, and safe links', () => {
     const markup = renderToStaticMarkup(
       createElement(CommandPalette, {
@@ -532,6 +542,7 @@ describe('command palette markup', () => {
 
     expect(markup).toMatch(/role="dialog"[^>]*aria-modal="true"[^>]*aria-labelledby="command-palette-title"/);
     expect(markup).toMatch(/<input(?=[^>]*role="combobox")(?=[^>]*aria-controls="command-palette-listbox")(?=[^>]*aria-expanded="true")(?=[^>]*aria-autocomplete="list")(?=[^>]*aria-activedescendant="command-palette-option-)/);
+    expect(markup).not.toContain('autofocus');
     expect(markup).toMatch(/role="listbox"/);
     expect(markup).not.toMatch(/role="listbox"[^>]*aria-activedescendant/);
     expect(markup.match(/role="option"/g)).toHaveLength(23);

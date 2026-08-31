@@ -22,6 +22,8 @@ import type { ChatFocusTarget } from '@/components/chat/chat-store';
 import { Contact } from '@/components/sections/contact';
 import profileJson from '@/content/profile.json';
 import type { Profile } from '@/content/schema';
+// @ts-expect-error The Vitest config exposes the stylesheet source as a virtual text module.
+import styles from 'virtual:globals-css-source';
 
 const profile = profileJson as Profile;
 const intentChips = profile.chat.intent_chips.slice(0, 4);
@@ -148,6 +150,15 @@ describe('chat launcher', () => {
 });
 
 describe('chat panel markup', () => {
+  it('uses the reduced panel glow in both color themes', () => {
+    expect(styles).toContain(
+      'box-shadow: 0 12px 32px color-mix(in oklab, var(--text-1) 11%, transparent);',
+    );
+    expect(styles).not.toContain(
+      'box-shadow: 0 24px 64px color-mix(in oklab, var(--text-1) 22%, transparent);',
+    );
+  });
+
   it('renders the dossier panel content, status, empty state, intents, and composer', () => {
     const markup = renderToStaticMarkup(
       createElement(Chat, {
