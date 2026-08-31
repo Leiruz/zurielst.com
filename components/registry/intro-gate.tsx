@@ -206,7 +206,9 @@ export function IntroOverlay({
       role="dialog"
       aria-modal="true"
       aria-label="Intro animation"
-      autoFocus={!entryReady}
+      ref={(dialog) => {
+        if (!entryReady) dialog?.focus();
+      }}
       tabIndex={entryReady ? undefined : -1}
       onKeyDown={(event) => {
         if (leaving || event.key !== 'Tab') return;

@@ -492,14 +492,19 @@ describe('IntroOverlay', () => {
     },
   );
 
-  it('keeps focus on the pending dialog until the entry control mounts', () => {
+  it('focuses and traps the pending dialog until the entry control mounts', () => {
     const overlay = createIntroOverlay({ animationComplete: false });
     const handler = overlay.props.onKeyDown;
     const focus = vi.fn();
     const preventDefault = vi.fn();
 
     expect(overlay.props.tabIndex).toBe(-1);
-    expect(overlay.props.autoFocus).toBe(true);
+    expect(overlay.props.autoFocus).toBeUndefined();
+    expect(overlay.props.ref).toBeTypeOf('function');
+    overlay.props.ref({ focus });
+    expect(focus).toHaveBeenCalledOnce();
+
+    focus.mockClear();
     expect(handler).toBeTypeOf('function');
     if (typeof handler !== 'function') return;
 
