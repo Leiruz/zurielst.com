@@ -29,10 +29,13 @@ import {
   GLOBAL_SECTION_SHORTCUTS,
   installGlobalSectionShortcuts,
 } from '@/lib/section-shortcuts';
+import { installReturnToTop } from '@/lib/return-to-top';
 
 const GLOBAL_SECTION_SHORTCUTS_SCRIPT = `(${installGlobalSectionShortcuts.toString()})(${JSON.stringify(GLOBAL_SECTION_SHORTCUTS)});`;
+const RETURN_TO_TOP_SCRIPT = `(${installReturnToTop.toString()})(document.querySelector("[data-return-to-top]"));`;
 
 const COPY_DISCLOSURE_STATE_SCRIPT = `(() => {
+  ${RETURN_TO_TOP_SCRIPT}
   document.querySelectorAll("details[data-copy-disclosure]").forEach((details) => {
     const summary = details.querySelector(":scope > summary");
     if (!summary) return;
@@ -172,6 +175,19 @@ export default function Home() {
             </div>
           </div>
         </main>
+        <button
+          type="button"
+          className="return-to-top"
+          data-return-to-top="true"
+          data-visible="false"
+          aria-label="Return to top"
+          aria-hidden="true"
+          tabIndex={-1}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="m6 15 6-6 6 6" />
+          </svg>
+        </button>
         <script
           id="copy-disclosure-state"
           dangerouslySetInnerHTML={{ __html: COPY_DISCLOSURE_STATE_SCRIPT }}

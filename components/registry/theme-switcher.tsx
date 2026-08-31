@@ -65,38 +65,29 @@ function resolveActiveTheme(
   return undefined
 }
 
-const THEME_OPTIONS = ["light", "dark"] as const
-
 function ThemeSwitcherControl({
   activeTheme,
   onSelect,
 }: {
-  activeTheme: ThemeChoice | undefined
+  activeTheme: ThemeChoice
   onSelect: (theme: ThemeChoice) => void
 }) {
+  const nextTheme = activeTheme === "dark" ? "light" : "dark"
+  const actionLabel = `Switch to ${nextTheme} theme`
+
   return (
-    <div
-      className="theme-switcher-reveal"
-      role="group"
-      aria-label="Theme"
-    >
-      {THEME_OPTIONS.map((value) => (
-        <button
-          key={value}
-          type="button"
-          className="theme-switcher-button"
-          aria-label={`Switch to ${value} theme`}
-          aria-pressed={activeTheme === value}
-          onClick={() => onSelect(value)}
-        >
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-          >
-            <use href={`#theme-${value}`} />
-          </svg>
-        </button>
-      ))}
+    <div className="theme-switcher-reveal">
+      <button
+        type="button"
+        className="theme-switcher-button"
+        aria-label={actionLabel}
+        onClick={() => onSelect(nextTheme)}
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <use href={`#theme-${activeTheme}`} />
+        </svg>
+      </button>
+      <span className="sr-only" aria-live="polite">{actionLabel}</span>
     </div>
   )
 }
@@ -112,10 +103,13 @@ function ThemeSwitcher() {
   )
 
   if (!isMounted) {
-    return <div className="flex h-11 w-[5.5rem]" />
+    return <div className="flex h-11 w-11" />
   }
 
   const activeTheme = resolveActiveTheme(theme, resolvedTheme)
+  if (!activeTheme) {
+    return <div className="flex h-11 w-11" />
+  }
 
   function selectTheme(nextTheme: ThemeChoice) {
     selectThemeChoice(nextTheme, {

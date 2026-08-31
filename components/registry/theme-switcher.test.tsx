@@ -78,32 +78,40 @@ function requiredExport<T>(name: string): T | undefined {
 }
 
 describe('ThemeSwitcherControl', () => {
-  it('renders only 44px light and dark buttons with the pressed state', () => {
+  it('renders one action-labelled control for the dark theme', () => {
     const Control = requiredExport<ComponentType<ThemeSwitcherControlProps>>(
       'ThemeSwitcherControl',
     );
     if (!Control) return;
 
-    const markup = renderToStaticMarkup(
+    const darkMarkup = renderToStaticMarkup(
       createElement(Control, { activeTheme: 'dark', onSelect: vi.fn() }),
     );
-    const buttons: string[] = markup.match(/<button[\s\S]*?<\/button>/g) ?? [];
-    const lightButton = buttons.find((button) => button.includes('Switch to light theme'));
-    const darkButton = buttons.find((button) => button.includes('Switch to dark theme'));
+    const buttons: string[] = darkMarkup.match(/<button[\s\S]*?<\/button>/g) ?? [];
 
-    expect(markup).toContain('role="group"');
-    expect(buttons).toHaveLength(2);
-    expect(buttons.every((button) => button.includes('theme-switcher-button'))).toBe(true);
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0]).toContain('theme-switcher-button');
     expect(styles).toMatch(/\.theme-switcher-button\s*\{[\s\S]*width: 2\.75rem;[\s\S]*height: 2\.75rem;/);
-    expect(lightButton).toContain('aria-pressed="false"');
-    expect(darkButton).toContain('aria-pressed="true"');
-    expect(markup.match(/<svg\b/g)).toHaveLength(2);
-    expect(lightButton).toContain('<use href="#theme-light"');
-    expect(darkButton).toContain('<use href="#theme-dark"');
-    expect(markup.match(/<svg aria-hidden="true"/g)).toHaveLength(2);
-    expect(markup).not.toMatch(/>L<|>D</);
-    expect(markup).not.toContain('role="radio"');
-    expect(markup).not.toContain('Switch to system theme');
+    expect(darkMarkup).toContain('aria-label="Switch to light theme"');
+    expect(darkMarkup).toContain('<use href="#theme-dark"');
+    expect(darkMarkup).toContain('aria-live="polite"');
+  });
+
+  it('renders one action-labelled control for the light theme', () => {
+    const Control = requiredExport<ComponentType<ThemeSwitcherControlProps>>(
+      'ThemeSwitcherControl',
+    );
+    if (!Control) return;
+
+    const lightMarkup = renderToStaticMarkup(
+      createElement(Control, { activeTheme: 'light', onSelect: vi.fn() }),
+    );
+    const buttons: string[] = lightMarkup.match(/<button[\s\S]*?<\/button>/g) ?? [];
+
+    expect(buttons).toHaveLength(1);
+    expect(lightMarkup).toContain('aria-label="Switch to dark theme"');
+    expect(lightMarkup).toContain('<use href="#theme-light"');
+    expect(lightMarkup).toContain('aria-live="polite"');
   });
 
   it('defines hand-drawn sun and moon geometry in the inline document sprite', () => {

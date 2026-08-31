@@ -1,11 +1,16 @@
 import {
   Children,
+  createElement,
   Fragment,
   isValidElement,
   type ReactElement,
   type ReactNode,
 } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+// @ts-expect-error The installed react-dom runtime has no declaration package in this project.
+import { renderToStaticMarkup } from 'react-dom/server';
+// @ts-expect-error The Vitest config exposes the stylesheet source as a virtual text module.
+import styles from 'virtual:globals-css-source';
 
 import Home from '@/app/page';
 import { ChatAssistant } from '@/components/chat/chat-assistant';
@@ -79,6 +84,28 @@ describe('page client boundaries', () => {
     expect(source).toContain('dossier:command-palette-open');
     expect(source).toContain('dossier:terminal-open');
     expect(source).toContain('.chat-launcher[aria-expanded=');
+  });
+
+  it('server-renders one initially hidden return-to-top control in the inline bootstrap', () => {
+    const markup = renderToStaticMarkup(createElement(Home));
+
+    expect(markup.match(/aria-label="Return to top"/g) ?? []).toHaveLength(1);
+    expect(markup).toContain('data-return-to-top="true"');
+    expect(markup).toContain('data-visible="false"');
+    expect(markup).toContain('aria-hidden="true"');
+    expect(markup).toContain('tabindex="-1"');
+    expect(markup).toMatch(/<button[^>]*data-return-to-top="true"[^>]*>[\s\S]*?<svg[^>]*aria-hidden="true"/);
+    expect(markup).toContain('installReturnToTop');
+    expect(markup).toContain('document.querySelector("[data-return-to-top]")');
+  });
+
+  it('sizes and stacks the return control and hides it while chat is open', () => {
+    expect(styles).toMatch(/\.return-to-top\s*\{[\s\S]*?width:\s*var\(--chat-fab-size\);[\s\S]*?height:\s*var\(--chat-fab-size\);/);
+    expect(styles).toContain('bottom: calc(var(--chat-edge) + env(safe-area-inset-bottom, 0px) + var(--chat-fab-size) + 0.5rem);');
+    expect(styles).toMatch(/\.return-to-top\s*\{[\s\S]*?transition:\s*opacity 150ms/);
+    expect(styles).toMatch(/\.return-to-top\[data-visible='false'\]\s*\{[\s\S]*?opacity:\s*0;[\s\S]*?pointer-events:\s*none;/);
+    expect(styles).toMatch(/body\[data-chat\]\s+\.return-to-top\s*\{[\s\S]*?display:\s*none;/);
+    expect(styles).toMatch(/@media \(prefers-reduced-motion: reduce\)\s*\{[\s\S]*?\.return-to-top\s*\{[\s\S]*?transition:\s*none !important;/);
   });
 
   it('embeds the nine guarded global g-key section sequences in excluded inline code', () => {

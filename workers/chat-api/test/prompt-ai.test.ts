@@ -73,7 +73,7 @@ describe('grounded prompt', () => {
     const prompt = buildSystemPrompt();
 
     expect(prompt).toContain('Forward Deployed AI & Automation Security Engineer at Singtel');
-    expect(prompt).toContain('Tagline: Using AI to automate & solve security solution.');
+    expect(prompt).toContain('Tagline: Using AI to automate & solve security solutions.');
     expect(prompt).toContain(
       "metrics: 40+ deep learning models trained for security and vision tasks; 200+ firewalls fed by one automated IOC pipeline; Up to 90% threat detection uplift from AI-assisted SOC workflows; 100% of this site's assistant grounded in published profile data.",
     );
@@ -332,7 +332,7 @@ describe('grounded prompt', () => {
     });
     const messages = buildChatMessages(parsed.message, parsed.history);
 
-    expect(serializedPromptByteLength(messages)).toBe(16_252);
+    expect(serializedPromptByteLength(messages)).toBe(16_253);
     expect(serializedPromptByteLength(messages)).toBeLessThanOrEqual(
       MAX_SERIALIZED_PROMPT_BYTES,
     );

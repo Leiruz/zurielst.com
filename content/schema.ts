@@ -210,6 +210,7 @@ const CertificationSchema = z
     year: z.string().min(1).optional(),
     validity: z.string().min(1).optional(),
     image: MediaPath.optional(),
+    credential: MediaPath.optional(),
     caption: z.string().min(1).optional(),
   })
   .strict();

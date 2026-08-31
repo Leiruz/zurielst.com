@@ -37,9 +37,13 @@ describe('RoleRotator', () => {
     expect(markup).toBe('');
   });
 
-  it('runs an obvious 1.5 second left-to-right sweep before a readable rest', () => {
-    expect(styles).toMatch(/@keyframes role-light-up-sweep\s*\{[\s\S]*0%\s*\{ background-position: 100% 50%; \}[\s\S]*50%, 100%\s*\{ background-position: 0 50%; \}/);
-    expect(styles).toMatch(/\.role-light-up\s*\{[\s\S]*var\(--ring\)[\s\S]*animation: role-light-up-sweep 3s/);
+  it('runs a neutral two-second left-to-right sweep before a readable rest', () => {
+    const roleLightUpRule = styles.match(/\.role-light-up\s*\{([\s\S]*?)^\}/m)?.[1];
+
+    expect(styles).toMatch(/@keyframes role-light-up-sweep\s*\{[\s\S]*0%\s*\{ background-position: 100% 50%; \}[\s\S]*66\.6+%, 100%\s*\{ background-position: 0 50%; \}/);
+    expect(styles).toMatch(/\.role-light-up\s*\{[\s\S]*animation: role-light-up-sweep 3s/);
+    expect(roleLightUpRule).toBeDefined();
+    expect(roleLightUpRule).not.toContain('var(--ring)');
     expect(styles).toMatch(/@media \(prefers-reduced-motion: reduce\)[\s\S]*\.role-light-up[\s\S]*animation: none !important/);
   });
 });

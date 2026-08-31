@@ -26,7 +26,7 @@ export const NEURONS_PER_CHAT_WORST = (
 
 export const DAILY_CAP = Math.min(
   200,
-  Math.floor(4_000 / NEURONS_PER_CHAT_WORST),
+  Math.floor(6_000 / NEURONS_PER_CHAT_WORST),
 );
 
 export interface BudgetReservation {

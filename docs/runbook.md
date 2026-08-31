@@ -83,11 +83,9 @@ once to attach routes; afterwards routeless CI deploys keep them attached.
 To detach, either delete the route in the dashboard (Workers Routes) or
 redeploy the overlay with the pattern removed from `routes`.
 
-Known drift (2026-08-31): the chat overlay's DAILY_CAP ("120") and
-RATE_LIMITER namespace_id ("1001") differ from wrangler.jsonc ("29",
-"4169117853"). Harmless today (the code clamps the cap to 29), but
-reconcile the overlay before deploying it again. Details in
-docs/cutover-2026-08-30.md.
+Chat config parity was resolved on 2026-08-31. Both configs use DAILY_CAP
+"44" and RATE_LIMITER namespace_id "4169117853"; the overlay now differs
+only by routes. Details are recorded in docs/cutover-2026-08-30.md.
 
 ## Rollback
 

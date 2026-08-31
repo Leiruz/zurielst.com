@@ -66,13 +66,14 @@ describe('ProofWall media', () => {
       ['cyberark-pam-intro', '/media/certs/cyberark-pam-intro.png'],
       ['carbon-black-fundamentals', '/media/certs/carbon-black-fundamentals.png'],
       ['nus-zero-to-one', '/media/certs/nus-zero-to-one.jpg'],
+      ['fearless-find-2026', '/media/certs/big-fearless-find-2026.jpg'],
       ['singtel-scholarship', '/media/certs/singtel-scholarship.jpg'],
       ['mindef-bug-bounty', '/media/certs/mindef-bug-bounty-2019.jpg'],
       ['homeless-hearts-appreciation', '/media/certs/homeless-hearts-appreciation.png'],
       ['cys-eae-hackathon', '/media/certs/cys-eae-hackathon-2020.png'],
     ]);
-    expect(credentialItems).toHaveLength(10);
-    expect(markup.match(/>View credential ↗<\/a>/g) ?? []).toHaveLength(credentialItems.length);
+    expect(credentialItems).toHaveLength(11);
+    expect(markup.match(/>View credential ↗<\/a>/g) ?? []).toHaveLength(credentialItems.length + 1);
     for (const item of credentialItems) {
       const tileMarkup = proofTileMarkup(markup, item.title);
       expect(tileMarkup).toContain(`href="${item.image}"`);
@@ -85,18 +86,28 @@ describe('ProofWall media', () => {
     }
   });
 
-  it('leaves unmatched Cisco and Fearless tiles without credential links', () => {
-    const unmatchedItems = [
-      sourceProfile.proof_wall.certifications.find((item) => item.id === 'cisco-cyber-threat-management'),
-      sourceProfile.proof_wall.awards.find((item) => item.id === 'fearless-find-2026'),
-    ];
+  it('links Cisco PDF and Fearless image credentials without previewing the PDF', () => {
+    const cisco = sourceProfile.proof_wall.certifications.find(
+      (item) => item.id === 'cisco-cyber-threat-management',
+    );
+    const fearless = sourceProfile.proof_wall.awards.find(
+      (item) => item.id === 'fearless-find-2026',
+    );
     const markup = renderToStaticMarkup(createElement(ProofWall, { profile: sourceProfile }));
 
-    for (const item of unmatchedItems) {
-      expect(item).toBeDefined();
-      if (!item) continue;
-      expect(item.image).toBeUndefined();
-      expect(proofTileMarkup(markup, item.title)).not.toContain('View credential');
-    }
+    expect(cisco).toBeDefined();
+    expect(fearless).toBeDefined();
+    if (!cisco || !fearless) return;
+
+    const ciscoTile = proofTileMarkup(markup, cisco.title);
+    const fearlessTile = proofTileMarkup(markup, fearless.title);
+    expect(ciscoTile).toContain('href="/media/certs/cisco-cyber-threat-management.pdf"');
+    expect(ciscoTile).not.toContain('<img');
+    expect(ciscoTile).toContain('target="_blank"');
+    expect(ciscoTile).toContain('rel="noopener noreferrer"');
+    expect(fearlessTile).toContain('href="/media/certs/big-fearless-find-2026.jpg"');
+    expect(fearlessTile).toContain('src="/media/certs/big-fearless-find-2026.jpg"');
+    expect(fearlessTile).toContain('target="_blank"');
+    expect(fearlessTile).toContain('rel="noopener noreferrer"');
   });
 });
