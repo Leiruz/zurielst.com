@@ -29,6 +29,7 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - run: npm run layout:gate
       # Release evidence: verify the required-reviewers protection rule before deploying.
       - name: Verify deploy environment protection
         env:
