@@ -1,4 +1,4 @@
-// Structural adapter for ncdai registry block "social-proof-01" (chanhdai.com/r, MIT).
+// Structural adapter for the MIT-licensed ncdai registry block "social-proof-01".
 // Adapted to compose the profile-owned Worked with brand carousel.
 import type { ReactNode } from 'react';
 

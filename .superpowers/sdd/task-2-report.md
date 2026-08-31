@@ -81,3 +81,28 @@ Types generated successfully
 ## Concerns
 
 The passing Vitest commands emit pre-existing non-failing Workers configuration notices and Miniflare temporary-directory `EBUSY` cleanup warnings. Both focused and full commands exited with code 0.
+
+## Review correction
+
+Removed the prohibited registry owner URL from the runtime-source provenance comment in `components/registry/social-proof-01.tsx`. Registry provenance remains documented in `docs/components-map.md`; behavior and other files are unchanged.
+
+Command:
+
+```powershell
+npx vitest run lib/registry-final-sections.test.tsx lib/registry-data-adapters.test.tsx
+```
+
+Result:
+
+```text
+Test Files  2 passed (2)
+Tests  28 passed (28)
+Exit code: 0
+```
+
+Self-review:
+
+- `rg -n "chanhdai" components/registry/social-proof-01.tsx components/sections/brands-wall.tsx` returned no matches.
+- `git diff --check` returned no whitespace errors.
+- The correction changes only `components/registry/social-proof-01.tsx` and this report.
+- The focused run retained the pre-existing non-failing Workers configuration and Miniflare `EBUSY` cleanup warnings.
