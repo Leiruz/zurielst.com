@@ -1,0 +1,72 @@
+name: Refresh analytics snapshot
+
+on:
+  schedule:
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: analytics-snapshot-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out main
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          ref: main
+      - name: Set up Node.js
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version-file: .node-version
+      - name: Fetch analytics snapshot
+        env:
+          CF_ANALYTICS_TOKEN: ${{ secrets.CF_ANALYTICS_TOKEN }}
+        run: node scripts/fetch-analytics.mjs
+      - name: Commit refreshed snapshot
+        id: snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          git switch -C analytics/refresh
+          git add -- content/analytics-snapshot.json
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(analytics): refresh visitor snapshot"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+      - name: Push refresh branch and open pull request
+        if: steps.snapshot.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          remote_sha="$(git ls-remote --heads origin refs/heads/analytics/refresh | cut -f1)"
+          if [[ -n "$remote_sha" ]]; then
+            git push --force-with-lease=refs/heads/analytics/refresh:"$remote_sha" origin HEAD:refs/heads/analytics/refresh
+          else
+            git push origin HEAD:refs/heads/analytics/refresh
+          fi
+
+          pr_number="$(gh pr list --base main --head analytics/refresh --state open --json number --jq '.[0].number // empty')"
+          if [[ -z "$pr_number" ]]; then
+            gh pr create \
+              --base main \
+              --head analytics/refresh \
+              --title "chore: refresh analytics snapshot" \
+              --body "Refreshes the committed Cloudflare Web Analytics snapshot for issue #19."
+          else
+            echo "Updated existing analytics refresh pull request #$pr_number"
+          fi

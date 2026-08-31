@@ -94,3 +94,48 @@ test("monitor runs a secretless six-hour production canary", async () => {
     "the permissive server-error-only rejection is gone",
   );
 });
+
+test("analytics snapshot refresh uses pinned actions and a direct gh pull request", async () => {
+  const workflow = await readWorkflow("analytics-snapshot.yml");
+
+  assert.match(workflow, /cron:\s*["']17 3 \* \* 1["']/);
+  assert.ok(workflow.includes("workflow_dispatch:"), "operators may refresh manually");
+  assert.match(workflow, /permissions:\s*\n\s+contents:\s*write\s*\n\s+pull-requests:\s*write/);
+  assert.ok(workflow.includes("concurrency:"), "overlapping refreshes are serialized");
+  assert.ok(workflow.includes("timeout-minutes:"), "the job has a finite timeout");
+
+  assert.ok(
+    workflow.includes("actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"),
+    "checkout reuses the repository pin",
+  );
+  assert.ok(
+    workflow.includes("actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af"),
+    "setup-node reuses the repository pin",
+  );
+  for (const line of workflow.split("\n").filter((candidate) => candidate.includes("uses:"))) {
+    assert.match(line, /@[0-9a-f]{40}(?:\s|$)/, `action is SHA-pinned: ${line.trim()}`);
+  }
+
+  assert.ok(workflow.includes("node scripts/fetch-analytics.mjs"));
+  assert.ok(workflow.includes("CF_ANALYTICS_TOKEN: ${{ secrets.CF_ANALYTICS_TOKEN }}"));
+  assert.equal(
+    workflow.match(/secrets\.CF_ANALYTICS_TOKEN/g)?.length,
+    1,
+    "the analytics secret is exposed to the fetch step only",
+  );
+  assert.ok(workflow.includes("git add -- content/analytics-snapshot.json"));
+  assert.ok(workflow.includes("analytics/refresh"));
+  assert.ok(workflow.includes("--force-with-lease"));
+  assert.ok(workflow.includes("GH_TOKEN: ${{ github.token }}"));
+  assert.ok(workflow.includes("gh pr list"));
+  assert.ok(workflow.includes("gh pr create"));
+  assert.ok(!workflow.includes("peter-evans/create-pull-request"));
+});
+
+test("runbook records the pending consent-gated Web Analytics setup", async () => {
+  const runbook = await readFile(new URL("../docs/runbook.md", import.meta.url), "utf8");
+
+  assert.ok(runbook.includes(
+    "disable Web Analytics automatic setup and ship the manual snippet behind the consent measurement category, with the snippet token referenced from the dashboard",
+  ));
+});

@@ -105,6 +105,8 @@ docs/cutover-2026-08-30.md.
 | TEMP configuration rule, SSL mode Full, apex plus www | ON PURPOSE, guards the GitHub Pages rollback origin | delete only at origin retirement |
 | Response-header CSP transform rule | stale, predates the rebuild | remove at retirement (owner) |
 
+Pending owner step: disable Web Analytics automatic setup and ship the manual snippet behind the consent measurement category, with the snippet token referenced from the dashboard.
+
 ## Secrets
 
 - CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN live only in the GitHub
