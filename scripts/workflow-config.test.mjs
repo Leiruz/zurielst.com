@@ -47,3 +47,50 @@ test("preview comments identify the enforced noindex header", async () => {
     "the completed M8 work is not described as future work",
   );
 });
+
+test("monitor runs a secretless six-hour production canary", async () => {
+  const workflow = await readWorkflow("monitor.yml");
+
+  assert.match(workflow, /cron:\s*['"]0 \*\/6 \* \* \*['"]/);
+  assert.ok(workflow.includes("workflow_dispatch:"), "operators may run the canary manually");
+  assert.ok(workflow.includes("set -euo pipefail"), "curl or assertion failures stop the canary");
+  assert.ok(workflow.includes("::error::"), "failures surface as workflow annotations");
+  assert.ok(!workflow.includes("secrets."), "the canary has no secret dependency");
+  assert.ok(!workflow.includes("actions/"), "the canary needs no action or checkout dependency");
+
+  for (const expected of [
+    "https://zurielst.com/",
+    "https://www.zurielst.com/",
+    "https://staging.zurielst.com/",
+    "https://zurielst.com/api/chat",
+    "https://zurielst.com/sitemap.xml",
+    "https://zurielst.com/media/resume.pdf",
+    "Zuriel Shanley Tanyory",
+  ]) {
+    assert.ok(workflow.includes(expected), `the canary includes ${expected}`);
+  }
+
+  assert.match(workflow, /check_status\s+"apex"[^\n]+200/);
+  assert.match(workflow, /check_status\s+"www"[^\n]+301/);
+  assert.match(workflow, /check_status\s+"staging"[^\n]+200/);
+  assert.match(workflow, /check_status\s+"sitemap"[^\n]+200/);
+  assert.match(workflow, /check_status\s+"resume"[^\n]+200/);
+  assert.ok(workflow.includes("--request POST"), "chat is exercised with POST");
+  assert.ok(workflow.includes("User-Agent: Mozilla/5.0"), "chat uses a browser-like user agent");
+  assert.ok(workflow.includes("Origin: https://zurielst.com"), "chat carries its production origin");
+  assert.ok(workflow.includes("text/event-stream"), "a streamed answer is accepted");
+  assert.ok(workflow.includes("application/json"), "a canned JSON answer is accepted");
+  assert.match(
+    workflow,
+    /CHAT_STATUS[^\n]+!= 200/,
+    "any non-200 chat status fails the canary",
+  );
+  assert.ok(
+    workflow.includes("ignore previous instructions"),
+    "the probe message triggers the budget-free pre-filter deflection",
+  );
+  assert.ok(
+    !/-ge 500/.test(workflow),
+    "the permissive server-error-only rejection is gone",
+  );
+});

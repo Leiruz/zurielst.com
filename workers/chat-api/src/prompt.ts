@@ -132,17 +132,7 @@ function renderIdentity(source: Profile): string {
 }
 
 function renderMetrics(source: Profile): string {
-  const cost = requiredByLabel(source.identity.metrics, 'lower SOC solution cost', 'metric');
-  const detection = requiredByLabel(source.identity.metrics, 'threat detection uplift', 'metric');
-  const uptime = requiredByLabel(source.identity.metrics, 'security-tool uptime', 'metric');
-  const waf = requiredByLabel(source.identity.metrics, 'made readable for analysts', 'metric');
-  const citadel = requiredById(source.work_cases, 'citadel-soc', 'work case').title.replace(/ SOC$/, '');
-  const akamaiCase = requiredById(source.work_cases, 'akamai-waf-automation', 'work case');
-  const akamai = akamaiCase.title.split(' ')[0];
-  const ncs = requiredById(source.timeline, 'ncs-intern', 'timeline').org.replace(/ Pte Ltd$/, '');
-  const internshipOrganization = workCaseOrganization(akamaiCase);
-
-  return `metrics: ${cost.value} ${cost.label.replace(' solution', '')} (${citadel}); ${detection.value.replace(/^Up/, 'up')} ${detection.label.replace(/^threat /, '')} (${citadel}); ${uptime.value} ${uptime.label} (${ncs}); ${akamai} ${waf.value} ${waf.label.replace(/ for analysts$/, '')} (${internshipOrganization}).`;
+  return `metrics: ${source.identity.metrics.map(({ value, label }) => `${value} ${label}`).join('; ')}.`;
 }
 
 function renderSecurity(source: Profile): string {
@@ -253,8 +243,8 @@ function renderFounder(source: Profile): string {
   const soc = requiredByName(act.skills, 'SOC architecture', 'founder skill');
   const ai = requiredByName(act.skills, 'AI in security operations', 'founder skill');
   const zeroToOne = requiredByName(act.skills, 'Zero to One', 'founder skill');
-  const cost = requiredByLabel(source.identity.metrics, 'lower SOC solution cost', 'metric');
-  const detection = requiredByLabel(source.identity.metrics, 'threat detection uplift', 'metric');
+  const cost = requiredCapture(founder.summary, /(\d+%) lower SOC cost/, 'founder cost reduction');
+  const detection = requiredCapture(founder.summary, /(up to \d+%) detection uplift/, 'founder detection uplift');
   const falsePositives = founder.summary.match(/false positives by (\d+%)/)?.[1];
   const woundDown = act.narrative.match(/wound down in ([^.]+) when/)?.[1];
   if (falsePositives === undefined || woundDown === undefined) {
@@ -267,7 +257,7 @@ function renderFounder(source: Profile): string {
     'founder proposition',
   );
 
-  return `act_founder: ${founder.title.replace(/^Founder$/, 'founded')} ${organization} (${founder.period}): ${founderAdjective?.toLowerCase()} ${founderOffering}; cost down ${cost.value}; ${requiredDetail(soc, soc.name).replace(' and ', ' + ').replace(' on open source', '')}; detection ${detection.value.toLowerCase()}; ${requiredDetail(ai, ai.name).replace(/^Deep/, 'deep')} cut false positives ${falsePositives}; wound down ${woundDown}. ${genesis.org} ${genesis.title.replace('Vice-President of ', 'VP of ')}; ${zeroToOne.name} program (${requiredDetail(zeroToOne, zeroToOne.name).replace('MVP building with ', '').replace(' and ', ' + ')}).`;
+  return `act_founder: ${founder.title.replace(/^Founder$/, 'founded')} ${organization} (${founder.period}): ${founderAdjective?.toLowerCase()} ${founderOffering}; cost down ${cost}; ${requiredDetail(soc, soc.name).replace(' and ', ' + ').replace(' on open source', '')}; detection ${detection}; ${requiredDetail(ai, ai.name).replace(/^Deep/, 'deep')} cut false positives ${falsePositives}; wound down ${woundDown}. ${genesis.org} ${genesis.title.replace('Vice-President of ', 'VP of ')}; ${zeroToOne.name} program (${requiredDetail(zeroToOne, zeroToOne.name).replace('MVP building with ', '').replace(' and ', ' + ')}).`;
 }
 
 function renderWorkCases(source: Profile): string {

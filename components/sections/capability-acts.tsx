@@ -10,29 +10,30 @@ interface CapabilityActsProps {
 
 export function CapabilityActs({ profile }: CapabilityActsProps) {
   return (
-    <section id="capabilities" className="bp-nodes relative border-t border-line" aria-labelledby="capabilities-title">
-      <div className="dossier-shell py-[clamp(4rem,8vw,7rem)]">
-        <Reveal>
-          <p className="fig-label">Fig. 4. Capabilities</p>
-          <h2 id="capabilities-title" className="dossier-title mt-4 text-text-1">
-            Capabilities <SectionAnchor href="#capabilities" label="capabilities" />
-          </h2>
-        </Reveal>
-      </div>
-
+    <section id="capabilities" className="border-t border-line" aria-labelledby="capabilities-title">
       {profile.capabilities.acts.map((act, index) => {
         const { teaser, remainder } = splitDisclosureCopy(act.narrative, 160);
+        const isFirstAct = index === 0;
 
         return (
-          <div key={act.id} className={`border-t border-line ${index % 2 === 0 ? 'bg-canvas' : 'bg-canvas-raised'}`}>
+          <div key={act.id} className={`${isFirstAct ? '' : 'border-t border-line '}${index % 2 === 0 ? 'bg-canvas' : 'bg-canvas-raised'}`}>
             <div className="dossier-shell py-[clamp(3rem,6vw,5rem)]">
               <Reveal delayIndex={index}>
-                <div className="grid min-w-0 gap-8 lg:grid-cols-[9rem_minmax(0,1fr)]">
+                <div data-capability-header={act.id} className="grid min-w-0 gap-8 lg:grid-cols-[9rem_minmax(0,1fr)]">
                   <p className="font-mono text-[clamp(4.5rem,12vw,8rem)] font-semibold leading-none text-text-1 opacity-[0.08]" aria-hidden="true">
                     {String(act.act).padStart(2, '0')}
                   </p>
                   <div className="min-w-0">
-                    <h3 className="dossier-title text-text-1">{act.title}</h3>
+                    {isFirstAct ? (
+                      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
+                        <h2 id="capabilities-title" className="dossier-title text-text-1">
+                          {act.title} <SectionAnchor href="#capabilities" label="capabilities" />
+                        </h2>
+                        <p className="fig-label ml-auto">Fig. 4. Capabilities</p>
+                      </div>
+                    ) : (
+                      <h3 className="dossier-title text-text-1">{act.title}</h3>
+                    )}
                     <p className="dossier-prose mt-5 text-text-2">{teaser}</p>
                     {remainder && (
                       <CopyDisclosure
@@ -42,7 +43,7 @@ export function CapabilityActs({ profile }: CapabilityActsProps) {
                         text={remainder}
                       />
                     )}
-                    <ul data-skill-grid={act.id} className="mt-8 grid min-w-0 grid-cols-1 gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 xl:grid-cols-3">
+                    <ul data-skill-grid={act.id} className="mt-8 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
                       {act.skills.map((skill) => <SkillChip key={skill.name} skill={skill} />)}
                     </ul>
                   </div>
@@ -61,7 +62,7 @@ function SkillChip({ skill }: { skill: Skill }) {
 
   return (
     <li
-      className="min-w-0 bg-surface px-3 py-2 text-sm text-text-2 transition-colors duration-150 hover:bg-surface-hover"
+      className="min-w-0 rounded-lg border border-line bg-surface/70 px-3 py-2 text-sm text-text-2"
       title={skill.detail}
       aria-label={accessibleDetail}
     >

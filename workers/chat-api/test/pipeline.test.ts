@@ -645,7 +645,7 @@ describe('chat pipeline complete-answer guard and SSE framing', () => {
 
     const response = await worker.fetch(post(), fakeEnv({ run }));
 
-    expect(answer).toContain('99.9% security-tool uptime');
+    expect(answer).toContain('Up to 90% threat detection uplift from AI-assisted SOC workflows');
     expect(answer).toContain('Aug 2024 to May 2028');
     expect(await readSse(response)).toMatchObject({ text: answer });
     expect(run).toHaveBeenCalledTimes(1);

@@ -99,7 +99,7 @@ export function ContributionHeatmap({ data }: ContributionHeatmapProps) {
   const firstDayDate = data.weeks.flatMap((week) => week.contributionDays)[0]?.date;
 
   return (
-    <section id="contributions" className="bp-nodes dossier-section bg-canvas" aria-labelledby="contributions-title">
+    <section id="contributions" className="dossier-section bg-canvas" aria-labelledby="contributions-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
           <p className="fig-label">Fig. 3. Contributions</p>

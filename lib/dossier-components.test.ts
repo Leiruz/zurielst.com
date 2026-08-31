@@ -16,12 +16,12 @@ describe('Reveal', () => {
 
 describe('CountUpMetric', () => {
   it('server-renders an accessible final value beside a hidden zero animation start', () => {
-    const markup = renderToStaticMarkup(createElement(CountUpMetric, { value: '99.9%' }));
+    const markup = renderToStaticMarkup(createElement(CountUpMetric, { value: '40+' }));
 
-    expect(markup).toContain('<span class="sr-only">99.9%</span>');
-    expect(markup).not.toContain('aria-label="99.9%"');
-    expect(markup).toContain('data-count-up-static="true">99.9%');
-    expect(markup).toContain('data-count-up-animated="true">0.0%');
+    expect(markup).toContain('<span class="sr-only">40+</span>');
+    expect(markup).not.toContain('aria-label="40+"');
+    expect(markup).toContain('data-count-up-static="true">40+');
+    expect(markup).toContain('data-count-up-animated="true">0+');
   });
 });
 

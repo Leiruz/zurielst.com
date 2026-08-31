@@ -33,13 +33,14 @@ describe('identity header', () => {
     expect(markup).toMatch(/Tanyory<\/span>.*aria-label="verified"/);
   });
 
-  it('provides a downloadable resume from the dossier', () => {
+  it('provides a downloadable resume beside the socials and in the dossier', () => {
     const markup = renderToStaticMarkup(
       createElement(IdentityHeader, { profile }),
     );
 
-    expect(markup).toContain('href="/media/resume.pdf"');
-    expect(markup).toContain('download=""');
+    expect(markup.match(/href="\/media\/resume\.pdf"/g)).toHaveLength(2);
+    expect(markup.match(/download=""/g)).toHaveLength(2);
+    expect(markup).toMatch(/data-identity-socials="true"[\s\S]*href="\/media\/resume\.pdf"[^>]*download=""[^>]*>Resume<\/a>/);
   });
 
   it('tracks only outbound social profile links', () => {
@@ -55,26 +56,14 @@ describe('identity header', () => {
     expect(markup).not.toContain('/media/resume.pdf?utm_source=');
   });
 
-  it('renders an accessible xl-only isometric ZST blueprint mark', () => {
+  it('omits the landing-page ZST background mark and its third layout column', () => {
     const markup = renderToStaticMarkup(
       createElement(IdentityHeader, { profile }),
     );
-    const markStart = markup.indexOf('data-zst-hero-mark="true"');
-    const markEnd = markup.indexOf('</a>', markStart);
-    const markMarkup = markup.slice(markStart, markEnd);
 
-    expect(markStart).toBeGreaterThanOrEqual(0);
-    expect(markEnd).toBeGreaterThan(markStart);
-    expect(markMarkup).toContain('href="#identity"');
-    expect(markMarkup).toContain('aria-label="Return to top"');
-    expect(markMarkup).toContain('hidden');
-    expect(markMarkup).toContain('xl:flex');
-    expect(markMarkup).toMatch(/opacity-/);
-    expect(markMarkup).toContain('<svg');
-    expect(markMarkup).toContain('aria-hidden="true"');
-    expect(markMarkup).toContain('data-zst-line-art="true"');
-    expect(markMarkup).toContain('zst-blueprint-line-art');
-    expect(markMarkup).not.toContain('<img');
+    expect(markup).not.toContain('data-zst-hero-mark');
+    expect(markup).not.toContain('data-zst-line-art');
+    expect(markup).not.toContain('xl:grid-cols-[minmax(0,1.05fr)_minmax(18rem,0.75fr)_minmax(12rem,0.4fr)]');
   });
 });
 

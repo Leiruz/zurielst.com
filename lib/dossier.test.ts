@@ -30,8 +30,8 @@ describe('deriveInitials', () => {
 
 describe('parseMetric', () => {
   it('parses an integer percentage', () => {
-    expect(parseMetric('80%')).toEqual({
-      value: 80,
+    expect(parseMetric('100%')).toEqual({
+      value: 100,
       prefix: '',
       suffix: '%',
       fractionDigits: 0,
@@ -48,8 +48,8 @@ describe('parseMetric', () => {
   });
 
   it('preserves one decimal place', () => {
-    expect(parseMetric('99.9%')).toEqual({
-      value: 99.9,
+    expect(parseMetric('12.5%')).toEqual({
+      value: 12.5,
       prefix: '',
       suffix: '%',
       fractionDigits: 1,
@@ -57,7 +57,7 @@ describe('parseMetric', () => {
   });
 
   it('returns null for a metric without a number', () => {
-    expect(parseMetric('WAF telemetry')).toBeNull();
+    expect(parseMetric('No metric')).toBeNull();
   });
 });
 

@@ -440,76 +440,6 @@ canvas {
   transform: none;
 }
 
-@media (min-width: 80rem) {
-  .bp-rails::before,
-  .bp-rails::after {
-    content: '';
-    position: absolute;
-    inset-block: 0;
-    z-index: 1;
-    width: 1px;
-    background: var(--line);
-  }
-
-  .bp-rails::before { left: calc(50% - 40rem); }
-  .bp-rails::after { right: calc(50% - 40rem); }
-}
-
-.bp-nodes::before,
-.bp-nodes::after {
-  display: none;
-  content: '';
-  position: absolute;
-  top: -0.5rem;
-  z-index: 1;
-  width: 1rem;
-  height: 1rem;
-  border: 1px solid var(--line-strong);
-  border-radius: 9999px;
-  background:
-    linear-gradient(var(--text-3), var(--text-3)) center / 1px 0.375rem no-repeat,
-    linear-gradient(var(--text-3), var(--text-3)) center / 0.375rem 1px no-repeat,
-    var(--canvas);
-}
-
-@media (min-width: 80rem) {
-  .bp-nodes::before,
-  .bp-nodes::after { display: block; }
-}
-
-.bp-nodes::before { left: calc(50% - 40rem - 0.5rem); }
-.bp-nodes::after { right: calc(50% - 40rem - 0.5rem); }
-
-.bp-stitch {
-  display: none;
-  width: 1px;
-  height: 3rem;
-  margin-inline: auto;
-  background: repeating-linear-gradient(var(--line-strong) 0 4px, transparent 4px 8px);
-}
-
-@media (min-width: 48rem) {
-  .bp-stitch { display: block; }
-}
-
-.dim-mark {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.dim-mark::before,
-.dim-mark::after {
-  content: '';
-  flex: none;
-  width: 0.875rem;
-  height: 5px;
-  background: linear-gradient(var(--line-strong), var(--line-strong)) center / 100% 1px no-repeat;
-}
-
-.dim-mark::before { border-left: 1px solid var(--line-strong); }
-.dim-mark::after { border-right: 1px solid var(--line-strong); }
-
 .fig-label {
   font-family: var(--font-mono);
   font-style: italic;
@@ -517,13 +447,9 @@ canvas {
   color: var(--text-3);
 }
 
-.zst-blueprint-line-art path {
-  vector-effect: non-scaling-stroke;
-}
-
 @keyframes role-light-up-sweep {
   0% { background-position: 100% 50%; }
-  30%, 100% { background-position: 0 50%; }
+  50%, 100% { background-position: 0 50%; }
 }
 
 @keyframes role-rotation {
@@ -557,13 +483,11 @@ canvas {
   color: var(--text-1);
   background-image: linear-gradient(
     100deg,
-    var(--text-2) 0%,
-    var(--text-2) 38%,
-    var(--text-1) 48%,
-    var(--ring) 52%,
-    var(--text-1) 56%,
-    var(--text-2) 66%,
-    var(--text-2) 100%
+    var(--text-1) 0%,
+    var(--text-1) 32%,
+    var(--ring) 47%,
+    var(--text-1) 62%,
+    var(--text-1) 100%
   );
   background-position: 100% 50%;
   background-size: 250% 100%;
@@ -610,7 +534,37 @@ canvas {
 }
 
 .theme-switcher-reveal {
+  display: inline-flex;
+  overflow: clip;
+  border-radius: 9999px;
+  background: var(--background);
+  box-shadow: inset 0 0 0 1px var(--border);
   animation: theme-switcher-reveal 0.3s ease-out;
+}
+
+.theme-switcher-button {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  color: var(--muted-foreground);
+  transition: color 150ms, border-color 150ms;
+}
+
+.theme-switcher-button:hover,
+.theme-switcher-button[aria-pressed='true'] {
+  color: var(--foreground);
+}
+
+.theme-switcher-button[aria-pressed='true'] {
+  border-color: var(--border);
+}
+
+.theme-switcher-button svg {
+  width: 1rem;
+  height: 1rem;
 }
 
 /* Floating dossier assistant */
@@ -715,7 +669,7 @@ canvas {
   border: 1px solid var(--line-strong);
   border-radius: 0.875rem 0.875rem 0 0;
   background: var(--surface);
-  box-shadow: 0 24px 64px color-mix(in oklab, var(--text-1) 22%, transparent);
+  box-shadow: 0 12px 32px color-mix(in oklab, var(--text-1) 11%, transparent);
   color: var(--text-2);
   opacity: 1;
   transform: translate3d(0, 0, 0) scale(1);

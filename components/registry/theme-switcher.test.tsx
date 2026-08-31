@@ -4,6 +4,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
 import { scheduleThemeToggleSound } from '@/lib/theme-toggle-sound';
+import { ThemeIconSprite } from '@/components/theme-icon-sprite';
+// @ts-expect-error The Vitest config exposes the stylesheet source as a virtual text module.
+import styles from 'virtual:globals-css-source';
 
 import * as themeSwitcherModule from './theme-switcher';
 
@@ -90,11 +93,26 @@ describe('ThemeSwitcherControl', () => {
 
     expect(markup).toContain('role="group"');
     expect(buttons).toHaveLength(2);
-    expect(buttons.every((button) => button.includes('size-11'))).toBe(true);
+    expect(buttons.every((button) => button.includes('theme-switcher-button'))).toBe(true);
+    expect(styles).toMatch(/\.theme-switcher-button\s*\{[\s\S]*width: 2\.75rem;[\s\S]*height: 2\.75rem;/);
     expect(lightButton).toContain('aria-pressed="false"');
     expect(darkButton).toContain('aria-pressed="true"');
+    expect(markup.match(/<svg\b/g)).toHaveLength(2);
+    expect(lightButton).toContain('<use href="#theme-light"');
+    expect(darkButton).toContain('<use href="#theme-dark"');
+    expect(markup.match(/<svg aria-hidden="true"/g)).toHaveLength(2);
+    expect(markup).not.toMatch(/>L<|>D</);
     expect(markup).not.toContain('role="radio"');
     expect(markup).not.toContain('Switch to system theme');
+  });
+
+  it('defines hand-drawn sun and moon geometry in the inline document sprite', () => {
+    const markup = renderToStaticMarkup(createElement(ThemeIconSprite));
+
+    expect(markup).toContain('id="theme-light"');
+    expect(markup).toContain('m0-6v2');
+    expect(markup).toContain('id="theme-dark"');
+    expect(markup).toContain('A9 9 0 1 1');
   });
 
   it('maps an untouched system preference to the resolved active button', () => {

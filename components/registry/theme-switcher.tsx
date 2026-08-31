@@ -46,19 +46,10 @@ function selectThemeChoice(
 ) {
   if (dependencies.currentTheme === nextTheme) return
 
-  let reducedMotion = true
   try {
-    reducedMotion = dependencies.prefersReducedMotion()
+    if (!dependencies.prefersReducedMotion()) dependencies.playSound(nextTheme)
   } catch {
-    // A blocked media-query API disables optional audio, not theme switching.
-  }
-
-  if (!reducedMotion) {
-    try {
-      dependencies.playSound(nextTheme)
-    } catch {
-      // Optional audio can never prevent the explicit theme choice.
-    }
+    // Optional audio can never prevent the explicit theme choice.
   }
   dependencies.setTheme(nextTheme)
 }
@@ -85,7 +76,7 @@ function ThemeSwitcherControl({
 }) {
   return (
     <div
-      className="theme-switcher-reveal inline-flex items-center overflow-clip rounded-full bg-background inset-ring-1 inset-ring-border"
+      className="theme-switcher-reveal"
       role="group"
       aria-label="Theme"
     >
@@ -93,13 +84,17 @@ function ThemeSwitcherControl({
         <button
           key={value}
           type="button"
-          data-active={activeTheme === value}
-          className="flex size-11 items-center justify-center rounded-full border border-transparent font-mono text-xs text-muted-foreground transition-colors hover:text-foreground data-[active=true]:border-border data-[active=true]:text-foreground"
+          className="theme-switcher-button"
           aria-label={`Switch to ${value} theme`}
           aria-pressed={activeTheme === value}
           onClick={() => onSelect(value)}
         >
-          <span aria-hidden="true">{value === "light" ? "L" : "D"}</span>
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+          >
+            <use href={`#theme-${value}`} />
+          </svg>
         </button>
       ))}
     </div>
@@ -147,7 +142,6 @@ function ThemeSwitcher() {
 
   return (
     <ThemeSwitcherControl
-      key={String(isMounted)}
       activeTheme={activeTheme}
       onSelect={selectTheme}
     />

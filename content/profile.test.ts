@@ -24,6 +24,16 @@ describe('content/profile.json', () => {
     expect(profile.meta.og.type).toBe('profile');
   });
 
+  it('uses the owner-approved AI and security identity framing', () => {
+    expect(profile.identity.tagline).toBe('Using AI to automate & solve security solution.');
+    expect(profile.identity.metrics).toEqual([
+      { value: '40+', label: 'deep learning models trained for security and vision tasks' },
+      { value: '200+', label: 'firewalls fed by one automated IOC pipeline' },
+      { value: 'Up to 90%', label: 'threat detection uplift from AI-assisted SOC workflows' },
+      { value: '100%', label: "of this site's assistant grounded in published profile data" },
+    ]);
+  });
+
   it('Singtel content stays at resume level: no internal tool names beyond the resume', () => {
     const raw = JSON.stringify(profile);
     // The resume-level allowlist is what the resume itself says; a couple of

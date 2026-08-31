@@ -48,6 +48,19 @@ describe('core dossier sections', () => {
     );
   });
 
+  it('merges Fig. 4 into act 01 without changing the Capabilities navigation name', () => {
+    const markup = renderToStaticMarkup(createElement(Home));
+    const start = markup.indexOf('<section id="capabilities"');
+    const end = markup.indexOf('<section id="stack"', start);
+    const capabilitiesMarkup = markup.slice(start, end);
+
+    expect(capabilitiesMarkup).toContain('data-capability-header="security"');
+    expect(capabilitiesMarkup).toMatch(/data-capability-header="security"[\s\S]*>01<\/p>[\s\S]*id="capabilities-title"[\s\S]*Security/);
+    expect(capabilitiesMarkup).toContain('Fig. 4. Capabilities');
+    expect(capabilitiesMarkup).toContain('href="#capabilities"');
+    expect(capabilitiesMarkup).not.toContain('>Capabilities</h2>');
+  });
+
   it('renders Introduction, Stack, and Brands from profile data in page order', () => {
     const markup = renderToStaticMarkup(createElement(Home));
     const identityStart = markup.indexOf('id="identity"');
@@ -95,9 +108,9 @@ describe('core dossier sections', () => {
     }
     expectRenderedText(brandsMarkup, profile.stack_brands.disclaimer);
     expect(brandsMarkup).not.toMatch(/<img\b/);
-    expect(brandsMarkup.match(/<svg\b(?=[^>]*aria-hidden="true")/g)).toHaveLength(4);
-    expect(brandsMarkup.match(/<path d="M5 12h14"><\/path>/g)).toHaveLength(4);
-    expect(brandsMarkup.match(/<path d="M12 5v14"><\/path>/g)).toHaveLength(4);
+    expect(brandsMarkup).not.toMatch(/<svg\b/);
+    expect(brandsMarkup).not.toContain('M5 12h14');
+    expect(brandsMarkup).not.toContain('M12 5v14');
 
     expect(markup).toContain('href="#stack"');
     expect(markup).toContain('>Stack</a>');

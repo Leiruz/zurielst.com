@@ -73,6 +73,10 @@ describe('grounded prompt', () => {
     const prompt = buildSystemPrompt();
 
     expect(prompt).toContain('Forward Deployed AI & Automation Security Engineer at Singtel');
+    expect(prompt).toContain('Tagline: Using AI to automate & solve security solution.');
+    expect(prompt).toContain(
+      "metrics: 40+ deep learning models trained for security and vision tasks; 200+ firewalls fed by one automated IOC pipeline; Up to 90% threat detection uplift from AI-assisted SOC workflows; 100% of this site's assistant grounded in published profile data.",
+    );
     expect(prompt).toContain('CGPA 3.82/4');
     expect(prompt).toContain('1st Place, Singtel BIG Fearless Find 2026 Round 1');
     expect(prompt).toContain('Project Xynthea (2018 origin story');
@@ -105,7 +109,7 @@ describe('grounded prompt', () => {
     expect(block).toContain('Languages: English (native), Chinese (advanced), Bahasa Indonesia (basic).');
   });
 
-  it('sources role, internship, metric, and automation organizations from their own records', () => {
+  it('sources roles, metrics, work cases, and automation from their own records', () => {
     const source = structuredClone(profileData) as Profile;
     source.identity.employer = 'Stale Employer';
     source.timeline.find(({ id }) => id === 'singtel-fd-engineer')!.org = 'CurrentOrg';
@@ -114,6 +118,10 @@ describe('grounded prompt', () => {
       'Security reporting automation, AkamaiOrg';
     source.work_cases.find(({ id }) => id === 'configproof-ai')!.kicker =
       'Vendor security risk assurance, ConfigOrg';
+    source.identity.metrics[0] = {
+      value: '41+',
+      label: 'models verified by the profile projection',
+    };
     source.capabilities.acts.find(({ id }) => id === 'ai-automation')!.narrative =
       source.capabilities.acts.find(({ id }) => id === 'ai-automation')!.narrative
         .replace('at Singtel I automated', 'at AutomationOrg I automated');
@@ -121,7 +129,7 @@ describe('grounded prompt', () => {
     const block = buildProfileBlock(source);
 
     expect(block).toContain('Forward Deployed AI & Automation Security Engineer at CurrentOrg');
-    expect(block).toContain('Akamai WAF telemetry made readable (AkamaiOrg)');
+    expect(block).toContain('metrics: 41+ models verified by the profile projection;');
     expect(block).toContain('Akamai WAF API reporting automation at AutomationOrg');
     expect(block).toContain('Akamai WAF Automation (AkamaiOrg internship');
     expect(block).toContain('ConfigProof AI (ConfigOrg internship)');
@@ -324,7 +332,7 @@ describe('grounded prompt', () => {
     });
     const messages = buildChatMessages(parsed.message, parsed.history);
 
-    expect(serializedPromptByteLength(messages)).toBe(16_126);
+    expect(serializedPromptByteLength(messages)).toBe(16_252);
     expect(serializedPromptByteLength(messages)).toBeLessThanOrEqual(
       MAX_SERIALIZED_PROMPT_BYTES,
     );

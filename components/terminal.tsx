@@ -56,6 +56,10 @@ interface TerminalBackdropEvent {
   currentTarget: EventTarget | null;
 }
 
+function focusInput(input: HTMLInputElement | null) {
+  input?.focus({ preventScroll: true });
+}
+
 export function closeTerminalDialog(
   isOpenRef: { current: boolean },
   restoreFocusRef: { current: FocusTarget | null },
@@ -263,7 +267,7 @@ export function Terminal({ commands, source, email, gamesUrl, resumeAvailable }:
         </div>
         <form onSubmit={submit} className="flex items-center gap-2 border-t border-white/10 px-4 py-3">
           <label htmlFor="terminal-command" className="text-[#8a8f98]">$</label>
-          <input autoFocus id="terminal-command" value={input} onChange={(event) => setInput(event.target.value)} autoComplete="off" spellCheck={false} className="min-w-0 flex-1 bg-transparent text-[#f7f8f8] outline-none placeholder:text-[#8a8f98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4b7bff]" placeholder="Type help" />
+          <input ref={focusInput} id="terminal-command" value={input} onChange={(event) => setInput(event.target.value)} autoComplete="off" spellCheck={false} className="min-w-0 flex-1 bg-transparent text-[#f7f8f8] outline-none placeholder:text-[#8a8f98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4b7bff]" placeholder="Type help" />
           <button type="submit" className="rounded-md border border-white/15 px-3 py-1.5 text-xs text-[#d0d6e0] transition-colors duration-150 hover:bg-white/10 hover:text-white">Run</button>
         </form>
       </div>

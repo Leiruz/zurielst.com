@@ -60,10 +60,11 @@ describe('Terminal visitor copy', () => {
 });
 
 describe('Terminal focus', () => {
-  it('puts initial focus on the command input when the dialog opens', () => {
+  it('leaves initial focus to the preventScroll ref instead of autofocus markup', () => {
     const markup = openTerminalMarkup();
 
-    expect(markup).toMatch(/<input(?=[^>]*id="terminal-command")(?=[^>]*autofocus="")/);
+    expect(markup).toMatch(/<input(?=[^>]*id="terminal-command")/);
+    expect(markup).not.toContain('autofocus');
   });
 
   it('restores focus after the backdrop click default action', () => {
