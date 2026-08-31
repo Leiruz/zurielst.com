@@ -90,6 +90,22 @@ function ProofImage({ src, alt }: { src: string | undefined; alt: string }) {
   return <img src={src} alt={alt} width={720} height={405} loading="lazy" decoding="async" className="aspect-video w-full object-cover object-top" />;
 }
 
+function CredentialLink({ src, title }: { src: string | undefined; title: string }) {
+  if (!hasPublicMedia(src)) return null;
+
+  return (
+    <a
+      href={src}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`View credential for ${title}`}
+      className="mt-auto pt-6 font-mono text-xs text-text-2 underline decoration-line-strong underline-offset-4 transition-colors duration-150 hover:text-text-1"
+    >
+      View credential ↗
+    </a>
+  );
+}
+
 function CertificationTile({ item }: { item: Certification }) {
   return (
     <ProofTile>
@@ -99,6 +115,7 @@ function CertificationTile({ item }: { item: Certification }) {
         <p className="mt-3 font-mono text-xs leading-5 text-text-3">{[item.issuer, item.year].filter(Boolean).join(' · ')}</p>
         {item.validity && <p className="mt-2 font-mono text-xs leading-5 text-text-3">{item.validity}</p>}
         {item.caption && <p className="mt-4 text-sm leading-6 text-text-2">{item.caption}</p>}
+        <CredentialLink src={item.image} title={item.title} />
       </div>
     </ProofTile>
   );
@@ -112,6 +129,7 @@ function AwardTile({ item }: { item: Award }) {
         <h4 className="text-base font-semibold leading-snug text-text-1">{item.title}</h4>
         <p className="mt-3 font-mono text-xs leading-5 text-text-3">{item.issuer} · {item.year}</p>
         {item.caption && <p className="mt-4 text-sm leading-6 text-text-2">{item.caption}</p>}
+        <CredentialLink src={item.image} title={item.title} />
       </div>
     </ProofTile>
   );

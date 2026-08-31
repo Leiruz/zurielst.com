@@ -322,14 +322,14 @@
         "title": "Fortinet Certified Associate Cybersecurity",
         "issuer": "Fortinet",
         "validity": "20 Oct 2023 to 20 Oct 2025",
-        "image": "/media/proof/fortinet-fcac.png",
+        "image": "/media/certs/fortinet-fcac.png",
         "caption": "Earned to stay sharp on network security; validity dates shown as they are."
       },
       {
         "id": "fortigate-74-operator",
         "title": "FortiGate 7.4 Operator Self-Paced Course",
         "issuer": "Fortinet",
-        "image": "/media/proof/fortigate-74-operator.png",
+        "image": "/media/certs/fortigate-74-operator.png",
         "caption": "Taken during National Service to stay current; familiar ground after learning Palo Alto firewalls at poly."
       },
       {
@@ -337,7 +337,7 @@
         "title": "CyberArk Certified Trustee",
         "issuer": "CyberArk",
         "year": "2021",
-        "image": "/media/proof/cyberark-trustee.png",
+        "image": "/media/certs/cyberark-trustee.png",
         "caption": "Taken during my NCS internship; passed with 80% or higher on the first attempt."
       },
       {
@@ -345,7 +345,7 @@
         "title": "CyberArk Introduction to Privileged Access Management",
         "issuer": "CyberArk",
         "year": "2021",
-        "image": "/media/proof/cyberark-pam-intro.png",
+        "image": "/media/certs/cyberark-pam-intro.png",
         "caption": "Privileged access management fundamentals, completed during the NCS internship."
       },
       {
@@ -353,7 +353,7 @@
         "title": "VMware Carbon Black Cloud Fundamentals",
         "issuer": "VMware",
         "year": "2021",
-        "image": "/media/proof/carbon-black-fundamentals.png",
+        "image": "/media/certs/carbon-black-fundamentals.png",
         "caption": "Hands-on training on installing, upgrading and troubleshooting Carbon Black EDR. NCS recognized me as their Carbon Black subject matter expert."
       },
       {
@@ -361,7 +361,7 @@
         "title": "NUS Zero To One Entrepreneurship Program",
         "issuer": "NUS Business School",
         "year": "2021",
-        "image": "/media/proof/nus-zero-to-one.jpg",
+        "image": "/media/certs/nus-zero-to-one.jpg",
         "caption": "Selected through Genesis: six months of MVP building and founder networking with Meet Ventures and NUS Business School."
       }
     ],
@@ -378,7 +378,7 @@
         "title": "SingTel Cyber Security Cadet Scholarship",
         "issuer": "SingTel",
         "year": "2021 to 2022",
-        "image": "/media/proof/singtel-scholarship.jpg",
+        "image": "/media/certs/singtel-scholarship.jpg",
         "caption": "Awarded in my second year at Ngee Ann Polytechnic. It opened the door to my NCS internship, and years later I joined Singtel for real. The arc completed itself."
       },
       {
@@ -386,7 +386,7 @@
         "title": "MINDEF Bug Bounty Programme",
         "issuer": "MINDEF Singapore",
         "year": "2019",
-        "image": "/media/proof/mindef-bug-bounty-2019.png",
+        "image": "/media/certs/mindef-bug-bounty-2019.jpg",
         "caption": "Selected through NullSec to take part in MINDEF's bug bounty programme: finding, exploiting and reporting real vulnerabilities, ethically."
       },
       {
@@ -394,7 +394,7 @@
         "title": "Homeless Hearts of Singapore, Certificate of Appreciation",
         "issuer": "Homeless Hearts of Singapore",
         "year": "2021",
-        "image": "/media/proof/homeless-hearts-appreciation.png",
+        "image": "/media/certs/homeless-hearts-appreciation.png",
         "caption": "For volunteering through the pandemic: befriending people and distributing food and basic necessities."
       },
       {
@@ -402,7 +402,7 @@
         "title": "Cyber Youth Singapore EAE Hackathon, Certificate of Appreciation",
         "issuer": "Cyber Youth Singapore",
         "year": "2020",
-        "image": "/media/proof/cys-eae-hackathon-2020.png",
+        "image": "/media/certs/cys-eae-hackathon-2020.png",
         "caption": "Volunteered as an EAE consultant and conference panelist, guiding youths through their early-admission applications into poly."
       }
     ],
