@@ -54,7 +54,6 @@ function createIntroOverlay(
     leaving: false,
     onAnimationComplete: () => {},
     onDismiss: () => {},
-    reducedMotion: false,
     ...overrides,
   });
 }
@@ -337,7 +336,6 @@ describe('intro animation fallback', () => {
     type InstallFallback = (
       state: {
         animationComplete: boolean;
-        reducedMotion: boolean;
         show: boolean;
       },
       onAnimationComplete: () => void,
@@ -363,7 +361,7 @@ describe('intro animation fallback', () => {
     if (!installFallback) return;
 
     const cleanup = installFallback(
-      { animationComplete: false, reducedMotion: false, show: true },
+      { animationComplete: false, show: true },
       onAnimationComplete,
       { clearTimeout, setTimeout },
     );
@@ -376,9 +374,8 @@ describe('intro animation fallback', () => {
     expect(clearTimeout).toHaveBeenCalledWith(41);
 
     for (const state of [
-      { animationComplete: true, reducedMotion: false, show: true },
-      { animationComplete: false, reducedMotion: true, show: true },
-      { animationComplete: false, reducedMotion: false, show: false },
+      { animationComplete: true, show: true },
+      { animationComplete: false, show: false },
     ]) {
       setTimeout.mockClear();
       installFallback(state, onAnimationComplete, { clearTimeout, setTimeout });
@@ -559,24 +556,16 @@ describe('IntroOverlay', () => {
     expect(focus).toHaveBeenCalledOnce();
   });
 
-  it('reports handwriting completion only for full-motion sessions', () => {
+  it('reports handwriting completion to reveal the entry control', () => {
     const onAnimationComplete = vi.fn();
-    const fullMotion = createIntroOverlay({
+    const overlay = createIntroOverlay({
       animationComplete: false,
       onAnimationComplete,
       onDismiss: vi.fn(),
     });
-    const reducedMotion = createIntroOverlay({
-      animationComplete: false,
-      onAnimationComplete,
-      onDismiss: vi.fn(),
-      reducedMotion: true,
-    });
-    const [fullAnimation] = fullMotion.props.children;
-    const [reducedAnimation] = reducedMotion.props.children;
+    const [animation] = overlay.props.children;
 
-    expect(fullAnimation.props.onAnimationComplete).toBe(onAnimationComplete);
-    expect(reducedAnimation.props.onAnimationComplete).toBeUndefined();
+    expect(animation.props.onAnimationComplete).toBe(onAnimationComplete);
   });
 
   it('does not trap Tab after the leaving transition begins', () => {
