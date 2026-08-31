@@ -1,5 +1,6 @@
 export interface ReturnToTopControl {
   dataset: Record<string, string> | DOMStringMap;
+  blur(): void;
   setAttribute(name: string, value: string): void;
   tabIndex: number;
   addEventListener(type: 'click', listener: () => void): void;
@@ -19,11 +20,14 @@ export function installReturnToTop(
 ) {
   if (!control) return;
 
+  let wasVisible = false;
   const sync = () => {
     const visible = runtime.scrollY > runtime.innerHeight;
+    if (wasVisible && !visible) control.blur();
     control.dataset.visible = String(visible);
     control.setAttribute('aria-hidden', String(!visible));
     control.tabIndex = visible ? 0 : -1;
+    wasVisible = visible;
   };
   runtime.addEventListener('scroll', sync, { passive: true });
   control.addEventListener('click', () => runtime.scrollTo({

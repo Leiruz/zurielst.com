@@ -9,6 +9,7 @@ function setup(reducedMotion = false) {
   const scrollTo = vi.fn();
   const control = {
     dataset: {} as Record<string, string>,
+    blur: vi.fn(),
     setAttribute: vi.fn(),
     tabIndex: 0,
     addEventListener: vi.fn((type: string, listener: () => void) => {
@@ -74,6 +75,31 @@ describe('installReturnToTop', () => {
     expect(control.dataset.visible).toBe('true');
     expect(control.setAttribute).toHaveBeenLastCalledWith('aria-hidden', 'false');
     expect(control.tabIndex).toBe(0);
+  });
+
+  it('releases focus before hiding after manual upward scrolling', () => {
+    const { control, runtime, scrollListener, setScrollY } = setup();
+
+    expect(control.blur).not.toHaveBeenCalled();
+
+    setScrollY(runtime.innerHeight + 1);
+    scrollListener();
+    expect(control.dataset.visible).toBe('true');
+
+    control.setAttribute.mockClear();
+    setScrollY(runtime.innerHeight);
+    scrollListener();
+
+    expect(control.blur).toHaveBeenCalledOnce();
+    expect(control.blur.mock.invocationCallOrder[0]).toBeLessThan(
+      control.setAttribute.mock.invocationCallOrder[0],
+    );
+    expect(control.dataset.visible).toBe('false');
+    expect(control.setAttribute).toHaveBeenLastCalledWith('aria-hidden', 'true');
+    expect(control.tabIndex).toBe(-1);
+
+    scrollListener();
+    expect(control.blur).toHaveBeenCalledOnce();
   });
 
   it('smooth-scrolls to the top when motion is allowed', () => {

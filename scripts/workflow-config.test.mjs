@@ -11,6 +11,50 @@ async function readWorkflow(fileName) {
   return readFile(new URL(`../.github/workflows/${fileName}`, import.meta.url), "utf8");
 }
 
+async function readRepositoryFile(fileName) {
+  return readFile(new URL(`../${fileName}`, import.meta.url), "utf8");
+}
+
+test("chat configs and operations docs agree on the resolved production limits", async () => {
+  const [routelessConfig, cutoverConfig, runbook, cutoverRecord] = await Promise.all([
+    readRepositoryFile("workers/chat-api/wrangler.jsonc"),
+    readRepositoryFile("workers/chat-api/wrangler.cutover.jsonc"),
+    readRepositoryFile("docs/runbook.md"),
+    readRepositoryFile("docs/cutover-2026-08-30.md"),
+  ]);
+
+  for (const [name, config] of [
+    ["routeless config", routelessConfig],
+    ["cutover overlay", cutoverConfig],
+  ]) {
+    assert.match(config, /"DAILY_CAP":\s*"44"/, `${name} uses the 44-chat daily cap`);
+    assert.match(
+      config,
+      /"namespace_id":\s*"4169117853"/,
+      `${name} uses the production rate-limiter namespace`,
+    );
+  }
+
+  for (const [name, document] of [
+    ["runbook", runbook],
+    ["cutover record", cutoverRecord],
+  ]) {
+    assert.match(document, /resolved on 2026-08-31/i, `${name} dates the resolution`);
+    assert.match(document, /DAILY_CAP\s*"44"/i, `${name} states the resolved daily cap`);
+    assert.match(
+      document,
+      /RATE_LIMITER[^\n]*4169117853/i,
+      `${name} states the resolved rate-limiter namespace`,
+    );
+    assert.match(
+      document,
+      /differ(?:s)?\s+only\s+by\s+routes/i,
+      `${name} states that the overlay now differs only by routes`,
+    );
+    assert.doesNotMatch(document, /Known drift|Config drift noticed|"120"|"29"|"1001"/i);
+  }
+});
+
 for (const [fileName, followingStep] of [
   ["deploy.yml", "- name: Deploy site worker"],
   ["preview-deploy.yml", "- name: Upload preview version (trusted base-branch config)"],

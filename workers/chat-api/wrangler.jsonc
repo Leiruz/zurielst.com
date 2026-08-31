@@ -26,7 +26,7 @@
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DailyBudget"] }],
   "vars": {
     // Hard daily chat cap derived from the conservative worst-case neuron budget.
-    "DAILY_CAP": "29",
+    "DAILY_CAP": "44",
     "ALLOWED_HOSTS": "zurielst.com,staging.zurielst.com"
   }
 }

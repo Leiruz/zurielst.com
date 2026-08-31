@@ -114,12 +114,12 @@ describe('daily Durable Object budget', () => {
       + MAX_SERIALIZED_PROMPT_BYTES * LLAMA_1B_IN
       + MAX_OUTPUT_TOKENS * LLAMA_1B_OUT
     ) / 1_000_000);
-    expect(DAILY_CAP).toBe(29);
-    expect(DAILY_CAP).toBe(Math.min(200, Math.floor(4_000 / NEURONS_PER_CHAT_WORST)));
+    expect(DAILY_CAP).toBe(44);
+    expect(DAILY_CAP).toBe(Math.min(200, Math.floor(6_000 / NEURONS_PER_CHAT_WORST)));
     expect(DAILY_CAP).toBeLessThanOrEqual(200);
-    expect(DAILY_CAP * NEURONS_PER_CHAT_WORST).toBeLessThanOrEqual(4_000);
-    expect((DAILY_CAP + 1) * NEURONS_PER_CHAT_WORST).toBeGreaterThan(4_000);
-    expect(env.DAILY_CAP).toBe(String(DAILY_CAP));
+    expect(DAILY_CAP * NEURONS_PER_CHAT_WORST).toBeLessThanOrEqual(6_000);
+    expect((DAILY_CAP + 1) * NEURONS_PER_CHAT_WORST).toBeGreaterThan(6_000);
+    expect(env.DAILY_CAP).toBe('44');
   });
 
   it('atomically allows exactly the derived cap of concurrent reservations and persists it', async () => {
