@@ -6,7 +6,6 @@ import { describe, expect, it, vi } from 'vitest';
 import styles from 'virtual:globals-css-source';
 
 import {
-  getIntroLeavingDelay,
   hasSeenIntro,
   IntroOverlay,
 } from './intro-gate';
@@ -41,8 +40,10 @@ function createWritableStorage(entries: Record<string, string> = {}) {
   };
 }
 
-function countSlideToEnterLabels(markup: string) {
-  return markup.match(/>slide to enter<\/span>/g)?.length ?? 0;
+function countShimmeringSlideLabels(markup: string) {
+  return markup.match(
+    /<span[^>]*data-slot="shimmering-text"[^>]*>Slide to unlock<\/span>/g,
+  )?.length ?? 0;
 }
 
 function createIntroOverlay(
@@ -253,7 +254,7 @@ describe('first-paint intro state', () => {
     expect(schedule).not.toHaveBeenCalled();
   });
 
-  it('keeps an unseen reduced-motion session pending for explicit entry', () => {
+  it('stamps an unseen reduced-motion session done without scheduling a fallback', () => {
     const root = { dataset: {} as Record<string, string | undefined> };
     const schedule = vi.fn();
 
@@ -264,8 +265,38 @@ describe('first-paint intro state', () => {
       schedule,
     });
 
-    expect(root.dataset.intro).toBe('pending');
-    expect(schedule).toHaveBeenCalledOnce();
+    expect(root.dataset.intro).toBe('done');
+    expect(root.dataset.introMotion).toBeUndefined();
+    expect(schedule).not.toHaveBeenCalled();
+  });
+
+  it('enters the hydrated gate only for an unseen full-motion pending cover', () => {
+    type ShouldShowIntro = (state: {
+      coverAvailable: boolean;
+      reducedMotion: boolean;
+      seen: boolean;
+      stampedPending: boolean;
+    }) => boolean;
+    const shouldShowIntro = Reflect.get(
+      introGateModule,
+      'shouldShowIntro',
+    ) as ShouldShowIntro | undefined;
+
+    expect(shouldShowIntro).toBeTypeOf('function');
+    if (!shouldShowIntro) return;
+
+    const eligibleState = {
+      coverAvailable: true,
+      reducedMotion: false,
+      seen: false,
+      stampedPending: true,
+    };
+
+    expect(shouldShowIntro(eligibleState)).toBe(true);
+    expect(shouldShowIntro({ ...eligibleState, reducedMotion: true })).toBe(false);
+    expect(shouldShowIntro({ ...eligibleState, seen: true })).toBe(false);
+    expect(shouldShowIntro({ ...eligibleState, stampedPending: false })).toBe(false);
+    expect(shouldShowIntro({ ...eligibleState, coverAvailable: false })).toBe(false);
   });
 
   it('server-renders the black cover, synchronous stamp, and no-script escape hatch', () => {
@@ -285,7 +316,7 @@ describe('first-paint intro state', () => {
     expect(markup).toContain('class="intro-cover"');
     expect(markup).toContain('data-intro-static-hello="true"');
     expect(markup).toContain('<svg');
-    expect(markup).not.toContain('>slide to enter</span>');
+    expect(markup).not.toContain('Slide to unlock');
     expect(markup).not.toContain('>skip</span>');
     expect(markup).toContain('<noscript>');
     expect(markup).toContain('#intro-cover{display:none!important}');
@@ -384,7 +415,8 @@ describe('IntroOverlay', () => {
     expect(overlay.props['aria-hidden']).toBeUndefined();
     expect(animation.props['aria-hidden']).toBe('true');
     expect(markup).toContain('data-slot="slide-to-unlock"');
-    expect(markup).toContain('slide to enter');
+    expect(markup).toContain('Slide to unlock');
+    expect(markup).toContain('data-slot="shimmering-text"');
     expect(markup).not.toContain('Skip intro');
   });
 
@@ -393,28 +425,6 @@ describe('IntroOverlay', () => {
     const markup = renderToStaticMarkup(overlay);
 
     expect(markup).toContain('autofocus=""');
-  });
-
-  it('renders a plain instant Enter control for reduced motion', () => {
-    const onDismiss = vi.fn();
-    const overlay = createIntroOverlay({
-      animationComplete: false,
-      onAnimationComplete: vi.fn(),
-      onDismiss,
-      reducedMotion: true,
-    });
-    const [, enterButton] = overlay.props.children;
-    const markup = renderToStaticMarkup(overlay);
-
-    expect(enterButton.type).toBe('button');
-    expect(enterButton.props.children).toBe('Enter');
-    expect(enterButton.props['data-haptic']).toBe(true);
-    enterButton.props.onClick();
-    expect(onDismiss).toHaveBeenCalledOnce();
-    expect(markup).not.toContain('data-slot="slide-to-unlock"');
-    expect(markup).not.toContain('intro-entry-control');
-    expect(getIntroLeavingDelay(true)).toBe(0);
-    expect(getIntroLeavingDelay(false)).toBe(500);
   });
 
   it('waits for the full handwriting animation before fading in one slide label', () => {
@@ -436,7 +446,7 @@ describe('IntroOverlay', () => {
     );
 
     expect(pendingMarkup).not.toContain('data-slot="slide-to-unlock"');
-    expect(countSlideToEnterLabels(pendingMarkup)).toBe(0);
+    expect(countShimmeringSlideLabels(pendingMarkup)).toBe(0);
     expect(animation.props.onAnimationComplete).toBe(onAnimationComplete);
 
     const completedProps = { ...pendingProps, animationComplete: true };
@@ -450,9 +460,37 @@ describe('IntroOverlay', () => {
     );
 
     expect(completedMarkup).toContain('intro-entry-control');
-    expect(countSlideToEnterLabels(completedMarkup)).toBe(1);
+    expect(countShimmeringSlideLabels(completedMarkup)).toBe(1);
+    expect(completedMarkup).not.toContain('>slide to enter</span>');
     expect(styles).toMatch(
       /@keyframes intro-entry-fade-in\s*\{[\s\S]*from\s*\{[\s\S]*opacity:\s*0;[\s\S]*to\s*\{[\s\S]*opacity:\s*1;/,
+    );
+    expect(styles).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)\s*\{[\s\S]*?\.shimmering-text\s*\{[\s\S]*?animation:\s*none !important;/,
+    );
+  });
+
+  it('reveals the slider on animation completion and dismisses only on unlock', () => {
+    const onAnimationComplete = vi.fn();
+    const onDismiss = vi.fn();
+    const overlay = createIntroOverlay({
+      animationComplete: true,
+      onAnimationComplete,
+      onDismiss,
+    });
+    const [animation, slideControl] = overlay.props.children;
+
+    animation.props.onAnimationComplete();
+    expect(onAnimationComplete).toHaveBeenCalledOnce();
+    expect(onDismiss).not.toHaveBeenCalled();
+
+    slideControl.props.onUnlock();
+    expect(onDismiss).toHaveBeenCalledOnce();
+  });
+
+  it('locks document scrolling for every visible gate state', () => {
+    expect(styles).toMatch(
+      /html\[data-intro='pending'\],\s*html\[data-intro='active'\],\s*html\[data-intro='leaving'\]\s*\{[^}]*overflow:\s*hidden;/,
     );
   });
 
