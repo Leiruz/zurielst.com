@@ -312,18 +312,39 @@ canvas {
   }
 }
 
-.dossier-reveal {
-  opacity: 1;
-  transform: translateY(0);
-  transition:
-    opacity 600ms cubic-bezier(.32, .72, 0, 1),
-    transform 600ms cubic-bezier(.32, .72, 0, 1);
-  transition-delay: var(--reveal-delay, 0ms);
+.scroll-fade-effect-x {
+  mask-image: linear-gradient(90deg, transparent, black 1.5rem, black calc(100% - 1.5rem), transparent);
 }
 
-.dossier-reveal[data-reveal-state='hidden'] {
-  opacity: 0;
-  transform: translateY(12px);
+.scroll-fade-effect-y {
+  mask-image: linear-gradient(transparent, black 1.5rem, black calc(100% - 1.5rem), transparent);
+}
+
+.scroll-fade-entrance {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes scroll-fade-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scroll-fade-entrance {
+      animation: scroll-fade-entrance 1s both;
+      animation-range-start: entry var(--scroll-fade-range-start, 0%);
+      animation-range-end: cover var(--scroll-fade-range-end, 28%);
+      animation-timeline: view();
+    }
+  }
 }
 
 .dossier-count-up-static {
@@ -451,16 +472,11 @@ canvas {
   font-size: 12px;
 }
 
-@keyframes role-light-up-sweep {
-  0% { background-position: 100% 50%; }
-  66.666%, 100% { background-position: 0 50%; }
-}
-
-@keyframes role-rotation {
+@keyframes text-flip-cycle {
   to { transform: translateY(calc(-100% + var(--role-step))); }
 }
 
-.role-rotator-viewport {
+.text-flip-viewport {
   --role-step: 3.5rem;
   display: block;
   height: var(--role-step);
@@ -469,46 +485,105 @@ canvas {
   width: 100%;
 }
 
-.role-rotator-track {
+.text-flip-track {
   display: flex;
   flex-direction: column;
-  animation: role-rotation var(--role-duration) steps(var(--role-count), end) infinite;
+  animation: text-flip-cycle var(--text-flip-duration) steps(var(--text-flip-count), end) infinite;
 }
 
-.role-rotator-item {
+.text-flip-item {
   align-items: center;
+  color: var(--text-1);
   display: flex;
   flex: 0 0 var(--role-step);
   line-height: 1.35;
   white-space: normal;
 }
 
-.role-light-up {
-  color: var(--text-1);
+.text-flip-stopped .text-flip-track {
+  animation: none;
+}
+
+.shimmering-text {
   background-image: linear-gradient(
     100deg,
-    var(--text-1) 0%,
-    var(--text-1) 32%,
-    color-mix(in oklab, var(--text-1) 72%, transparent) 47%,
-    var(--text-1) 62%,
-    var(--text-1) 100%
+    var(--text-3) 0%,
+    var(--text-3) 38%,
+    var(--text-1) 50%,
+    var(--text-3) 62%,
+    var(--text-3) 100%
   );
   background-position: 100% 50%;
-  background-size: 250% 100%;
+  background-size: 240% 100%;
   background-clip: text;
+  color: var(--text-3);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: role-light-up-sweep 3s cubic-bezier(.32, .72, 0, 1) infinite;
+  animation: shimmering-text var(--shimmer-duration, 1s) ease-in-out infinite;
+}
+
+@keyframes shimmering-text {
+  to { background-position: 0 50%; }
+}
+
+.shimmering-text-stopped {
+  animation: none;
+}
+
+.spotlight-logo {
+  display: inline-grid;
+  position: relative;
+}
+
+.spotlight-logo-base,
+.spotlight-logo-highlight {
+  grid-area: 1 / 1;
+}
+
+.spotlight-logo-highlight {
+  background: radial-gradient(circle at 50% 50%, var(--ring) 0 28%, transparent 72%);
+  background-position: 100% 50%;
+  background-size: 300% 300%;
+  background-clip: text;
+  color: transparent;
+  transition: background-position 300ms cubic-bezier(.32, .72, 0, 1);
+  -webkit-background-clip: text;
+}
+
+.group:hover .spotlight-logo-highlight,
+.group:focus-visible .spotlight-logo-highlight {
+  background-position: 50% 50%;
+}
+
+.status-button-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--ring);
+  box-shadow: 0 0 0 0.2rem color-mix(in oklab, var(--ring) 18%, transparent);
+}
+
+.fluid-gradient-text,
+.fluid-gradient-text svg {
+  width: 100%;
+  height: 100%;
+}
+
+.fluid-gradient-text text {
+  font-family: var(--font-sans);
+  font-size: 11rem;
+  font-weight: 700;
+  letter-spacing: -0.06em;
 }
 
 @media (min-width: 640px) {
-  .role-rotator-viewport {
+  .text-flip-viewport {
     --role-step: 1.75rem;
     display: inline-block;
     width: auto;
   }
 
-  .role-rotator-item {
+  .text-flip-item {
     line-height: 1.75rem;
     white-space: nowrap;
   }
@@ -990,7 +1065,8 @@ body[data-chat] .return-to-top {
     scroll-behavior: auto !important;
   }
 
-  .dossier-reveal[data-reveal-state='hidden'] {
+  .scroll-fade-entrance {
+    animation: none !important;
     opacity: 1;
     transform: none;
   }
@@ -1008,16 +1084,20 @@ body[data-chat] .return-to-top {
     transition: none !important;
   }
 
-  .role-light-up {
-    color: var(--text-1);
-    background: none;
-    -webkit-text-fill-color: currentColor;
+  .shimmering-text {
     animation: none !important;
+    background: none;
+    color: var(--text-3);
+    -webkit-text-fill-color: currentColor;
   }
 
-  .role-rotator-track {
+  .text-flip-track {
     animation: none !important;
     transform: none !important;
+  }
+
+  .spotlight-logo-highlight {
+    display: none;
   }
 
   .chat-character-counter,

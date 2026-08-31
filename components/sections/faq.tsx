@@ -1,4 +1,4 @@
-import { Reveal } from '@/components/dossier/reveal';
+import { ScrollFadeEffect } from '@/components/registry/scroll-fade-effect';
 import { SectionAnchor } from '@/components/dossier/section-anchor';
 import type { Profile } from '@/content/schema';
 
@@ -10,14 +10,14 @@ export function Faq({ profile }: FaqProps) {
   return (
     <section id="faq" className="dossier-section bg-canvas-raised" aria-labelledby="faq-title">
       <div className="dossier-shell min-w-0">
-        <Reveal>
+        <ScrollFadeEffect entrance>
           <p className="fig-label">Fig. 13. FAQ</p>
           <h2 id="faq-title" className="dossier-title mt-4 text-text-1">
             FAQ <SectionAnchor href="#faq" label="FAQ" />
           </h2>
-        </Reveal>
+        </ScrollFadeEffect>
 
-        <Reveal className="mt-10 max-w-4xl mx-auto">
+        <ScrollFadeEffect entrance className="mt-10 max-w-4xl mx-auto">
           <div className="divide-y divide-line border-y border-line">
             {profile.faq.map((entry) => (
               <details key={entry.id} data-faq-entry="true" className="group min-w-0">
@@ -28,7 +28,7 @@ export function Faq({ profile }: FaqProps) {
               </details>
             ))}
           </div>
-        </Reveal>
+        </ScrollFadeEffect>
       </div>
     </section>
   );

@@ -1,5 +1,5 @@
 import { CopyDisclosure } from '@/components/dossier/copy-disclosure';
-import { Reveal } from '@/components/dossier/reveal';
+import { ScrollFadeEffect } from '@/components/registry/scroll-fade-effect';
 import { SectionAnchor } from '@/components/dossier/section-anchor';
 import type { Profile, TimelineEntry } from '@/content/schema';
 
@@ -17,18 +17,18 @@ export function Timeline({ profile }: TimelineProps) {
   return (
     <section id="timeline" className="dossier-section bg-canvas" aria-labelledby="timeline-title">
       <div className="dossier-shell min-w-0">
-        <Reveal>
+        <ScrollFadeEffect entrance>
           <p className="fig-label">Fig. 8. Timeline</p>
           <h2 id="timeline-title" className="dossier-title mt-4 text-text-1">
             Timeline <SectionAnchor href="#timeline" label="timeline" />
           </h2>
-        </Reveal>
+        </ScrollFadeEffect>
 
         <ol className="relative mt-12 ml-2 border-l border-line-strong sm:ml-3">
           {profile.timeline.filter((entry) => entry.type !== 'education').map((entry, index) => (
             <li key={entry.id} className="relative pb-10 pl-7 last:pb-0 sm:pl-10">
               <span className="absolute -left-[5px] top-2 size-[9px] rounded-full border-2 border-canvas bg-text-3" aria-hidden="true" />
-              <Reveal delayIndex={index}>
+              <ScrollFadeEffect entrance delayIndex={index}>
                 <article className="min-w-0">
                   <span className={`inline-flex rounded-full border px-2 py-0.5 font-mono text-[0.65rem] uppercase tracking-wider ${TAG_STYLES[entry.type]}`}>
                     {entry.type}
@@ -47,7 +47,7 @@ export function Timeline({ profile }: TimelineProps) {
                     text={entry.summary}
                   />
                 </article>
-              </Reveal>
+              </ScrollFadeEffect>
             </li>
           ))}
         </ol>

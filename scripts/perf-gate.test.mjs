@@ -90,12 +90,13 @@ test("median returns the middle value for an odd-sized sample", () => {
   assert.equal(median([0.93, 0.99, 0.95]), 0.95);
 });
 
-test("landing-route controls avoid the Motion and icon runtimes", async () => {
-  const [appleHelloSource, globalStyles, roleRotatorSource, siteNavSource, themeSwitcherSource] = await Promise.all(
+test("landing-route controls avoid superseded identity motion code and unnecessary runtimes", async () => {
+  const [appleHelloSource, fluidGradientSource, globalStyles, identitySource, siteNavSource, themeSwitcherSource] = await Promise.all(
     [
       "../components/registry/apple-hello-effect-english.tsx",
+      "../components/registry/fluid-gradient-text.tsx",
       "../styles/globals.css",
-      "../components/dossier/role-rotator.tsx",
+      "../components/sections/identity-header.tsx",
       "../components/site-nav.tsx",
       "../components/registry/theme-switcher.tsx",
     ].map((relativePath) => readFile(new URL(relativePath, import.meta.url), "utf8")),
@@ -106,10 +107,14 @@ test("landing-route controls avoid the Motion and icon runtimes", async () => {
   }
   assert.doesNotMatch(appleHelloSource, /from ["']@\/lib\/utils["']/);
   assert.doesNotMatch(themeSwitcherSource, /from ["']lucide-react["']/);
-  assert.doesNotMatch(roleRotatorSource, /^["']use client["'];?/m);
-  assert.doesNotMatch(roleRotatorSource, /use(?:Effect|State|PrefersReducedMotion)/);
-  assert.match(globalStyles, /\.role-rotator-viewport\s*{[^}]*--role-step:\s*3\.5rem;[^}]*width:\s*100%;/s);
-  assert.match(globalStyles, /\.role-rotator-item\s*{[^}]*white-space:\s*normal;/s);
+  assert.doesNotMatch(identitySource, /RoleRotator|role-light-up/);
+  assert.doesNotMatch(globalStyles, /role-rotator|role-light-up|light-up-sweep/);
+  assert.doesNotMatch(globalStyles, /scroll-fade-entrance\s*\{[^}]*animation-delay/s);
+  assert.match(globalStyles, /animation-range-start:\s*entry var\(--scroll-fade-range-start/);
+  assert.match(globalStyles, /animation-range-end:\s*cover var\(--scroll-fade-range-end/);
+  assert.match(fluidGradientSource, /useReducedMotion/);
+  assert.match(fluidGradientSource, /onPointerMove/);
+  assert.match(fluidGradientSource, /resolveFluidGradientPosition/);
   assert.doesNotMatch(siteNavSource, /^["']use client["'];?/m);
   assert.match(siteNavSource, /site-nav-enhancement/);
 });

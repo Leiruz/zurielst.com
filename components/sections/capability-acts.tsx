@@ -1,5 +1,5 @@
 import { CopyDisclosure } from '@/components/dossier/copy-disclosure';
-import { Reveal } from '@/components/dossier/reveal';
+import { ScrollFadeEffect } from '@/components/registry/scroll-fade-effect';
 import { SectionAnchor } from '@/components/dossier/section-anchor';
 import type { Profile, Skill } from '@/content/schema';
 import { splitDisclosureCopy } from '@/lib/dossier';
@@ -18,7 +18,7 @@ export function CapabilityActs({ profile }: CapabilityActsProps) {
         return (
           <div key={act.id} className={`${isFirstAct ? '' : 'border-t border-line '}${index % 2 === 0 ? 'bg-canvas' : 'bg-canvas-raised'}`}>
             <div className="dossier-shell py-[clamp(3rem,6vw,5rem)]">
-              <Reveal delayIndex={index}>
+              <ScrollFadeEffect entrance delayIndex={index}>
                 <div data-capability-header={act.id} className="grid min-w-0 gap-8 lg:grid-cols-[9rem_minmax(0,1fr)]">
                   <p className="font-mono text-[clamp(4.5rem,12vw,8rem)] font-semibold leading-none text-text-1 opacity-[0.08]" aria-hidden="true">
                     {String(act.act).padStart(2, '0')}
@@ -48,7 +48,7 @@ export function CapabilityActs({ profile }: CapabilityActsProps) {
                     </ul>
                   </div>
                 </div>
-              </Reveal>
+              </ScrollFadeEffect>
             </div>
           </div>
         );

@@ -1,4 +1,5 @@
 import { SectionAnchor } from '@/components/dossier/section-anchor';
+import { ScrollFadeEffect } from '@/components/registry/scroll-fade-effect';
 import type { Social } from '@/content/schema';
 import { withSiteUtm } from '@/lib/outbound-links';
 
@@ -24,7 +25,7 @@ interface ContactProps {
 export function Contact({ email, socials }: ContactProps) {
   return (
     <section id="contact" className="dossier-section bg-canvas" aria-labelledby="contact-title">
-      <div className="dossier-shell">
+      <ScrollFadeEffect entrance className="dossier-shell">
         <p className="fig-label">Fig. 14. Contact</p>
         <h2 id="contact-title" className="dossier-title mt-4 text-text-1">
           The dossier is open. <SectionAnchor href="#contact" label="contact" />
@@ -74,7 +75,7 @@ export function Contact({ email, socials }: ContactProps) {
         <div className="mt-10 border-t border-line pt-5">
           <ContactAssistantButton />
         </div>
-      </div>
+      </ScrollFadeEffect>
     </section>
   );
 }

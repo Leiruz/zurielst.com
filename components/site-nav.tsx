@@ -1,4 +1,5 @@
 import { DeferredThemeSwitcher } from '@/components/registry/client-enhancements';
+import { SpotlightLogo } from '@/components/registry/spotlight-logo';
 
 const LINKS = [
   ['Stack', '#stack'],
@@ -84,7 +85,7 @@ export function SiteNav() {
           data-terminal-trigger="true"
           className="group inline-flex size-11 shrink-0 items-center justify-center rounded-sm font-mono text-text-1 transition-colors duration-150 hover:text-ring motion-reduce:transition-none"
         >
-          <span aria-hidden="true" className="text-sm font-semibold tracking-[0.16em]">ZST</span>
+          <SpotlightLogo className="text-sm font-semibold tracking-[0.16em]" />
         </button>
 
         <div className="ml-auto hidden items-center gap-5 lg:flex">

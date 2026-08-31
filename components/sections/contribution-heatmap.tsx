@@ -1,4 +1,4 @@
-import { Reveal } from '@/components/dossier/reveal';
+import { ScrollFadeEffect } from '@/components/registry/scroll-fade-effect';
 import { contributionHeatBucket } from '@/lib/dossier';
 
 interface ContributionDay {
@@ -101,7 +101,7 @@ export function ContributionHeatmap({ data }: ContributionHeatmapProps) {
   return (
     <section id="contributions" className="dossier-section bg-canvas" aria-labelledby="contributions-title">
       <div className="dossier-shell min-w-0">
-        <Reveal>
+        <ScrollFadeEffect entrance>
           <p className="fig-label">Fig. 3. Contributions</p>
           <h2 id="contributions-title" className="sr-only">Contributions</h2>
           <p className="sr-only">{summary}</p>
@@ -160,7 +160,7 @@ export function ContributionHeatmap({ data }: ContributionHeatmapProps) {
           <p className="mt-4 font-mono text-xs leading-5 text-text-3">
             Fig. 3. {data.total_contributions} contributions in the last year. Source: {sourcePath}, committed build-time snapshot.
           </p>
-        </Reveal>
+        </ScrollFadeEffect>
       </div>
     </section>
   );
