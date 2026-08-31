@@ -30,11 +30,12 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tailwind-merge": "^3.6.0",
-    "zod": "4.4.3"
+    "zod": "^4.1.0"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.8.19",
     "@remotion/cli": "4.0.518",
+    "@remotion/fonts": "4.0.518",
     "@tailwindcss/postcss": "^4.1.0",
     "@types/node": "^22.10.0",
     "@types/react": "^19.2.0",

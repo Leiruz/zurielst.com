@@ -15,6 +15,12 @@ const outputs = {
   og: new URL('../public/og.png', import.meta.url),
 };
 
+const fonts = {
+  license: new URL('../public/fonts/OFL.txt', import.meta.url),
+  mono: new URL('../public/fonts/geist-mono-latin.woff2', import.meta.url),
+  sans: new URL('../public/fonts/geist-latin.woff2', import.meta.url),
+};
+
 async function readRequired(url, encoding) {
   try {
     return await readFile(url, encoding);
@@ -57,17 +63,22 @@ function probeRemotionVersions() {
 }
 
 test('pins the reproducible Remotion toolchain and exposes the render command', () => {
+  assert.equal(packageJson.devDependencies['@remotion/fonts'], '4.0.518');
   assert.equal(packageJson.devDependencies.remotion, '4.0.518');
   assert.equal(packageJson.devDependencies['@remotion/cli'], '4.0.518');
-  assert.equal(packageJson.dependencies.zod, '4.4.3');
+  assert.equal(packageLock.packages[''].devDependencies['@remotion/fonts'], '4.0.518');
   assert.equal(packageLock.packages[''].devDependencies.remotion, '4.0.518');
   assert.equal(packageLock.packages[''].devDependencies['@remotion/cli'], '4.0.518');
-  assert.equal(packageLock.packages[''].dependencies.zod, '4.4.3');
+  assert.equal(packageLock.packages['node_modules/@remotion/fonts'].version, '4.0.518');
   assert.equal(packageLock.packages['node_modules/remotion'].version, '4.0.518');
   assert.equal(packageLock.packages['node_modules/@remotion/cli'].version, '4.0.518');
-  assert.equal(packageLock.packages['node_modules/zod'].version, '4.4.3');
   assert.equal(packageJson.scripts['media:render'], 'node remotion/render.mjs');
   assert.match(packageJson.scripts.test, /node --test[\s\S]*scripts\/media-assets\.test\.mjs/);
+});
+
+test('preserves the production zod manifest range', () => {
+  assert.equal(packageJson.dependencies.zod, '^4.1.0');
+  assert.equal(packageLock.packages[''].dependencies.zod, '^4.1.0');
 });
 
 test('keeps the installed Remotion toolchain version-compatible', () => {
@@ -109,15 +120,61 @@ test('registers the required still and loop compositions', async () => {
   assert.match(rootSource, /<Composition[\s\S]*?id="card-loop"[\s\S]*?durationInFrames=\{180\}[\s\S]*?fps=\{30\}[\s\S]*?width=\{640\}[\s\S]*?height=\{360\}/);
 });
 
-test('keeps the card rotation periodic and hero labels source-safe', async () => {
-  const [cardSource, heroSource] = await Promise.all([
+test('uses one shared inclusive loop endpoint for every periodic value', async () => {
+  const [timingSource, designSource, cardSource, heroSource] = await Promise.all([
+    readRequired(new URL('../remotion/src/timing.ts', import.meta.url), 'utf8'),
+    readRequired(new URL('../remotion/src/design.tsx', import.meta.url), 'utf8'),
     readRequired(new URL('../remotion/src/card-loop.tsx', import.meta.url), 'utf8'),
     readRequired(new URL('../remotion/src/hero-loop.tsx', import.meta.url), 'utf8'),
   ]);
-  assert.match(cardSource, /const squareRotation = \(frame \/ durationInFrames\) \* 90/);
+
+  assert.match(timingSource, /durationInFrames <= 1 \? 0 : frame \/ \(durationInFrames - 1\)/);
+  assert.equal((designSource.match(/getLoopProgress\(frame, durationInFrames\)/g) ?? []).length, 3);
+  assert.match(designSource, /const cycle = progress \* 160/);
+  assert.match(designSource, /const angle = progress \* 360 - 90/);
+  assert.match(designSource, /const phase = progress \* Math\.PI \* 2/);
+  assert.match(heroSource, /const progress = getLoopProgress\(frame, durationInFrames\)/);
+  assert.match(heroSource, /const phase = progress \* Math\.PI \* 2/);
+  assert.match(cardSource, /const progress = getLoopProgress\(frame, durationInFrames\)/);
+  assert.match(cardSource, /const phase = progress \* Math\.PI \* 2/);
+  assert.match(cardSource, /const squareRotation = progress \* 90/);
   assert.match(cardSource, /rotate: `\$\{squareRotation\}deg`/);
   assert.doesNotMatch(cardSource, /phase \* 8/);
+  assert.doesNotMatch(`${designSource}\n${heroSource}\n${cardSource}`, /frame \/ durationInFrames/);
   assert.doesNotMatch(heroSource, /Â/);
+});
+
+test('loads pinned local Geist variable fonts before registering compositions', async () => {
+  const [sansFont, monoFont, license, fontsSource, indexSource] = await Promise.all([
+    readRequired(fonts.sans),
+    readRequired(fonts.mono),
+    readRequired(fonts.license, 'utf8'),
+    readRequired(new URL('../remotion/src/fonts.ts', import.meta.url), 'utf8'),
+    readRequired(new URL('../remotion/src/index.tsx', import.meta.url), 'utf8'),
+  ]);
+
+  assert.equal(sansFont.subarray(0, 4).toString('ascii'), 'wOF2');
+  assert.equal(monoFont.subarray(0, 4).toString('ascii'), 'wOF2');
+  assert.match(license, /SIL OPEN FONT LICENSE Version 1\.1 - 26 February 2007/);
+  assert.match(license, /Copyright \(c\) 2023 Vercel, in collaboration with basement\.studio/);
+  assert.match(fontsSource, /import \{ loadFont \} from '@remotion\/fonts'/);
+  assert.match(fontsSource, /import \{ staticFile \} from 'remotion'/);
+  assert.equal((fontsSource.match(/loadFont\(\{/g) ?? []).length, 2);
+  assert.doesNotMatch(fontsSource, /await Promise\.all/);
+  assert.match(fontsSource, /family: 'Geist'[\s\S]*?url: staticFile\('fonts\/geist-latin\.woff2'\)[\s\S]*?format: 'woff2'[\s\S]*?weight: '100 900'/);
+  assert.match(fontsSource, /family: 'Geist Mono'[\s\S]*?url: staticFile\('fonts\/geist-mono-latin\.woff2'\)[\s\S]*?format: 'woff2'[\s\S]*?weight: '100 900'/);
+  assert.match(indexSource, /import '.\/fonts';[\s\S]*registerRoot\(RemotionRoot\)/);
+});
+
+test('uses the exact approved profile tagline in the OG card', async () => {
+  const [profileSource, ogSource] = await Promise.all([
+    readRequired(new URL('../content/profile.json', import.meta.url), 'utf8'),
+    readRequired(new URL('../remotion/src/og-card.tsx', import.meta.url), 'utf8'),
+  ]);
+  const approvedTagline = JSON.parse(profileSource).identity.tagline;
+
+  assert.equal(approvedTagline, 'Using AI to automate & solve security solutions.');
+  assert.match(ogSource, /Using AI to automate &amp; solve security solutions\./);
 });
 
 test('produces a valid 1200 by 630 PNG within the decimal byte budget', async () => {

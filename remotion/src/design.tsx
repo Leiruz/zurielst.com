@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from 'remotion';
+import { getLoopProgress } from './timing';
 
 export const palette = {
   accent: '#4b7bff',
@@ -21,7 +22,8 @@ export const frameStyle: CSSProperties = {
 export function BlueprintGrid({ opacity = 0.42 }: { opacity?: number }) {
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
-  const cycle = (frame / durationInFrames) * 40;
+  const progress = getLoopProgress(frame, durationInFrames);
+  const cycle = progress * 160;
 
   return (
     <AbsoluteFill
@@ -63,7 +65,8 @@ export function DossierFrame({ children }: { children: ReactNode }) {
 export function Radar({ size, strokeWidth = 1.5 }: { size: number; strokeWidth?: number }) {
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
-  const angle = (frame / durationInFrames) * 360 - 90;
+  const progress = getLoopProgress(frame, durationInFrames);
+  const angle = progress * 360 - 90;
   const center = size / 2;
 
   return (
@@ -84,7 +87,8 @@ export function Radar({ size, strokeWidth = 1.5 }: { size: number; strokeWidth?:
 export function SignalTrace({ height, width }: { height: number; width: number }) {
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
-  const phase = (frame / durationInFrames) * Math.PI * 2;
+  const progress = getLoopProgress(frame, durationInFrames);
+  const phase = progress * Math.PI * 2;
   const points = Array.from({ length: 65 }, (_, index) => {
     const x = (index / 64) * width;
     const envelope = Math.exp(-Math.pow((index - 38) / 13, 2));

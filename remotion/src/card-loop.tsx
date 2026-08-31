@@ -1,11 +1,13 @@
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
 import { DossierFrame, mono, palette, SignalTrace } from './design';
+import { getLoopProgress } from './timing';
 
 export function CardLoop() {
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
-  const phase = (frame / durationInFrames) * Math.PI * 2;
-  const squareRotation = (frame / durationInFrames) * 90;
+  const progress = getLoopProgress(frame, durationInFrames);
+  const phase = progress * Math.PI * 2;
+  const squareRotation = progress * 90;
   const signal = interpolate(Math.sin(phase), [-1, 1], [0.35, 1]);
   const scanY = interpolate(Math.cos(phase), [-1, 1], [98, 262]);
 

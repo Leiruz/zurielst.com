@@ -1,10 +1,12 @@
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
 import { DossierFrame, mono, palette, Radar, SignalTrace } from './design';
+import { getLoopProgress } from './timing';
 
 export function HeroLoop() {
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
-  const phase = (frame / durationInFrames) * Math.PI * 2;
+  const progress = getLoopProgress(frame, durationInFrames);
+  const phase = progress * Math.PI * 2;
   const scanX = interpolate(Math.sin(phase), [-1, 1], [96, 544]);
 
   return (
