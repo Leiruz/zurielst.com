@@ -15,7 +15,7 @@ const TAG_STYLES: Record<TimelineEntry['type'], string> = {
 
 export function Timeline({ profile }: TimelineProps) {
   return (
-    <section id="timeline" className="bp-nodes dossier-section bg-canvas" aria-labelledby="timeline-title">
+    <section id="timeline" className="dossier-section bg-canvas" aria-labelledby="timeline-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
           <p className="fig-label">Fig. 7. Timeline</p>

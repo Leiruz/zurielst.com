@@ -8,7 +8,7 @@ interface StackProps {
 
 export function Stack({ profile }: StackProps) {
   return (
-    <section id="stack" className="bp-nodes dossier-section bg-canvas-raised" aria-labelledby="stack-title">
+    <section id="stack" className="dossier-section bg-canvas-raised" aria-labelledby="stack-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
           <p className="fig-label">Fig. 5. Stack</p>

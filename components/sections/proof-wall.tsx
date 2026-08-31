@@ -17,7 +17,7 @@ export function ProofWall({ profile }: ProofWallProps) {
   const proof = profile.proof_wall;
 
   return (
-    <section id="proof" className="bp-nodes dossier-section bg-canvas-raised" aria-labelledby="proof-title">
+    <section id="proof" className="dossier-section bg-canvas-raised" aria-labelledby="proof-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
           <p className="fig-label">Fig. 9. Accolades</p>
@@ -28,33 +28,33 @@ export function ProofWall({ profile }: ProofWallProps) {
 
         <ProofGroup title="Certifications">
           {proof.certifications.map((item, index) => (
-            <ProofCell key={item.id} delayIndex={index}>
+            <Reveal key={item.id} delayIndex={index} className="h-full">
               <CertificationTile item={item} />
-            </ProofCell>
+            </Reveal>
           ))}
         </ProofGroup>
 
         <ProofGroup title="Awards">
           {proof.awards.map((item, index) => (
-            <ProofCell key={item.id} delayIndex={index}>
+            <Reveal key={item.id} delayIndex={index} className="h-full">
               <AwardTile item={item} />
-            </ProofCell>
+            </Reveal>
           ))}
         </ProofGroup>
 
         <ProofGroup title="CTF results">
           {proof.ctf_results.map((item, index) => (
-            <ProofCell key={item.id} delayIndex={index}>
+            <Reveal key={item.id} delayIndex={index} className="h-full">
               <CtfTile item={item} />
-            </ProofCell>
+            </Reveal>
           ))}
         </ProofGroup>
 
         <ProofGroup title="Publications">
           {proof.publications.map((item, index) => (
-            <ProofCell key={item.id} delayIndex={index}>
+            <Reveal key={item.id} delayIndex={index} className="h-full">
               <PublicationTile item={item} />
-            </ProofCell>
+            </Reveal>
           ))}
         </ProofGroup>
 
@@ -69,7 +69,7 @@ function ProofGroup({ title, children }: { title: string; children: React.ReactN
       <h3 id={`proof-${title.toLowerCase().replaceAll(' ', '-')}`} className="border-b border-line pb-3 font-mono text-xs font-medium uppercase tracking-[0.14em] text-text-3">
         {title}
       </h3>
-      <div className="mt-5 grid min-w-0 grid-cols-1 gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-5 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {children}
       </div>
     </section>
@@ -78,25 +78,9 @@ function ProofGroup({ title, children }: { title: string; children: React.ReactN
 
 function ProofTile({ children }: { children: React.ReactNode }) {
   return (
-    <article data-proof-tile="true" className="flex h-full min-w-0 flex-col overflow-hidden">
+    <article data-proof-tile="true" className="flex h-full min-w-0 flex-col overflow-hidden rounded-[14px] border border-line bg-surface">
       {children}
     </article>
-  );
-}
-
-function ProofCell({
-  children,
-  delayIndex,
-}: {
-  children: React.ReactNode;
-  delayIndex: number;
-}) {
-  return (
-    <div className="h-full bg-surface transition-colors duration-150 hover:bg-surface-hover">
-      <Reveal delayIndex={delayIndex} className="h-full">
-        {children}
-      </Reveal>
-    </div>
   );
 }
 

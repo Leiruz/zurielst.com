@@ -119,9 +119,8 @@ export default function Home() {
     <>
       <div className="bp-grid min-h-screen overflow-x-clip">
         <SiteNav />
-        <main className="bp-rails relative">
+        <main>
           <IdentityHeader profile={profile} />
-          <div aria-hidden="true" className="bp-stitch" />
           <Introduction profile={profile} />
           <ContributionHeatmap data={contributions} />
           <CapabilityActs profile={profile} />
@@ -132,16 +131,14 @@ export default function Home() {
           <ProofWall profile={profile} />
           <Products profile={profile} />
           <BrandsWall profile={profile} />
-          <div aria-hidden="true" className="bp-stitch" />
           <Faq profile={profile} />
           <Contact
             email={profile.identity.email}
             socials={profile.identity.socials}
           />
-          <div aria-hidden="true" className="bp-stitch" />
           <div
             data-bookend-cta="true"
-            className="bp-nodes relative border-t border-line bg-canvas py-14 md:py-16"
+            className="border-t border-line bg-canvas py-14 md:py-16"
           >
             <div className="dossier-shell flex flex-col items-center gap-6 text-center">
               <h2 className="text-xl font-semibold tracking-tight text-text-3 md:text-3xl">

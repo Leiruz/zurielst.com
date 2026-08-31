@@ -10,7 +10,7 @@ interface CapabilityActsProps {
 
 export function CapabilityActs({ profile }: CapabilityActsProps) {
   return (
-    <section id="capabilities" className="bp-nodes relative border-t border-line" aria-labelledby="capabilities-title">
+    <section id="capabilities" className="border-t border-line" aria-labelledby="capabilities-title">
       <div className="dossier-shell py-[clamp(4rem,8vw,7rem)]">
         <Reveal>
           <p className="fig-label">Fig. 4. Capabilities</p>
@@ -42,7 +42,7 @@ export function CapabilityActs({ profile }: CapabilityActsProps) {
                         text={remainder}
                       />
                     )}
-                    <ul data-skill-grid={act.id} className="mt-8 grid min-w-0 grid-cols-1 gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 xl:grid-cols-3">
+                    <ul data-skill-grid={act.id} className="mt-8 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
                       {act.skills.map((skill) => <SkillChip key={skill.name} skill={skill} />)}
                     </ul>
                   </div>
@@ -61,7 +61,7 @@ function SkillChip({ skill }: { skill: Skill }) {
 
   return (
     <li
-      className="min-w-0 bg-surface px-3 py-2 text-sm text-text-2 transition-colors duration-150 hover:bg-surface-hover"
+      className="min-w-0 rounded-lg border border-line bg-surface/70 px-3 py-2 text-sm text-text-2"
       title={skill.detail}
       aria-label={accessibleDetail}
     >

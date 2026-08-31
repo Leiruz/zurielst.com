@@ -9,7 +9,7 @@ interface IntroductionProps {
 
 export function Introduction({ profile }: IntroductionProps) {
   return (
-    <section id="intro" className="bp-nodes dossier-section bg-canvas-raised" aria-labelledby="intro-title">
+    <section id="intro" className="dossier-section bg-canvas-raised" aria-labelledby="intro-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
           <p className="fig-label">Fig. 2. Introduction</p>

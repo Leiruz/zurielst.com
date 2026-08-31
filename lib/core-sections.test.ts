@@ -95,9 +95,9 @@ describe('core dossier sections', () => {
     }
     expectRenderedText(brandsMarkup, profile.stack_brands.disclaimer);
     expect(brandsMarkup).not.toMatch(/<img\b/);
-    expect(brandsMarkup.match(/<svg\b(?=[^>]*aria-hidden="true")/g)).toHaveLength(4);
-    expect(brandsMarkup.match(/<path d="M5 12h14"><\/path>/g)).toHaveLength(4);
-    expect(brandsMarkup.match(/<path d="M12 5v14"><\/path>/g)).toHaveLength(4);
+    expect(brandsMarkup).not.toMatch(/<svg\b/);
+    expect(brandsMarkup).not.toContain('M5 12h14');
+    expect(brandsMarkup).not.toContain('M12 5v14');
 
     expect(markup).toContain('href="#stack"');
     expect(markup).toContain('>Stack</a>');
