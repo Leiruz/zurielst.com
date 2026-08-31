@@ -3,7 +3,33 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
+const analyticsChartRuntime = vi.hoisted(() => ({
+  lineChartProps: [] as Array<Record<string, unknown>>,
+  reducedMotion: false,
+}));
+
+vi.mock('@/components/dossier/use-prefers-reduced-motion', () => ({
+  usePrefersReducedMotion: () => analyticsChartRuntime.reducedMotion,
+}));
+
+vi.mock('@/components/registry/bklit/charts/line-chart', async () => {
+  const { createElement: createMockElement } = await import('react');
+
+  return {
+    default: (props: Record<string, unknown>) => {
+      analyticsChartRuntime.lineChartProps.push(props);
+      return createMockElement('div');
+    },
+    Line: () => null,
+  };
+});
+
 import Home from '@/app/page';
+import { AnalyticsLineChart } from '@/components/registry/bklit/analytics-line-chart';
+import {
+  shortDateFmt,
+  weekdayDateFmt,
+} from '@/components/registry/bklit/charts/chart-formatters';
 import { VisitorInsights } from '@/components/sections/visitor-insights';
 import snapshotJson from '@/content/analytics-snapshot.json';
 import {
@@ -16,6 +42,45 @@ import styles from 'virtual:globals-css-source';
 vi.mock('server-only', () => ({}));
 
 describe('visitor insights section', () => {
+  it('disables the Motion reveal when reduced motion is requested', () => {
+    analyticsChartRuntime.lineChartProps = [];
+    analyticsChartRuntime.reducedMotion = true;
+
+    renderToStaticMarkup(createElement(AnalyticsLineChart, { data: [] }));
+
+    expect(analyticsChartRuntime.lineChartProps.at(-1)?.animationDuration).toBe(0);
+    analyticsChartRuntime.reducedMotion = false;
+  });
+
+  it('keeps the Bklit reveal timing when reduced motion is not requested', () => {
+    analyticsChartRuntime.lineChartProps = [];
+    analyticsChartRuntime.reducedMotion = false;
+
+    renderToStaticMarkup(createElement(AnalyticsLineChart, { data: [] }));
+
+    expect(analyticsChartRuntime.lineChartProps.at(-1)?.animationDuration).toBe(1100);
+  });
+
+  it('leaves touch gestures to page scrolling and browser zoom', () => {
+    analyticsChartRuntime.lineChartProps = [];
+
+    renderToStaticMarkup(createElement(AnalyticsLineChart, { data: [] }));
+
+    expect(analyticsChartRuntime.lineChartProps.at(-1)?.style).toEqual({
+      pointerEvents: 'none',
+      touchAction: 'auto',
+    });
+  });
+
+  it('formats analytics calendar dates in UTC', () => {
+    const date = new Date('2026-08-30');
+
+    expect(shortDateFmt.resolvedOptions().timeZone).toBe('UTC');
+    expect(weekdayDateFmt.resolvedOptions().timeZone).toBe('UTC');
+    expect(shortDateFmt.format(date)).toBe('Aug 30');
+    expect(weekdayDateFmt.format(date)).toBe('Sun, Aug 30');
+  });
+
   it('builds the Bklit series once with only date, visits, and views', () => {
     const chart = buildAnalyticsChart([
       { date: '2026-08-29', sampled: true, views: 9, visits: 4 },
