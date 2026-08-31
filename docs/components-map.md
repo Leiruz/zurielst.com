@@ -109,10 +109,10 @@ CyberArk uses the CyberArk-owned documentation mark at `https://raw.githubuserco
 ## Adaptation flags (Next.js coupling)
 
 - spotlight-logo: newly vendored for the nav terminal control; replaces registry artwork and sound dependencies with the decorative ZST wordmark and a dossier-token CSS hover spotlight.
-- status-button: newly vendored for identity availability; replaces transient button states with a semantic mailto anchor so navigation works without JavaScript.
+- status-button: remains vendored and covered as a semantic anchor, but is no longer mounted in the identity section after the availability action was removed.
 - scroll-fade-effect: newly vendored site-wide; preserves horizontal and vertical overflow masks and adds the `entrance` and `delayIndex` progressive CSS scroll-driven adapter without client observers. Staggering shifts bounded view-progress ranges instead of mixing time delays with a scroll timeline.
-- shimmering-text: newly vendored for the identity tagline; preserves the one-second default pace through progressive CSS and stops under reduced motion.
-- text-flip: newly vendored for identity roles; defaults to a span, uses a three-second CSS interval, keeps `aria-live="off"`, and leaves the first role fixed under reduced motion.
+- shimmering-text: composes with each rotating identity role, preserves the one-second default pace through progressive CSS, and becomes static under reduced motion. The identity tagline is plain text.
+- text-flip: newly vendored for identity roles; defaults to a span, uses a three-second CSS interval, keeps `aria-live="off"`, composes each role with shimmering-text, and leaves the first role fixed under reduced motion.
 - fluid-gradient-text: newly vendored for the footer bookend; keeps the registry pointer-driven spring gradient, uses unique SVG gradient IDs, dossier typography, and an accessible label, and fixes the gradient at center under reduced motion. Its footer wrapper is loaded through `next/dynamic` with a plain Zuriel fallback.
 - icon-swap: newly integrated in the single theme action; adds stable slot markers and disables its Motion spring through `useReducedMotion`.
 - haptic: keeps the vendored Vibration API and iOS checkbox fallback, with one delegated document click bridge for exact `data-haptic` controls.

@@ -30,10 +30,6 @@ describe('content/profile.json', () => {
 
   it('uses the owner-approved AI and security identity framing', () => {
     expect(profile.identity.tagline).toBe('Using AI to automate & solve security solutions.');
-    expect(profile.identity.status).toEqual({
-      label: 'Open to opportunities',
-      href: 'mailto:zurielst@u.nus.edu',
-    });
     expect(profile.identity.metrics).toEqual([
       { value: '40+', label: 'deep learning models trained for security and vision tasks' },
       { value: '200+', label: 'firewalls fed by one automated IOC pipeline' },
@@ -42,12 +38,19 @@ describe('content/profile.json', () => {
     ]);
   });
 
-  it('rejects any identity status other than the approved mailto action', () => {
+  it('omits the opportunities status from identity data', () => {
+    expect(profile.identity).not.toHaveProperty('status');
+  });
+
+  it('rejects an identity status as an unknown field', () => {
     expect(ProfileSchema.safeParse({
       ...profile,
       identity: {
         ...profile.identity,
-        status: { label: 'Available', href: 'https://example.com' },
+        status: {
+          label: 'Open to opportunities',
+          href: 'mailto:zurielst@u.nus.edu',
+        },
       },
     }).success).toBe(false);
   });

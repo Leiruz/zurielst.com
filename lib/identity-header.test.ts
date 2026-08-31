@@ -4,11 +4,25 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { Footer } from '@/components/footer';
+import { ShimmeringText } from '@/components/registry/shimmering-text';
 import { IdentityHeader } from '@/components/sections/identity-header';
 import profileJson from '@/content/profile.json';
 import type { Profile } from '@/content/schema';
 
 const profile = profileJson as Profile;
+
+function paragraphContaining(markup: string, text: string): string {
+  const encodedText = renderToStaticMarkup(createElement('span', null, text))
+    .replace(/^<span>|<\/span>$/g, '');
+  const textIndex = markup.indexOf(encodedText);
+  const paragraphStart = markup.lastIndexOf('<p', textIndex);
+  const paragraphEnd = markup.indexOf('</p>', textIndex);
+
+  expect(textIndex).toBeGreaterThanOrEqual(0);
+  expect(paragraphStart).toBeGreaterThanOrEqual(0);
+  expect(paragraphEnd).toBeGreaterThan(textIndex);
+  return markup.slice(paragraphStart, paragraphEnd + '</p>'.length);
+}
 
 describe('identity header', () => {
   it('renders the portrait and a runtime monogram fallback without a filesystem prop', () => {
@@ -66,18 +80,39 @@ describe('identity header', () => {
     expect(markup).not.toContain('xl:grid-cols-[minmax(0,1.05fr)_minmax(18rem,0.75fr)_minmax(12rem,0.4fr)]');
   });
 
-  it('uses registry identity treatments without animating the identity section', () => {
+  it('keeps the tagline static', () => {
     const markup = renderToStaticMarkup(
       createElement(IdentityHeader, { profile }),
     );
 
-    expect(markup).toContain('data-slot="status-button"');
-    expect(markup).toContain(`href="${profile.identity.status.href}"`);
-    expect(markup).toContain(`>${profile.identity.status.label}<`);
-    expect(markup).toContain('data-slot="shimmering-text"');
+    expect(paragraphContaining(markup, profile.identity.tagline)).not.toContain(
+      'data-slot="shimmering-text"',
+    );
+  });
+
+  it('shimmers every rotating role without animating the identity section', () => {
+    const markup = renderToStaticMarkup(
+      createElement(IdentityHeader, { profile }),
+    );
+
     expect(markup).toContain('data-slot="text-flip"');
     expect(markup).toContain('aria-live="off"');
+    for (const role of profile.identity.roles) {
+      const shimmer = renderToStaticMarkup(
+        createElement(ShimmeringText, { text: role }),
+      );
+      expect(markup).toContain(`<span class="text-flip-item">${shimmer}</span>`);
+    }
     expect(markup).not.toContain('data-scroll-fade-effect="entrance"');
+  });
+
+  it('omits the opportunities status action from the identity section', () => {
+    const markup = renderToStaticMarkup(
+      createElement(IdentityHeader, { profile }),
+    );
+
+    expect(markup).not.toContain('data-slot="status-button"');
+    expect(markup).not.toContain('Open to opportunities');
   });
 });
 

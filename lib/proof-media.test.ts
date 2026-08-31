@@ -60,6 +60,7 @@ describe('ProofWall media', () => {
     const markup = renderToStaticMarkup(createElement(ProofWall, { profile: sourceProfile }));
 
     expect(credentialItems.map((item) => [item.id, item.image])).toEqual([
+      ['cisco-cyber-threat-management', '/media/certs/cisco-cyber-threat-management.png'],
       ['fortinet-fcac', '/media/certs/fortinet-fcac.png'],
       ['fortigate-74-operator', '/media/certs/fortigate-74-operator.png'],
       ['cyberark-trustee', '/media/certs/cyberark-trustee.png'],
@@ -72,12 +73,13 @@ describe('ProofWall media', () => {
       ['homeless-hearts-appreciation', '/media/certs/homeless-hearts-appreciation.png'],
       ['cys-eae-hackathon', '/media/certs/cys-eae-hackathon-2020.png'],
     ]);
-    expect(credentialItems).toHaveLength(11);
-    expect(markup.match(/data-haptic="true"/g) ?? []).toHaveLength(credentialItems.length + 1);
-    expect(markup.match(/>View credential ↗<\/a>/g) ?? []).toHaveLength(credentialItems.length + 1);
+    expect(credentialItems).toHaveLength(12);
+    expect(markup.match(/data-haptic="true"/g) ?? []).toHaveLength(credentialItems.length);
+    expect(markup.match(/>View credential ↗<\/a>/g) ?? []).toHaveLength(credentialItems.length);
     for (const item of credentialItems) {
       const tileMarkup = proofTileMarkup(markup, item.title);
-      expect(tileMarkup).toContain(`href="${item.image}"`);
+      const credential = 'credential' in item ? item.credential : undefined;
+      expect(tileMarkup).toContain(`href="${credential ?? item.image}"`);
       expect(tileMarkup).toContain('target="_blank"');
       expect(tileMarkup).toContain('rel="noopener noreferrer"');
     }
@@ -87,7 +89,7 @@ describe('ProofWall media', () => {
     }
   });
 
-  it('links Cisco PDF and Fearless image credentials without previewing the PDF', () => {
+  it('previews the Cisco image while linking its PDF credential', () => {
     const cisco = sourceProfile.proof_wall.certifications.find(
       (item) => item.id === 'cisco-cyber-threat-management',
     );
@@ -103,7 +105,7 @@ describe('ProofWall media', () => {
     const ciscoTile = proofTileMarkup(markup, cisco.title);
     const fearlessTile = proofTileMarkup(markup, fearless.title);
     expect(ciscoTile).toContain('href="/media/certs/cisco-cyber-threat-management.pdf"');
-    expect(ciscoTile).not.toContain('<img');
+    expect(ciscoTile).toContain('src="/media/certs/cisco-cyber-threat-management.png"');
     expect(ciscoTile).toContain('target="_blank"');
     expect(ciscoTile).toContain('rel="noopener noreferrer"');
     expect(fearlessTile).toContain('href="/media/certs/big-fearless-find-2026.jpg"');
