@@ -24,6 +24,10 @@ describe('content/profile.json', () => {
     expect(profile.meta.og.type).toBe('profile');
   });
 
+  it('uses the committed root Open Graph image', () => {
+    expect(profile.meta.og.image).toBe('/og.png');
+  });
+
   it('uses the owner-approved AI and security identity framing', () => {
     expect(profile.identity.tagline).toBe('Using AI to automate & solve security solutions.');
     expect(profile.identity.metrics).toEqual([

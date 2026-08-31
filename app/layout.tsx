@@ -27,6 +27,12 @@ const profile = profileJson as Profile;
 const nameParts = profile.identity.name.split(' ');
 const firstName = nameParts[0] ?? '';
 const lastName = nameParts.at(-1) ?? '';
+const socialImage = {
+  url: profile.meta.og.image,
+  width: 1200,
+  height: 630,
+  alt: `${profile.identity.name} profile card, AI. Cyber. Defence.`,
+};
 const profileStructuredData = createProfileStructuredData(profile, BUILD_DATE);
 const structuredDataJson = JSON.stringify(profileStructuredData).replaceAll('<', '\\u003c');
 
@@ -52,12 +58,14 @@ export const metadata: Metadata = {
     firstName,
     lastName,
     username: profile.identity.github.username,
+    images: [socialImage],
   },
   twitter: {
-    // summary_large_image plus twitter:image and og:image must land atomically with the asset.
-    card: 'summary',
+    // The committed OG asset and its Open Graph and Twitter metadata ship together.
+    card: 'summary_large_image',
     title: profile.meta.og.title,
     description: profile.meta.og.description,
+    images: [socialImage],
   },
 };
 

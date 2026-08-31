@@ -78,7 +78,7 @@ image field, or with a placeholder noted here):
 - TODO-media: NullSec promo video (item 56): referenced as
   /media/proof/nullsec-promo.mp4 in proof_wall.extras but NO file exists in the
   terminal repo media folder. Locate the file or delete the extras entry before M5.
-- TODO-media: /media/og-card.png (meta.og.image): to be produced during the build.
+- RESOLVED (M9): /og.png (meta.og.image) ships as the committed social share card.
 
 Item 35 standing action (personal-data audit of scans): DONE separately; see the
 sibling media-audit.md in this folder (all 46 images inspected, all verdicts SHIP
