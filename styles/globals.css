@@ -800,6 +800,23 @@ canvas {
   border: 0;
 }
 
+.social-proof-01 {
+  margin-top: 2.5rem;
+  overflow: hidden;
+  border-inline: 1px solid var(--line);
+}
+
+.social-proof-01-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-inline: 0;
+}
+
+@media (min-width: 48rem) {
+  .social-proof-01-grid {
+    grid-template-columns: repeat(var(--logos-column-count), minmax(0, 1fr));
+  }
+}
+
 @keyframes testimonials-marquee-scroll {
   to { transform: translateX(-50%); }
 }
@@ -1304,6 +1321,10 @@ body[data-chat] .return-to-top {
     transform: none;
     filter: none;
     transition: none !important;
+  }
+
+  .social-proof-01-grid {
+    display: grid;
   }
 
   .testimonials-marquee-track {

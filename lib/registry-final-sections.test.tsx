@@ -233,6 +233,9 @@ describe('final registry sections', () => {
     const markup = renderToStaticMarkup(createElement(Home));
     const brands = between(markup, '<section id="brands"', '<section id="capabilities"');
 
+    expect(brands.match(/data-slot="social-proof-01"/g)).toHaveLength(1);
+    expect(brands).toContain('role="list"');
+    expect(brands.match(/role="listitem"/g)).toHaveLength(10);
     expect(brands.match(/data-brand-item="true"/g)).toHaveLength(10);
     expect(brands.match(/data-brand-icon="true"/g)).toHaveLength(10);
     expect(brands.match(/<svg\b/g)).toHaveLength(10);
@@ -248,6 +251,13 @@ describe('final registry sections', () => {
       expect(brands).toContain(brand.context);
     }
     expect(brands).toContain(profile.stack_brands.disclaimer);
+  });
+
+  it('keeps the adopted social-proof layout bordered, responsive, and static under reduced motion', () => {
+    expect(styles).toMatch(/\.social-proof-01\s*\{[^}]*border-inline:\s*1px solid var\(--line\)/);
+    expect(styles).toMatch(/\.social-proof-01-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+    expect(styles).toMatch(/@media\s*\(min-width:\s*48rem\)[\s\S]*\.social-proof-01-grid\s*\{[^}]*grid-template-columns:\s*repeat\(var\(--logos-column-count\), minmax\(0, 1fr\)\)/);
+    expect(styles).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*\.social-proof-01-grid\s*\{[^}]*display:\s*grid/);
   });
 
   it('uses only the two live Citadel testimonials before FAQ', () => {
