@@ -17,6 +17,7 @@ export interface ExperienceOrganization {
 }
 
 export interface WorkExperienceProps {
+  className?: string;
   experiences: ExperienceOrganization[];
 }
 
@@ -43,9 +44,12 @@ export function groupTimelineExperience(entries: TimelineEntry[]): ExperienceOrg
   return [...organizations.values()];
 }
 
-export function WorkExperience({ experiences }: WorkExperienceProps) {
+export function WorkExperience({ className, experiences }: WorkExperienceProps) {
   return (
-    <div data-slot="work-experience" className="mt-12 divide-y divide-line border-y border-line">
+    <div
+      data-slot="work-experience"
+      className={['mt-12 divide-y divide-line border-y border-line', className].filter(Boolean).join(' ')}
+    >
       {experiences.map((experience) => (
         <article
           key={experience.organization}

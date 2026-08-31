@@ -249,6 +249,54 @@ describe('core dossier sections', () => {
       .toBeLessThan(educationMarkup.indexOf(educationEntries[1].org));
   });
 
+  it('adopts the experience-01 timeline shell without changing profile chronology', () => {
+    const markup = renderToStaticMarkup(createElement(Timeline, { profile }));
+    const nonEducationEntries = profile.timeline.filter((entry) => entry.type !== 'education');
+    const organizations = [
+      'Singtel',
+      'CiTaDel Cybersecurity Solutions',
+      'Singapore Armed Forces',
+      'NCS Pte Ltd',
+      'NullSec',
+      'Genesis',
+      'Homeless Hearts of Singapore',
+    ];
+
+    expect(markup).toContain('data-slot="experience-01"');
+    expect(markup).toMatch(/data-slot="experience-01"[^>]*class="[^"]*max-w-screen[^"]*overflow-x-clip/);
+    expect(markup).toMatch(/class="[^"]*screen-line-top[^"]*screen-line-bottom[^"]*"/);
+    expect(markup).toMatch(/class="[^"]*border-x[^"]*border-line[^"]*"/);
+    expect(markup.match(/data-work-organization="true"/g)).toHaveLength(7);
+    expect(markup.match(/data-work-position="true"/g)).toHaveLength(8);
+    expect(markup.match(/data-copy-disclosure="timeline"/g)).toHaveLength(8);
+    expect(markup.match(/<details(?=[^>]*data-copy-disclosure="timeline")[\s\S]*?<\/details>/g)).toHaveLength(8);
+    expect(markup).not.toMatch(/shadcncraft|quaric|assets\.chanhdai\.com|<img\b/i);
+
+    let previousIndex = -1;
+    for (const organization of organizations) {
+      const index = markup.indexOf(organization);
+      expect(index).toBeGreaterThan(previousIndex);
+      previousIndex = index;
+    }
+
+    previousIndex = -1;
+    for (const entry of nonEducationEntries) {
+      const positionIndex = markup.indexOf(`data-copy-id="${entry.id}"`);
+      expect(positionIndex).toBeGreaterThan(previousIndex);
+      expectRenderedText(markup, entry.title);
+      expectRenderedText(markup, entry.period);
+      expectRenderedText(markup, entry.summary);
+      previousIndex = positionIndex;
+    }
+
+    for (const details of markup.match(/<details(?=[^>]*data-copy-disclosure="timeline")[\s\S]*?<\/details>/g) ?? []) {
+      expect(details).not.toMatch(/<details[^>]*\sopen(?:=|\s|>)/);
+      expect(details).toMatch(/^<details[^>]*><summary[^>]*aria-expanded="false"/);
+      expect(details).not.toContain('<button');
+    }
+    expect(renderToStaticMarkup(createElement(Home))).toContain('setAttribute("aria-expanded"');
+  });
+
   it('orders Timeline, Education, and Accolades and links Education from the line navigation', () => {
     const markup = renderToStaticMarkup(createElement(Home));
     const timelineStart = markup.indexOf('id="timeline"');

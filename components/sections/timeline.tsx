@@ -1,5 +1,6 @@
 import { ScrollFadeEffect } from '@/components/registry/scroll-fade-effect';
-import { WorkExperience, groupTimelineExperience } from '@/components/registry/work-experience';
+import { Experience01 } from '@/components/registry/experience-01';
+import { groupTimelineExperience } from '@/components/registry/work-experience';
 import { SectionAnchor } from '@/components/dossier/section-anchor';
 import type { Profile } from '@/content/schema';
 
@@ -12,18 +13,14 @@ export function Timeline({ profile }: TimelineProps) {
 
   return (
     <section id="timeline" className="dossier-section bg-canvas" aria-labelledby="timeline-title">
-      <div className="dossier-shell min-w-0">
+      <Experience01 experiences={experiences}>
         <ScrollFadeEffect entrance>
           <p className="fig-label">Fig. 7. Timeline</p>
-          <h2 id="timeline-title" className="dossier-title mt-4 text-text-1">
+          <h2 id="timeline-title" className="dossier-title screen-line-top screen-line-bottom mt-4 text-text-1">
             Timeline <SectionAnchor href="#timeline" label="timeline" />
           </h2>
         </ScrollFadeEffect>
-
-        <ScrollFadeEffect entrance delayIndex={1}>
-          <WorkExperience experiences={experiences} />
-        </ScrollFadeEffect>
-      </div>
+      </Experience01>
     </section>
   );
 }

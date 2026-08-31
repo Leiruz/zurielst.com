@@ -830,7 +830,59 @@ export function validateLandingPageContract(html) {
     throw new Error("Landing-page HTML must not contain an em dash");
   }
 
+  validateTimelineContract(html);
   validateInsightsContract(html);
+}
+
+export function validateTimelineContract(html) {
+  const timeline = topLevelSections(html).find((section) => section.id === "timeline")?.markup ?? "";
+  if (!/\bdata-slot=(['"])experience-01\1/i.test(timeline)) {
+    throw new Error("Timeline must use the experience-01 registry block");
+  }
+  if (!/class=(['"])[^'"]*\bscreen-line-top\b[^'"]*\bscreen-line-bottom\b[^'"]*\1/i.test(timeline)) {
+    throw new Error("Timeline experience-01 must preserve its top and bottom structural lines");
+  }
+
+  const organizationCount = [...timeline.matchAll(/\bdata-work-organization=(['"])true\1/gi)].length;
+  const positionCount = [...timeline.matchAll(/\bdata-work-position=(['"])true\1/gi)].length;
+  if (organizationCount !== 7 || positionCount !== 8) {
+    throw new Error("Timeline must export seven organizations and eight profile positions");
+  }
+
+  const expectedPositionIds = [
+    "singtel-fd-engineer",
+    "singtel-intern",
+    "citadel-founder",
+    "saf-developer",
+    "ncs-intern",
+    "nullsec",
+    "genesis",
+    "homeless-hearts",
+  ];
+  const positionIds = [...timeline.matchAll(/\bdata-copy-id=(['"])([^'"]+)\1/gi)].map((match) => match[2]);
+  if (JSON.stringify(positionIds) !== JSON.stringify(expectedPositionIds)) {
+    throw new Error("Timeline must preserve every profile position in source order");
+  }
+
+  const disclosures = timeline.match(/<details(?=[^>]*\bdata-copy-disclosure=(['"])timeline\1)[\s\S]*?<\/details>/gi) ?? [];
+  if (disclosures.length !== 8) {
+    throw new Error("Timeline must export eight native summary disclosures");
+  }
+  for (const disclosure of disclosures) {
+    if (/\sopen(?:=|\s|>)/i.test(disclosure.match(/^<details[^>]*>/)?.[0] ?? "")) {
+      throw new Error("Timeline disclosures must be collapsed initially");
+    }
+    if (!/^<details[^>]*><summary[^>]*\baria-expanded=(['"])false\1/i.test(disclosure)) {
+      throw new Error("Timeline disclosures must expose a collapsed native summary");
+    }
+    if (/<button\b/i.test(disclosure)) {
+      throw new Error("Timeline disclosures must not add nested buttons");
+    }
+  }
+
+  if (/shadcncraft|quaric|assets\.chanhdai\.com|<img\b/i.test(timeline)) {
+    throw new Error("Timeline must not export registry demo organizations or external logos");
+  }
 }
 
 export function validateInsightsContract(html) {

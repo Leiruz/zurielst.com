@@ -157,7 +157,7 @@ const validLandingPage = `<!doctype html>
     <section id="capabilities"><p class="fig-label">Fig. 4. Capabilities</p></section>
     <section id="stack"><p class="fig-label">Fig. 5. Stack</p></section>
     <section id="work"><p class="fig-label">Fig. 6. Selected work</p></section>
-    <section id="timeline"><p class="fig-label">Fig. 7. Timeline</p></section>
+    <section id="timeline"><p class="fig-label">Fig. 7. Timeline</p><div data-slot="experience-01" class="max-w-screen overflow-x-clip"><div class="container mx-auto px-4"><div class="border-x border-line py-8"><h2 class="screen-line-top screen-line-bottom">Timeline</h2><div data-slot="work-experience"><article data-work-organization="true"><h3>Singtel</h3><ol><li data-work-position="true"><h4>Forward Deployed AI &amp; Automation Security Engineer</h4><p>Aug 2026 to present</p><details data-copy-disclosure="timeline" data-copy-id="singtel-fd-engineer"><summary aria-expanded="false">Read more</summary><p>I build customised AI and automation solutions for Singtel MSSP with SMEs.</p></details></li><li data-work-position="true"><h4>Cybersecurity Consultant Intern</h4><p>May 2026 to Aug 2026</p><details data-copy-disclosure="timeline" data-copy-id="singtel-intern"><summary aria-expanded="false">Read more</summary><p>Akamai WAF API automation for reporting; developed ConfigProof AI for vendor security risk assurance.</p></details></li></ol></article><article data-work-organization="true"><h3>CiTaDel Cybersecurity Solutions</h3><ol><li data-work-position="true"><h4>Founder</h4><p>Mar 2023 to May 2026</p><details data-copy-disclosure="timeline" data-copy-id="citadel-founder"><summary aria-expanded="false">Read more</summary><p>Affordable, open-source SOC for SMEs: 80% lower SOC cost, up to 90% detection uplift, deep learning in SOC workflows cutting false positives by 20%.</p></details></li></ol></article><article data-work-organization="true"><h3>Singapore Armed Forces</h3><ol><li data-work-position="true"><h4>Full-Stack Web Developer</h4><p>Jan 2023 to Mar 2023</p><details data-copy-disclosure="timeline" data-copy-id="saf-developer"><summary aria-expanded="false">Read more</summary><p>Led a four-person team digitizing paper-based processes with a 3-tier web application; efficiency and cost improved by up to 20%.</p></details></li></ol></article><article data-work-organization="true"><h3>NCS Pte Ltd</h3><ol><li data-work-position="true"><h4>Cybersecurity Consultant Intern</h4><p>Aug 2021 to Feb 2022</p><details data-copy-disclosure="timeline" data-copy-id="ncs-intern"><summary aria-expanded="false">Read more</summary><p>Installed, configured and troubleshot EDR for government-managed endpoints: 40% increase in threat detection, 99.9% uptime, and recognition as the Carbon Black subject matter expert.</p></details></li></ol></article><article data-work-organization="true"><h3>NullSec</h3><ol><li data-work-position="true"><h4>Head of Publicity</h4><p>Apr 2019 to May 2021</p><details data-copy-disclosure="timeline" data-copy-id="nullsec"><summary aria-expanded="false">Read more</summary><p>Helped organize the Lag n Crash inter-poly CTF and plan the YCEP CTF and the annual Hack'n'Flag CTF.</p></details></li></ol></article><article data-work-organization="true"><h3>Genesis</h3><ol><li data-work-position="true"><h4>Vice-President of Startup</h4><p>Apr 2019 to May 2021</p><details data-copy-disclosure="timeline" data-copy-id="genesis"><summary aria-expanded="false">Read more</summary><p>Nominated into the Zero to One Entrepreneurship Program with Meet Ventures and NUS Business School; the runway CiTaDel launched from.</p></details></li></ol></article><article data-work-organization="true"><h3>Homeless Hearts of Singapore</h3><ol><li data-work-position="true"><h4>Volunteer</h4><p>Jun 2021 to Dec 2022</p><details data-copy-disclosure="timeline" data-copy-id="homeless-hearts"><summary aria-expanded="false">Read more</summary><p>Befriended and distributed food and basic necessities to people in need during the pandemic.</p></details></li></ol></article></div></div></div></div></section>
     <section id="education"><p class="fig-label">Fig. 8. Education</p></section>
     <section id="proof"><p class="fig-label">Fig. 9. Accolades</p></section>
     <section id="products"><p class="fig-label">Fig. 10. Products</p></section>
@@ -639,6 +639,30 @@ test("accepts the ordered landing-page section and figure contract", () => {
   );
 
   assert.doesNotThrow(() => validateLandingPageContract(validLandingPage));
+});
+
+test("requires the exported experience-01 Timeline shell and every profile position", () => {
+  const validateLandingPageContract = requireSubjectFunction(
+    "validateLandingPageContract",
+  );
+
+  assert.doesNotThrow(() => validateLandingPageContract(validLandingPage));
+  for (const [needle, replacement] of [
+    ['data-slot="experience-01"', 'data-slot="other"'],
+    ['screen-line-top screen-line-bottom', 'screen-line-top'],
+    ['data-work-organization="true"', 'data-work-organization="false"'],
+    ['data-work-position="true"', 'data-work-position="false"'],
+    ['data-copy-id="homeless-hearts"', 'data-copy-id="missing-position"'],
+    ['aria-expanded="false"', 'aria-expanded="true"'],
+    ['<details data-copy-disclosure="timeline"', '<details open data-copy-disclosure="timeline"'],
+    ['<h3>Singtel</h3>', '<h3>shadcncraft</h3>'],
+    ['<h3>Singtel</h3>', '<img src="https://assets.chanhdai.com/images/companies/shadcncraft.svg"><h3>Singtel</h3>'],
+  ]) {
+    assert.throws(
+      () => validateLandingPageContract(validLandingPage.replace(needle, replacement)),
+      /Timeline/i,
+    );
+  }
 });
 
 test("requires the exported metrics-01 Insights values and chart contract", () => {
