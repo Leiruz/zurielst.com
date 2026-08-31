@@ -1,4 +1,5 @@
 import { ScrollFadeEffect } from '@/components/registry/scroll-fade-effect';
+import { GlowCard, GlowCardGrid } from '@/components/registry/glow-card-grid';
 import { SectionAnchor } from '@/components/dossier/section-anchor';
 import type { MediaRef, Product, Profile } from '@/content/schema';
 import { hasPublicMedia } from '@/lib/media';
@@ -18,13 +19,13 @@ export function Products({ profile }: ProductsProps) {
           </h2>
         </ScrollFadeEffect>
 
-        <div className="mt-10 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <GlowCardGrid className="mt-10 min-w-0 grid-cols-1">
           {profile.products.map((product, index) => (
             <ScrollFadeEffect entrance key={product.id} delayIndex={index} className="h-full">
               <ProductCard product={product} />
             </ScrollFadeEffect>
           ))}
-        </div>
+        </GlowCardGrid>
       </div>
     </section>
   );
@@ -35,7 +36,7 @@ function ProductCard({ product }: { product: Product }) {
   const notes = [product.note, ...product.links.map((link) => link.note)].filter((note): note is string => Boolean(note));
 
   return (
-    <article data-product-card="true" className="dossier-card flex h-full min-w-0 flex-col overflow-hidden bg-surface">
+    <GlowCard data-product-card="true" className="dossier-card">
       {availableMedia.map((item) => <ProductMedia key={item.media} item={item} />)}
       <div className="flex flex-1 flex-col p-5">
         {product.origin_story && <p className="dossier-eyebrow">Origin story</p>}
@@ -70,7 +71,7 @@ function ProductCard({ product }: { product: Product }) {
           </div>
         )}
       </div>
-    </article>
+    </GlowCard>
   );
 }
 

@@ -89,7 +89,11 @@ describe('chanhdai dossier direction', () => {
     const proofMarkup = sectionMarkup(markup, 'proof');
     expectClasses(educationMarkup, /class="([^"]*mt-10 grid[^"]*)"/, ['grid', 'gap-4']);
     expect(educationMarkup).toContain('dossier-card');
-    expectClasses(productMarkup, /class="([^"]*mt-10 grid[^"]*)"/, ['grid', 'gap-4']);
+    expectClasses(
+      productMarkup,
+      /data-slot="glow-card-grid" class="([^"]+)"/,
+      ['glow-card-grid', 'grid', 'gap-4', 'mt-10'],
+    );
     expect(productMarkup).toContain('dossier-card');
 
     for (const title of ['Certifications', 'Awards', 'CTF results', 'Publications']) {

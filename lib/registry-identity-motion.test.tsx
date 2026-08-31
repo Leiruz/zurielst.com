@@ -3,22 +3,35 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
+// @ts-expect-error Vite virtual module has no type declaration.
+import styles from 'virtual:globals-css-source';
+
 import * as fluidGradientModule from '@/components/registry/fluid-gradient-text';
 import { ShimmeringText } from '@/components/registry/shimmering-text';
-import { SpotlightLogo } from '@/components/registry/spotlight-logo';
 import { TextFlip } from '@/components/registry/text-flip';
 import { SiteNav } from '@/components/site-nav';
 
 const FluidGradientText = fluidGradientModule.FluidGradientText;
 
 describe('registry identity and motion adapters', () => {
-  it('renders the decorative ZST spotlight in the terminal button', () => {
+  it('renders the accessible shimmering Zuriel Shanley terminal wordmark', () => {
     const markup = renderToStaticMarkup(createElement(SiteNav));
 
-    expect(markup).toContain('data-slot="spotlight-logo"');
-    expect(markup).toContain('aria-hidden="true"');
-    expect(markup).toContain('ZST');
+    expect(markup).toContain('aria-label="Zuriel Shanley"');
+    expect(markup).toContain('data-slot="shimmering-text"');
+    expect(markup).toContain('>Zuriel Shanley</span>');
+    expect(markup).not.toContain('data-slot="spotlight-logo"');
+    expect(markup).not.toMatch(/>ZST</);
     expect(markup).not.toContain('chanhdai');
+  });
+
+  it('retains no spotlight-logo implementation in source', () => {
+    const registryModules = Object.keys(
+      import.meta.glob('/components/registry/*.tsx'),
+    );
+
+    expect(registryModules.some((m) => m.includes('spotlight-logo'))).toBe(false);
+    expect(styles).not.toContain('spotlight-logo');
   });
 
   it('keeps text effects accessible in server markup', () => {
@@ -44,9 +57,5 @@ describe('registry identity and motion adapters', () => {
 
     const markup = renderToStaticMarkup(createElement(FluidGradientText, { text: 'Zuriel' }));
     expect(markup).toContain('data-gradient-motion="pointer"');
-  });
-
-  it('exports the registry components as functions', () => {
-    expect(SpotlightLogo).toBeTypeOf('function');
   });
 });

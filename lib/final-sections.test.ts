@@ -29,6 +29,10 @@ function expectRenderedText(markup: string, value: string) {
 describe('final dossier sections', () => {
   it('server-renders accolades without extras, plus products and FAQ from the complete profile', () => {
     const markup = renderToStaticMarkup(createElement(Home));
+    const productsMarkup = markup.slice(
+      markup.indexOf('<section id="products"'),
+      markup.indexOf('<section id="testimonials"'),
+    );
     const accoladeItems = [
       ...profile.proof_wall.certifications,
       ...profile.proof_wall.awards,
@@ -55,7 +59,10 @@ describe('final dossier sections', () => {
 
     expect(profile.proof_wall.extras.length).toBeGreaterThan(0);
     expect(markup.match(/data-proof-tile="true"/g)).toHaveLength(accoladeItems.length);
-    expect(markup.match(/data-product-card="true"/g)).toHaveLength(profile.products.length);
+    expect(productsMarkup.match(/data-slot="glow-card-grid"/g)).toHaveLength(1);
+    expect(productsMarkup.match(/data-slot="glow-card"/g)).toHaveLength(profile.products.length);
+    expect(productsMarkup.match(/data-product-card="true"/g)).toHaveLength(profile.products.length);
+    expect(productsMarkup.match(/tabindex="0"/g)).toHaveLength(profile.products.length);
     expect(markup.match(/<details data-faq-entry="true"/g)).toHaveLength(profile.faq.length);
     expect(markup).toContain('Origin story');
 

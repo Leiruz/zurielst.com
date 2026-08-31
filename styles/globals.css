@@ -366,6 +366,38 @@ canvas {
     transform 150ms cubic-bezier(.32, .72, 0, 1);
 }
 
+.glow-card {
+  --glow-pointer-x: 50%;
+  --glow-pointer-y: 50%;
+  isolation: isolate;
+}
+
+.glow-card::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    24rem circle at var(--glow-pointer-x) var(--glow-pointer-y),
+    color-mix(in oklab, var(--ring) 24%, transparent),
+    transparent 58%
+  );
+  content: '';
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms cubic-bezier(.32, .72, 0, 1);
+}
+
+.glow-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.glow-card:hover::before,
+.glow-card:focus-visible::before {
+  opacity: 1;
+}
+
 @media (hover: hover) {
   .dossier-card:hover {
     border-color: var(--line-strong);
@@ -555,31 +587,6 @@ canvas {
 
 .shimmering-text-stopped {
   animation: none;
-}
-
-.spotlight-logo {
-  display: inline-grid;
-  position: relative;
-}
-
-.spotlight-logo-base,
-.spotlight-logo-highlight {
-  grid-area: 1 / 1;
-}
-
-.spotlight-logo-highlight {
-  background: radial-gradient(circle at 50% 50%, var(--ring) 0 28%, transparent 72%);
-  background-position: 100% 50%;
-  background-size: 300% 300%;
-  background-clip: text;
-  color: transparent;
-  transition: background-position 300ms cubic-bezier(.32, .72, 0, 1);
-  -webkit-background-clip: text;
-}
-
-.group:hover .spotlight-logo-highlight,
-.group:focus-visible .spotlight-logo-highlight {
-  background-position: 50% 50%;
 }
 
 .fluid-gradient-text,
@@ -1243,8 +1250,13 @@ body[data-chat] .return-to-top {
     transform: none !important;
   }
 
-  .spotlight-logo-highlight {
-    display: none;
+  .glow-card {
+    --glow-pointer-x: 50%;
+    --glow-pointer-y: 50%;
+  }
+
+  .glow-card::before {
+    transition: none;
   }
 
   .logos-carousel {

@@ -72,9 +72,13 @@ test("uses CF_PAGES_COMMIT_SHA after skipping empty higher-priority values", () 
   assert.equal(gitCallCount, 0);
 });
 
-test("falls back to Git after skipping empty environment values", () => {
+test("falls back to dev locally without consulting Git", () => {
   const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
-  const successfulGit = () => "git-sha\n";
+  let gitCallCount = 0;
+  const successfulGit = () => {
+    gitCallCount += 1;
+    return "git-sha\n";
+  };
 
   assert.equal(typeof resolveBuildSha, "function");
   if (typeof resolveBuildSha !== "function") return;
@@ -83,40 +87,11 @@ test("falls back to Git after skipping empty environment values", () => {
     BUILD_SHA: " ",
     GITHUB_SHA: "",
     CF_PAGES_COMMIT_SHA: "\n",
-  }), "git-sha");
+  }), "dev");
+  assert.equal(gitCallCount, 0);
 });
 
-test("invokes Git with the exact rev-parse contract when all environment values are empty", () => {
-  const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
-  const gitCalls = [];
-  const successfulGit = (...arguments_) => {
-    gitCalls.push(arguments_);
-    return "git-sha\n";
-  };
-
-  assert.equal(typeof resolveBuildSha, "function");
-  if (typeof resolveBuildSha !== "function") return;
-
-  assert.equal(resolveBuildSha(successfulGit, {
-    BUILD_SHA: "",
-    GITHUB_SHA: "",
-    CF_PAGES_COMMIT_SHA: "",
-  }), "git-sha");
-  assert.deepEqual(gitCalls, [
-    ["git", ["rev-parse", "HEAD"], { encoding: "utf8" }],
-  ]);
-});
-
-test("returns unknown when Git discovery produces only whitespace", () => {
-  const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
-
-  assert.equal(typeof resolveBuildSha, "function");
-  if (typeof resolveBuildSha !== "function") return;
-
-  assert.equal(resolveBuildSha(() => " \t\n", {}), "unknown");
-});
-
-test("returns unknown when Git discovery throws and no environment value exists", () => {
+test("returns dev when Git is unavailable and no deployment environment value exists", () => {
   const resolveBuildSha = Reflect.get(nextConfigModule, "resolveBuildSha");
   const throwingGit = () => {
     throw new Error("git unavailable");
@@ -125,7 +100,7 @@ test("returns unknown when Git discovery throws and no environment value exists"
   assert.equal(typeof resolveBuildSha, "function");
   if (typeof resolveBuildSha !== "function") return;
 
-  assert.equal(resolveBuildSha(throwingGit, {}), "unknown");
+  assert.equal(resolveBuildSha(throwingGit, {}), "dev");
 });
 
 const validHeaders = `/*

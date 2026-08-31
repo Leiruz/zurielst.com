@@ -9,12 +9,15 @@ import { SECTION_LINE_NAV_ITEMS } from '@/components/section-line-nav';
 import * as carouselEnhancement from '@/components/registry/logos-carousel-enhancement';
 import profileJson from '@/content/profile.json';
 import type { Profile } from '@/content/schema';
+// @ts-expect-error Vite exposes the Markdown source through its raw query loader.
+import componentsMap from '@/docs/components-map.md?raw';
 // @ts-expect-error The Vitest config exposes the stylesheet source as a virtual text module.
 import styles from 'virtual:globals-css-source';
 
 vi.mock('server-only', () => ({}));
 
 const profile = profileJson as Profile;
+const glowGridModule = await import('@/components/registry/glow-card-grid').catch(() => ({}));
 const sections = [
   ['identity', 'Identity'],
   ['intro', 'Introduction'],
@@ -47,6 +50,56 @@ function between(markup: string, start: string, end: string) {
 }
 
 describe('final registry sections', () => {
+  it('exports the vendored glow grid with reduced-motion pointer suppression', () => {
+    const GlowCardGrid = Reflect.get(glowGridModule, 'GlowCardGrid');
+    const GlowCard = Reflect.get(glowGridModule, 'GlowCard');
+    const shouldTrackGlowPointer = Reflect.get(glowGridModule, 'shouldTrackGlowPointer');
+
+    expect(GlowCardGrid).toBeTypeOf('function');
+    expect(GlowCard).toBeTypeOf('function');
+    expect(shouldTrackGlowPointer).toBeTypeOf('function');
+    if (typeof shouldTrackGlowPointer !== 'function') return;
+    expect(shouldTrackGlowPointer(false)).toBe(true);
+    expect(shouldTrackGlowPointer(true)).toBe(false);
+  });
+
+  it('renders every profile product inside one keyboard-focusable glow grid', () => {
+    const markup = renderToStaticMarkup(createElement(Home));
+    const products = between(markup, '<section id="products"', '<section id="testimonials"');
+
+    expect(products.match(/data-slot="glow-card-grid"/g)).toHaveLength(1);
+    expect(products.match(/data-slot="glow-card"/g)).toHaveLength(profile.products.length);
+    expect(products.match(/data-product-card="true"/g)).toHaveLength(profile.products.length);
+    expect(products.match(/tabindex="0"/g)).toHaveLength(profile.products.length);
+
+    for (const product of profile.products) {
+      for (const value of [product.name, product.summary, product.period, product.note]) {
+        if (!value) continue;
+        const encodedValue = renderToStaticMarkup(createElement('span', null, value))
+          .replace(/^<span>|<\/span>$/g, '');
+        expect(products).toContain(encodedValue);
+      }
+      for (const stackItem of product.stack) expect(products).toContain(stackItem);
+      for (const link of product.links) {
+        expect(products).toContain(`href="${link.url}"`);
+        expect(products).toContain(link.label);
+      }
+    }
+  });
+
+  it('uses dossier-token hover glow and a static reduced-motion fallback', () => {
+    expect(styles).toMatch(/\.glow-card::before\s*\{[\s\S]*radial-gradient[\s\S]*var\(--ring\)/);
+    expect(styles).toMatch(/\.glow-card:hover::before[\s\S]*\.glow-card:focus-visible::before[\s\S]*opacity:\s*1/);
+    expect(styles).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*\.glow-card\s*\{[^}]*--glow-pointer-x:\s*50%[^}]*--glow-pointer-y:\s*50%/);
+    expect(styles).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*\.glow-card::before\s*\{[^}]*transition:\s*none/);
+  });
+
+  it('records the adopted staged glow grid SHA', () => {
+    expect(componentsMap).toMatch(
+      /glow-card-grid: newly vendored for Products[\s\S]*697511424edc76ff595359fdf5a32641096b62a102ca54d3fdac6d5d4954ad73/,
+    );
+  });
+
   it('normalizes a partially completed carousel wave before playback pauses', () => {
     const normalize = Reflect.get(carouselEnhancement, 'normalizeCarouselColumns') as unknown;
     expect(normalize).toBeTypeOf('function');

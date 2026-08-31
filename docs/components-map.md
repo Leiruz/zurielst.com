@@ -17,7 +17,6 @@ _registry-index.json is the registry index kept for reference; it and this manif
 - Four registryDependencies point at third-party namespaced registries, NOT shadcn base and NOT chanhdai; they are not staged here and need namespace entries in components.json (or manual vendoring from those registries) at M2 time:
   - @bklit/line-chart (needed by metrics-01)
   - @kibo-ui/marquee (needed by testimonials-marquee)
-  - @soundcn/metal-click (needed by spotlight-logo)
   - @soundcn/u-mini-map-open (needed by toc-minimap)
 - Types as published use registry:component for UI components (not registry:ui), plus registry:block, registry:style, registry:hook.
 - File count 0 is real for testimonials-marquee, typography, thin-scrollbar, style, theme-toggle-effect-circle: their payload is css/cssVars/metadata (and for testimonials-marquee, composition via registryDependencies) rather than component files.
@@ -43,7 +42,6 @@ registryDependencies legend: plain name = shadcn base component (ui.shadcn.com);
 | text-flip | registry:component | 1 | 3009 | motion | - | - | `58483c6fa826914d310af33b99df5f5c711b9b93f5663c084b2559bc48235e78` |
 | shimmering-text | registry:component | 1 | 2673 | motion | - | - | `4893a4a34bb01df9fd9e857cdd426c3dbf76e8dcc214d3742cc374d98169056d` |
 | fluid-gradient-text | registry:component | 1 | 3224 | motion | - | - | `341d98d8d33408c398f79d0c18bd943d6cb35f4ddc49692c6486a4d03d59762b` |
-| spotlight-logo | registry:component | 1 | 9953 | motion | @soundcn/metal-click [3rd-party] | - | `9c7aecc16a01be0222bc23525b901b50e1d884ef910667ed9bc1818fbf7a3f95` |
 | dot-grid-spotlight | registry:component | 1 | 6631 | - | - | - | `8e9189d97d31c2feebb521dbbac41a7cc6711c87d27bcc7c7f1178354943cf92` |
 | scroll-fade-effect | registry:component | 1 | 4166 | - | - | - | `6f58faaac39e2058ff3fbe46fa8122a4fcae5800bd2c69731b89b0aca1879f53` |
 | line-nav | registry:component | 1 | 4283 | motion | - | next/link | `3c038ee717cc910037fb4e723479cc5dc9f91665a8fc1d9cb649fafd257244ed` |
@@ -107,12 +105,12 @@ CyberArk uses the CyberArk-owned documentation mark at `https://raw.githubuserco
 
 ## Adaptation flags (Next.js coupling)
 
-- spotlight-logo: newly vendored for the nav terminal control; replaces registry artwork and sound dependencies with the decorative ZST wordmark and a dossier-token CSS hover spotlight.
+- spotlight-logo: removed 2026-08-31 when the navbar adopted the shimmering full-name wordmark; the vendored component and every .spotlight-logo CSS rule were deleted rather than kept unmounted.
 - status-button: removed 2026-08-31 with the availability action (owner request); the vendored component, its test, and the `.status-button-dot` rule were deleted rather than kept unmounted.
 - scroll-fade-effect: newly vendored site-wide; preserves horizontal and vertical overflow masks and adds the `entrance` and `delayIndex` progressive CSS scroll-driven adapter without client observers. Staggering shifts bounded view-progress ranges instead of mixing time delays with a scroll timeline.
-- shimmering-text: composes with each rotating identity role and the intro gate's single Slide to unlock label, preserves the one-second default pace through progressive CSS, and becomes static under reduced motion. The identity tagline is plain text.
+- shimmering-text: composes with the navbar's Zuriel Shanley wordmark, each rotating identity role, and the intro gate's single Slide to unlock label. It preserves the one-second default pace through progressive CSS and becomes static under reduced motion. The identity tagline is plain text.
 - text-flip: newly vendored for identity roles; defaults to a span, uses a three-second CSS interval, keeps `aria-live="off"`, composes each role with shimmering-text, and leaves the first role fixed under reduced motion.
-- fluid-gradient-text: newly vendored for the footer bookend; keeps the registry pointer-driven spring gradient, uses unique SVG gradient IDs, dossier typography, and an accessible label, and fixes the gradient at center under reduced motion. Its footer wrapper is loaded through `next/dynamic` with a plain Zuriel fallback.
+- fluid-gradient-text: remains vendored with unique SVG gradient IDs, dossier typography, an accessible label, and a centered reduced-motion state, but is no longer mounted after the footer colophon redesign.
 - icon-swap: newly integrated in the single theme action; adds stable slot markers and disables its Motion spring through `useReducedMotion`.
 - haptic: keeps the vendored Vibration API and iOS checkbox fallback, with one delegated document click bridge for exact `data-haptic` controls.
 - slide-to-unlock: replaces the intro skip control, adapts the handle to a real button, adds Enter, Space, and ArrowRight-hold keyboard completion, and guards duplicate unlocks. Reduced-motion sessions bypass the entire intro before the control mounts.
@@ -124,6 +122,7 @@ CyberArk uses the CyberArk-owned documentation mark at `https://raw.githubuserco
 - logos-carousel: keeps four distributed columns, a monotonic 2400ms cycle, and a 125ms left-to-right wave. Every logo stays in static markup exactly once; inactive items remain in their column instead of being removed by AnimatePresence. A small `next/dynamic` enhancement cycles only while near the viewport and the document is visible. An interrupted wave normalizes every column to the shared step before playback can resume, and reduced-motion users receive all ten items as a static grid with no interval.
 - testimonial: trims unused avatar presentation and applies dossier borders, typography, and colors to the quote and attribution primitives.
 - testimonials-marquee: the registry manifest has no component file, so the local provenance-marked adapter composes testimonial primitives. It provides one semantic primary copy, an `aria-hidden` animation copy, pause on hover or focus, and a static reduced-motion grid without adding `@kibo-ui/marquee`.
+- glow-card-grid: newly vendored for Products from staged SHA `697511424edc76ff595359fdf5a32641096b62a102ca54d3fdac6d5d4954ad73`. The local adapter keeps the dependency-free grid and glow primitives, scopes pointer tracking to the grid, uses dossier tokens, exposes keyboard-focusable article cards, and disables pointer tracking under reduced motion.
 - consent-manager: imports @c15t/nextjs.
 - consent-manager: local component overrides registry copy with site-specific measurement-only privacy wording.
 - consent-manager: uses c15t's headless provider and state with a site-owned automatic banner, and loads the split c15t dialog only after Customize opens it. The provider waits for both intro completion and the visitor's first pointer, keyboard, wheel, or touch interaction, preventing its banner from overlapping the intro dialog and keeping consent code outside an unengaged landing route; measurement remains disabled until consent.
@@ -156,7 +155,7 @@ Install: `npx shadcn@latest add button collapsible dropdown-menu hover-card sepa
 - @c15t/nextjs (for consent-manager)
 - @rexa-developer/tiks (for copy-button)
 - date-fns (for contribution-graph, metrics-01, work-experience)
-- motion (for apple-hello-effect, chevrons-up-down-icon, copy-button, fluid-gradient-text, icon-swap, line-nav, logos-carousel, shimmering-text, spotlight-logo, text-flip, theme-switcher)
+- motion (for apple-hello-effect, chevrons-up-down-icon, copy-button, fluid-gradient-text, icon-swap, line-nav, logos-carousel, shimmering-text, text-flip, theme-switcher)
 - next-themes (for theme-switcher)
 - radix-ui (for the base button component)
 - react-markdown (for work-experience)

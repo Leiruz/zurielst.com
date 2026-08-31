@@ -181,8 +181,8 @@ test('uses the exact approved profile tagline in the OG card', async () => {
   ]);
   const approvedTagline = JSON.parse(profileSource).identity.tagline;
 
-  assert.equal(approvedTagline, 'Using AI to automate & solve security solutions.');
-  assert.match(ogSource, /Using AI to automate &amp; solve security solutions\./);
+  assert.equal(approvedTagline, 'Using AI & automation to solve security issues');
+  assert.match(ogSource, /Using AI &amp; automation to solve security issues/);
 });
 
 test('produces a valid 1200 by 630 PNG within the decimal byte budget', async () => {

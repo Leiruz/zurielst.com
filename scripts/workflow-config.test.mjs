@@ -92,6 +92,16 @@ test("PR and deploy pipelines execute the Chromium layout gate after build", asy
   }
 });
 
+test("production build injects the deployed commit SHA", async () => {
+  const workflow = await readWorkflow("deploy.yml");
+  const buildIndex = workflow.indexOf("- run: npm run build");
+  const nextStepIndex = workflow.indexOf("\n      - ", buildIndex + 1);
+  const buildStep = workflow.slice(buildIndex, nextStepIndex);
+
+  assert.ok(buildIndex >= 0, "deploy workflow must build the static export");
+  assert.ok(buildStep.includes("BUILD_SHA: ${{ github.sha }}"));
+});
+
 test("preview comments identify the enforced noindex header", async () => {
   const workflow = await readWorkflow("preview-deploy.yml");
 

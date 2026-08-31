@@ -35,7 +35,7 @@ export function OgCard() {
           </p>
           <div style={{ background: palette.ink, height: 1, opacity: 0.32, width: 560 }} />
           <p style={{ color: palette.muted, fontSize: 25, letterSpacing: '-0.02em', lineHeight: 1.3, margin: 0 }}>
-            Using AI to automate &amp; solve security solutions.
+            Using AI &amp; automation to solve security issues
           </p>
         </div>
 

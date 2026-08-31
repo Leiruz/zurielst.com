@@ -41,7 +41,6 @@ export function IdentityHeader({ profile }: { profile: Profile }) {
             <p className="mt-5 font-mono text-sm uppercase tracking-[0.16em] text-text-3">
               {identity.tagline}
             </p>
-            <p className="dossier-body mt-5 text-text-2">{identity.bio_hook}</p>
             <p className="mt-5 min-h-7 text-lg text-text-1">
               <TextFlip>
                 {identity.roles.map((role) => (
