@@ -1,5 +1,4 @@
 import { createElement } from 'react';
-// @ts-expect-error The installed react-dom runtime has no declaration package in this project.
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { CountUpMetric } from '@/components/dossier/count-up-metric';

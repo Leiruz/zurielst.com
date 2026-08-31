@@ -1,6 +1,5 @@
 import { createElement } from 'react';
 import type { ComponentType } from 'react';
-// @ts-expect-error The installed react-dom runtime has no declaration package in this project.
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
