@@ -106,13 +106,6 @@ const SocialSchema = z
   })
   .strict();
 
-const IdentityStatusSchema = z
-  .object({
-    label: z.literal("Open to opportunities"),
-    href: z.literal("mailto:zurielst@u.nus.edu"),
-  })
-  .strict();
-
 const IdentitySchema = z
   .object({
     name: z.literal("Zuriel Shanley Tanyory"),
@@ -128,7 +121,6 @@ const IdentitySchema = z
       })
       .strict(),
     email: z.literal("zurielst@u.nus.edu"),
-    status: IdentityStatusSchema,
     socials: z.array(SocialSchema).length(2),
     portrait: z
       .object({

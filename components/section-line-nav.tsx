@@ -7,8 +7,7 @@ import { LineNav } from '@/components/registry/line-nav';
 export const SECTION_LINE_NAV_ITEMS = [
   { href: '#identity', title: 'Identity' },
   { href: '#intro', title: 'Introduction' },
-  { href: '#contributions', title: 'Contributions' },
-  { href: '#insights', title: 'Insights' },
+  { href: '#brands', title: 'Worked with' },
   { href: '#capabilities', title: 'Capabilities' },
   { href: '#stack', title: 'Stack' },
   { href: '#work', title: 'Selected work' },
@@ -16,9 +15,9 @@ export const SECTION_LINE_NAV_ITEMS = [
   { href: '#education', title: 'Education' },
   { href: '#proof', title: 'Accolades' },
   { href: '#products', title: 'Products' },
-  { href: '#brands', title: 'Worked with' },
   { href: '#testimonials', title: 'Testimonials' },
   { href: '#faq', title: 'FAQ' },
+  { href: '#insights', title: 'Insights' },
   { href: '#contact', title: 'Contact' },
 ] as const;
 
@@ -53,7 +52,7 @@ export function SectionLineNav() {
     <LineNav
       items={SECTION_LINE_NAV_ITEMS}
       activeHref={activeHref}
-      className="fixed left-0 top-1/2 z-30 hidden -translate-y-1/2 px-3 xl:flex"
+      className="section-line-nav fixed left-0 top-1/2 z-30 hidden -translate-y-1/2 px-3 xl:flex"
     />
   );
 }

@@ -12,7 +12,6 @@ import { Contact } from '@/components/sections/contact';
 import { IdentityHeader } from '@/components/sections/identity-header';
 import { Introduction } from '@/components/sections/introduction';
 import { CapabilityActs } from '@/components/sections/capability-acts';
-import { GitHubContributionsSection } from '@/components/sections/github-contributions';
 import type { ContributionSnapshot } from '@/components/registry/github-contributions';
 import { VisitorInsights } from '@/components/sections/visitor-insights';
 import { Stack } from '@/components/sections/stack';
@@ -127,14 +126,13 @@ export default function Home() {
 
   return (
     <>
-      <div className="bp-grid min-h-screen overflow-x-clip">
+      <div className="dossier-page bp-grid min-h-screen overflow-x-clip">
         <SiteNav />
         <SectionLineNav />
         <main>
           <IdentityHeader profile={profile} />
-          <Introduction profile={profile} />
-          <GitHubContributionsSection snapshot={contributions} />
-          <VisitorInsights data={analytics} />
+          <Introduction profile={profile} contributions={contributions} />
+          <BrandsWall profile={profile} />
           <CapabilityActs profile={profile} />
           <Stack profile={profile} />
           <SelectedWork profile={profile} />
@@ -142,9 +140,9 @@ export default function Home() {
           <Education profile={profile} />
           <ProofWall profile={profile} />
           <Products profile={profile} />
-          <BrandsWall profile={profile} />
           <Testimonials />
           <Faq profile={profile} />
+          <VisitorInsights data={analytics} />
           <Contact
             email={profile.identity.email}
             socials={profile.identity.socials}

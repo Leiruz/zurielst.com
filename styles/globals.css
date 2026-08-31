@@ -12,6 +12,9 @@
 */
 
 :root {
+  --section-line-nav-width: 10rem;
+  --section-line-nav-gutter: 12rem;
+
   /* dossier: light */
   --canvas: #fafafa;
   --canvas-raised: #f4f4f5;
@@ -165,6 +168,19 @@ html[data-intro='leaving'] .intro-cover {
   pointer-events: none;
 }
 
+@keyframes intro-entry-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.intro-entry-control {
+  animation: intro-entry-fade-in 300ms ease-out both;
+}
+
 .intro-static-hello path:first-of-type {
   --hello-delay: 0s;
   --hello-duration: 0.8s;
@@ -243,6 +259,19 @@ canvas {
   width: min(100%, 80rem);
   margin-inline: auto;
   padding-inline: clamp(1rem, 3vw, 2rem);
+}
+
+@media (min-width: 80rem) {
+  .section-line-nav {
+    width: var(--section-line-nav-width);
+    overflow: hidden;
+  }
+
+  .dossier-page .dossier-shell {
+    width: min(calc(100% - var(--section-line-nav-gutter)), 80rem);
+    margin-left: max(var(--section-line-nav-gutter), calc((100% - 80rem) / 2));
+    margin-right: auto;
+  }
 }
 
 .dossier-section {
@@ -519,14 +548,6 @@ canvas {
 .group:hover .spotlight-logo-highlight,
 .group:focus-visible .spotlight-logo-highlight {
   background-position: 50% 50%;
-}
-
-.status-button-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 9999px;
-  background: var(--ring);
-  box-shadow: 0 0 0 0.2rem color-mix(in oklab, var(--ring) 18%, transparent);
 }
 
 .fluid-gradient-text,

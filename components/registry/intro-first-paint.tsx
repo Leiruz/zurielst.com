@@ -111,9 +111,6 @@ export function IntroCover() {
           pathLength={1}
         />
       </svg>
-      <span className="absolute bottom-8 left-1/2 -translate-x-1/2 rounded-full border border-white/25 bg-black/60 px-3.5 py-1 font-mono text-xs text-white">
-        slide to enter
-      </span>
     </div>
   );
 }

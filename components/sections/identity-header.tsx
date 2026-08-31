@@ -2,7 +2,6 @@ import type { Profile } from '@/content/schema';
 import { CountUpMetric } from '@/components/dossier/count-up-metric';
 import { LiveClock } from '@/components/dossier/live-clock';
 import { ShimmeringText } from '@/components/registry/shimmering-text';
-import { StatusButton } from '@/components/registry/status-button';
 import { TextFlip } from '@/components/registry/text-flip';
 import { PortraitAvatar } from '@/components/sections/portrait-avatar';
 import { withSiteUtm } from '@/lib/outbound-links';
@@ -40,11 +39,15 @@ export function IdentityHeader({ profile }: { profile: Profile }) {
               </span>
             </h1>
             <p className="mt-5 font-mono text-sm uppercase tracking-[0.16em] text-text-3">
-              <ShimmeringText text={identity.tagline} />
+              {identity.tagline}
             </p>
             <p className="dossier-body mt-5 text-text-2">{identity.bio_hook}</p>
             <p className="mt-5 min-h-7 text-lg text-text-1">
-              <TextFlip words={identity.roles} />
+              <TextFlip>
+                {identity.roles.map((role) => (
+                  <ShimmeringText key={role} text={role} />
+                ))}
+              </TextFlip>
             </p>
 
             <div data-identity-socials="true" className="mt-9 flex flex-wrap gap-x-6 gap-y-3">
@@ -56,7 +59,6 @@ export function IdentityHeader({ profile }: { profile: Profile }) {
               <a href="/media/resume.pdf" download className="font-mono text-sm text-text-2 underline decoration-line-strong underline-offset-4 transition-colors duration-150 hover:text-text-1">
                 Resume
               </a>
-              <StatusButton href={identity.status.href}>{identity.status.label}</StatusButton>
             </div>
           </div>
 

@@ -33,10 +33,6 @@
       "timezone": "UTC+8"
     },
     "email": "zurielst@u.nus.edu",
-    "status": {
-      "label": "Open to opportunities",
-      "href": "mailto:zurielst@u.nus.edu"
-    },
     "socials": [
       {
         "platform": "GitHub",
@@ -319,6 +315,7 @@
         "id": "cisco-cyber-threat-management",
         "title": "Cisco Cyber Threat Management Certificate",
         "issuer": "Cisco",
+        "image": "/media/certs/cisco-cyber-threat-management.png",
         "credential": "/media/certs/cisco-cyber-threat-management.pdf",
         "caption": "Recognized vendor certification in cyber threat management."
       },

@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { CommandPalette } from '@/components/command-palette';
+import { SECTION_LINE_NAV_ITEMS } from '@/components/section-line-nav';
 // @ts-expect-error Vite exposes source files with the raw query as text.
 import commandPaletteSource from '@/components/command-palette.tsx?raw';
 import * as siteNavModule from '@/components/site-nav';
@@ -59,8 +60,7 @@ describe('command palette action model', () => {
     expect(actions.slice(0, 14).map((item) => item.label)).toEqual([
       'Identity',
       'Introduction',
-      'Contributions',
-      'Insights',
+      'Brands',
       'Capabilities',
       'Stack',
       'Selected work',
@@ -68,8 +68,9 @@ describe('command palette action model', () => {
       'Education',
       'Accolades',
       'Products',
-      'Brands',
+      'Testimonials',
       'FAQ',
+      'Insights',
       'Contact',
     ]);
     expect(actions.slice(14).map((item) => item.label)).toEqual([
@@ -84,6 +85,18 @@ describe('command palette action model', () => {
       'View source',
       'llms.txt',
     ]);
+  });
+
+  it('mirrors the line-nav target order exactly', () => {
+    const paletteSectionIds = createCommandPaletteActions(config)
+      .filter((item): item is Extract<CommandPaletteAction, { kind: 'section' }> => (
+        item.kind === 'section'
+      ))
+      .map((item) => item.targetId);
+
+    expect(paletteSectionIds).toEqual(
+      SECTION_LINE_NAV_ITEMS.map((item) => item.href.slice(1)),
+    );
   });
 
   it('gives the public downloads and llms file their exact internal hrefs', () => {

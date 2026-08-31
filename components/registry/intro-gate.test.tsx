@@ -2,12 +2,15 @@ import { createElement, Fragment } from 'react';
 // @ts-expect-error The installed react-dom runtime has no declaration package in this project.
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+// @ts-expect-error The Vitest config exposes the stylesheet source as a virtual text module.
+import styles from 'virtual:globals-css-source';
 
 import {
   getIntroLeavingDelay,
   hasSeenIntro,
   IntroOverlay,
 } from './intro-gate';
+import * as introGateModule from './intro-gate';
 import {
   advanceSlideKeyboardProgress,
   attemptSlideUnlock,
@@ -36,6 +39,23 @@ function createWritableStorage(entries: Record<string, string> = {}) {
       values.delete(key);
     },
   };
+}
+
+function countSlideToEnterLabels(markup: string) {
+  return markup.match(/>slide to enter<\/span>/g)?.length ?? 0;
+}
+
+function createIntroOverlay(
+  overrides: Partial<Parameters<typeof IntroOverlay>[0]> = {},
+) {
+  return IntroOverlay({
+    animationComplete: true,
+    leaving: false,
+    onAnimationComplete: () => {},
+    onDismiss: () => {},
+    reducedMotion: false,
+    ...overrides,
+  });
 }
 
 describe('hasSeenIntro', () => {
@@ -265,7 +285,7 @@ describe('first-paint intro state', () => {
     expect(markup).toContain('class="intro-cover"');
     expect(markup).toContain('data-intro-static-hello="true"');
     expect(markup).toContain('<svg');
-    expect(markup).toContain('>slide to enter</span>');
+    expect(markup).not.toContain('>slide to enter</span>');
     expect(markup).not.toContain('>skip</span>');
     expect(markup).toContain('<noscript>');
     expect(markup).toContain('#intro-cover{display:none!important}');
@@ -281,16 +301,71 @@ describe('first-paint intro state', () => {
   });
 });
 
+describe('intro animation fallback', () => {
+  it('reveals the entry control after the full-motion animation window if the event is lost', () => {
+    type InstallFallback = (
+      state: {
+        animationComplete: boolean;
+        reducedMotion: boolean;
+        show: boolean;
+      },
+      onAnimationComplete: () => void,
+      runtime: {
+        clearTimeout(timer: number): void;
+        setTimeout(callback: () => void, delay: number): number;
+      },
+    ) => () => void;
+    const installFallback = Reflect.get(
+      introGateModule,
+      'installIntroAnimationFallback',
+    ) as InstallFallback | undefined;
+    const onAnimationComplete = vi.fn();
+    let scheduledCallback: (() => void) | undefined;
+    const clearTimeout = vi.fn();
+    const setTimeout = vi.fn((callback: () => void, delay: number) => {
+      scheduledCallback = callback;
+      expect(delay).toBeGreaterThanOrEqual(3_500);
+      return 41;
+    });
+
+    expect(installFallback).toBeTypeOf('function');
+    if (!installFallback) return;
+
+    const cleanup = installFallback(
+      { animationComplete: false, reducedMotion: false, show: true },
+      onAnimationComplete,
+      { clearTimeout, setTimeout },
+    );
+
+    expect(setTimeout).toHaveBeenCalledOnce();
+    expect(onAnimationComplete).not.toHaveBeenCalled();
+    scheduledCallback?.();
+    expect(onAnimationComplete).toHaveBeenCalledOnce();
+    cleanup();
+    expect(clearTimeout).toHaveBeenCalledWith(41);
+
+    for (const state of [
+      { animationComplete: true, reducedMotion: false, show: true },
+      { animationComplete: false, reducedMotion: true, show: true },
+      { animationComplete: false, reducedMotion: false, show: false },
+    ]) {
+      setTimeout.mockClear();
+      installFallback(state, onAnimationComplete, { clearTimeout, setTimeout });
+      expect(setTimeout).not.toHaveBeenCalled();
+    }
+  });
+});
+
 describe('IntroOverlay', () => {
   it('uses the shared capped hello size for the hydrated SVG', () => {
-    const overlay = IntroOverlay({ leaving: false, onDismiss: () => {}, reducedMotion: false });
+    const overlay = createIntroOverlay();
     const [animation] = overlay.props.children;
 
     expect(animation.props.className).toContain(INTRO_HELLO_SIZE_CLASS);
   });
 
   it('uses explicit white styling independent of the page theme', () => {
-    const overlay = IntroOverlay({ leaving: false, onDismiss: () => {}, reducedMotion: false });
+    const overlay = createIntroOverlay();
     const [animation, slideControl] = overlay.props.children;
 
     expect(animation.props.className).toContain('text-white');
@@ -298,7 +373,7 @@ describe('IntroOverlay', () => {
   });
 
   it('exposes its controls while hiding the decorative animation', () => {
-    const overlay = IntroOverlay({ leaving: false, onDismiss: () => {}, reducedMotion: false });
+    const overlay = createIntroOverlay();
     const [animation] = overlay.props.children;
     const markup = renderToStaticMarkup(overlay);
 
@@ -314,24 +389,71 @@ describe('IntroOverlay', () => {
   });
 
   it('moves initial focus to the slide control', () => {
-    const overlay = IntroOverlay({ leaving: false, onDismiss: () => {}, reducedMotion: false });
+    const overlay = createIntroOverlay();
     const markup = renderToStaticMarkup(overlay);
 
     expect(markup).toContain('autofocus=""');
   });
 
-  it('renders a plain instant Enter button for reduced motion', () => {
+  it('renders a plain instant Enter control for reduced motion', () => {
     const onDismiss = vi.fn();
-    const overlay = IntroOverlay({ leaving: false, onDismiss, reducedMotion: true });
+    const overlay = createIntroOverlay({
+      animationComplete: false,
+      onAnimationComplete: vi.fn(),
+      onDismiss,
+      reducedMotion: true,
+    });
     const [, enterButton] = overlay.props.children;
+    const markup = renderToStaticMarkup(overlay);
 
     expect(enterButton.type).toBe('button');
     expect(enterButton.props.children).toBe('Enter');
     expect(enterButton.props['data-haptic']).toBe(true);
     enterButton.props.onClick();
     expect(onDismiss).toHaveBeenCalledOnce();
+    expect(markup).not.toContain('data-slot="slide-to-unlock"');
+    expect(markup).not.toContain('intro-entry-control');
     expect(getIntroLeavingDelay(true)).toBe(0);
     expect(getIntroLeavingDelay(false)).toBe(500);
+  });
+
+  it('waits for the full handwriting animation before fading in one slide label', () => {
+    const onAnimationComplete = vi.fn();
+    const pendingProps = {
+      animationComplete: false,
+      onAnimationComplete,
+      onDismiss: vi.fn(),
+    };
+    const pendingOverlay = createIntroOverlay(pendingProps);
+    const [animation] = pendingOverlay.props.children;
+    const pendingMarkup = renderToStaticMarkup(
+      createElement(
+        Fragment,
+        null,
+        createElement(IntroCover),
+        pendingOverlay,
+      ),
+    );
+
+    expect(pendingMarkup).not.toContain('data-slot="slide-to-unlock"');
+    expect(countSlideToEnterLabels(pendingMarkup)).toBe(0);
+    expect(animation.props.onAnimationComplete).toBe(onAnimationComplete);
+
+    const completedProps = { ...pendingProps, animationComplete: true };
+    const completedMarkup = renderToStaticMarkup(
+      createElement(
+        Fragment,
+        null,
+        createElement(IntroCover),
+        createIntroOverlay(completedProps),
+      ),
+    );
+
+    expect(completedMarkup).toContain('intro-entry-control');
+    expect(countSlideToEnterLabels(completedMarkup)).toBe(1);
+    expect(styles).toMatch(
+      /@keyframes intro-entry-fade-in\s*\{[\s\S]*from\s*\{[\s\S]*opacity:\s*0;[\s\S]*to\s*\{[\s\S]*opacity:\s*1;/,
+    );
   });
 
   it.each([
@@ -340,7 +462,7 @@ describe('IntroOverlay', () => {
   ])(
     'keeps %s Tab focus on the entry control while visible',
     (_direction, shiftKey) => {
-      const overlay = IntroOverlay({ leaving: false, onDismiss: () => {}, reducedMotion: false });
+      const overlay = createIntroOverlay();
       const handler = overlay.props.onKeyDown;
       let prevented = false;
       let focused = false;
@@ -370,26 +492,59 @@ describe('IntroOverlay', () => {
     },
   );
 
-  it('keeps automatic completion only for full-motion sessions', () => {
-    const fullMotion = IntroOverlay({
-      leaving: false,
-      onDismiss: vi.fn(),
-      reducedMotion: false,
+  it('focuses and traps the pending dialog until the entry control mounts', () => {
+    const overlay = createIntroOverlay({ animationComplete: false });
+    const handler = overlay.props.onKeyDown;
+    const focus = vi.fn();
+    const preventDefault = vi.fn();
+
+    expect(overlay.props.tabIndex).toBe(-1);
+    expect(overlay.props.autoFocus).toBeUndefined();
+    expect(overlay.props.ref).toBeTypeOf('function');
+    overlay.props.ref({ focus });
+    expect(focus).toHaveBeenCalledOnce();
+
+    focus.mockClear();
+    expect(handler).toBeTypeOf('function');
+    if (typeof handler !== 'function') return;
+
+    handler({
+      key: 'Tab',
+      preventDefault,
+      currentTarget: {
+        focus,
+        querySelector: vi.fn(),
+      },
     });
-    const reducedMotion = IntroOverlay({
-      leaving: false,
+
+    expect(preventDefault).toHaveBeenCalledOnce();
+    expect(focus).toHaveBeenCalledOnce();
+  });
+
+  it('reports handwriting completion only for full-motion sessions', () => {
+    const onAnimationComplete = vi.fn();
+    const fullMotion = createIntroOverlay({
+      animationComplete: false,
+      onAnimationComplete,
+      onDismiss: vi.fn(),
+    });
+    const reducedMotion = createIntroOverlay({
+      animationComplete: false,
+      onAnimationComplete,
       onDismiss: vi.fn(),
       reducedMotion: true,
     });
     const [fullAnimation] = fullMotion.props.children;
     const [reducedAnimation] = reducedMotion.props.children;
 
-    expect(fullAnimation.props.onAnimationComplete).toBeTypeOf('function');
+    expect(fullAnimation.props.onAnimationComplete).toBe(onAnimationComplete);
     expect(reducedAnimation.props.onAnimationComplete).toBeUndefined();
   });
 
   it('does not trap Tab after the leaving transition begins', () => {
-    const overlay = IntroOverlay({ leaving: true, onDismiss: () => {}, reducedMotion: false });
+    const overlay = createIntroOverlay({
+      leaving: true,
+    });
     const handler = overlay.props.onKeyDown;
     let prevented = false;
 

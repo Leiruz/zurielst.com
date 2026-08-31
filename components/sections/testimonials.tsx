@@ -39,7 +39,7 @@ export function Testimonials() {
     <section id="testimonials" className="dossier-section bg-canvas-raised" aria-labelledby="testimonials-title">
       <div className="dossier-shell min-w-0">
         <ScrollFadeEffect entrance>
-          <p className="fig-label">Fig. 13. Testimonials</p>
+          <p className="fig-label">Fig. 11. Testimonials</p>
           <h2 id="testimonials-title" className="dossier-title mt-4 text-text-1">
             Testimonials <SectionAnchor href="#testimonials" label="testimonials" />
           </h2>

@@ -7,8 +7,7 @@ const PREVIEW_RULE = "https://:version.:subdomain.workers.dev/*";
 const LANDING_SECTION_IDS = [
   "identity",
   "intro",
-  "contributions",
-  "insights",
+  "brands",
   "capabilities",
   "stack",
   "work",
@@ -16,16 +15,15 @@ const LANDING_SECTION_IDS = [
   "education",
   "proof",
   "products",
-  "brands",
   "testimonials",
   "faq",
+  "insights",
   "contact",
 ];
 const LANDING_SECTION_CAPTIONS = [
   "Identity",
   "Introduction",
-  "Contributions",
-  "Insights",
+  "Worked with",
   "Capabilities",
   "Stack",
   "Selected work",
@@ -33,9 +31,9 @@ const LANDING_SECTION_CAPTIONS = [
   "Education",
   "Accolades",
   "Products",
-  "Worked with",
   "Testimonials",
   "FAQ",
+  "Insights",
   "Contact",
 ];
 const VOID_ELEMENTS = new Set([

@@ -23,7 +23,7 @@ export function VisitorInsights({ data }: VisitorInsightsProps) {
   return (
     <section id="insights" className="dossier-section bg-canvas-raised" aria-labelledby="insights-title">
       <ScrollFadeEffect entrance className="dossier-shell min-w-0">
-        <p className="fig-label">Fig. 4. Insights</p>
+        <p className="fig-label">Fig. 13. Insights</p>
         <h2 id="insights-title" className="dossier-title mt-4 text-text-1">
           Visitor insights <SectionAnchor href="#insights" label="visitor insights" />
         </h2>
@@ -151,7 +151,7 @@ export function VisitorInsights({ data }: VisitorInsightsProps) {
             ))}
           </div>
           <figcaption className="mt-4 font-mono text-xs leading-5 text-text-3">
-            Fig. 4. Daily visits and views, trailing 30 days. Source: Cloudflare Web Analytics, committed snapshot.
+            Fig. 13. Daily visits and views, trailing 30 days. Source: Cloudflare Web Analytics, committed snapshot.
           </figcaption>
           {summary.sampled ? (
             <p className="mt-2 font-mono text-xs leading-5 text-text-3">
@@ -160,36 +160,6 @@ export function VisitorInsights({ data }: VisitorInsightsProps) {
           ) : null}
         </figure>
 
-        <details data-analytics-table="true" className="mt-8 border-y border-line py-1">
-          <summary className="cursor-pointer py-4 font-mono text-xs text-text-2 marker:text-text-3">
-            Daily data table
-          </summary>
-          <div className="max-w-full overflow-x-auto pb-4">
-            <table className="w-full min-w-[36rem] border-collapse text-left text-sm text-text-2">
-              <caption className="sr-only">Daily Cloudflare Web Analytics observations</caption>
-              <thead className="border-b border-line font-mono text-xs text-text-3">
-                <tr>
-                  <th scope="col" className="px-3 py-2 font-medium">Date</th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">Views</th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">Visits</th>
-                  <th scope="col" className="px-3 py-2 font-medium">Sampled estimate</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line">
-                {data.days.map((day) => (
-                  <tr key={day.date} data-analytics-day="true">
-                    <th scope="row" className="whitespace-nowrap px-3 py-2 font-normal">
-                      <time dateTime={day.date}>{formatAnalyticsDate(day.date, true)}</time>
-                    </th>
-                    <td className="px-3 py-2 text-right font-mono tabular-nums">{numberFormatter.format(day.views)}</td>
-                    <td className="px-3 py-2 text-right font-mono tabular-nums">{numberFormatter.format(day.visits)}</td>
-                    <td className="px-3 py-2">{day.sampled ? 'Yes' : 'No'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </details>
       </ScrollFadeEffect>
     </section>
   );
