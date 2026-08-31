@@ -11,7 +11,7 @@
     "dev": "next dev",
     "build": "next build && node scripts/generate-dossier.mjs && node scripts/generate-sitemap.mjs && node scripts/verify-build.mjs",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "vitest run && node --test scripts/generate-dossier.test.mjs scripts/generate-sitemap.test.mjs scripts/light-theme-contrast.test.mjs scripts/perf-gate.test.mjs scripts/seo-metadata.test.mjs scripts/verify-build.test.mjs scripts/workflow-config.test.mjs",
+    "test": "vitest run && node --test scripts/fetch-analytics.test.mjs scripts/generate-dossier.test.mjs scripts/generate-sitemap.test.mjs scripts/light-theme-contrast.test.mjs scripts/perf-gate.test.mjs scripts/seo-metadata.test.mjs scripts/verify-build.test.mjs scripts/workflow-config.test.mjs",
     "perf": "node scripts/perf-gate.mjs",
     "worker:dev": "wrangler dev --config workers/chat-api/wrangler.jsonc",
     "site:deploy": "wrangler deploy --config workers/site/wrangler.jsonc",
