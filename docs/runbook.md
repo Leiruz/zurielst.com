@@ -174,6 +174,7 @@ deployment id pair for the release being verified.
   waiting for environment approval blocks every run queued behind it.
 - Rerunning a superseded Actions run deploys its OLD merge snapshot. Want
   current main deployed? Push or merge to trigger a fresh run.
-- Local Windows vitest may exit 1 on workerd teardown with all tests
-  passing. The Linux run inside deploy.yml is the gate.
+- Local Windows vitest uses the pool's single-worker mode to keep concurrent
+  workerd teardown races from changing the exit code. Linux CI keeps the
+  default isolated runtimes and strict exit handling.
 - Secrets via PowerShell pipelines gain a trailing CRLF (see Secrets).

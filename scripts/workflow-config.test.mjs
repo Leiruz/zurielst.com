@@ -17,6 +17,34 @@ async function readRepositoryFile(fileName) {
   return readFile(new URL(`../${fileName}`, import.meta.url), "utf8");
 }
 
+test("Windows Vitest uses one worker without changing Linux isolation", async () => {
+  const config = await readRepositoryFile("vitest.config.ts");
+
+  assert.match(
+    config,
+    /singleWorker:\s*process\.platform\s*===\s*["']win32["']/,
+    "Windows enables the pool's supported single-worker mode while Linux keeps the false default",
+  );
+  assert.doesNotMatch(
+    config,
+    /dangerouslyIgnoreUnhandledErrors|passWithNoTests/,
+    "the configuration must not ignore real Vitest failures",
+  );
+});
+
+test("operations docs record the Windows-only Vitest teardown fix", async () => {
+  const documents = await Promise.all([
+    readRepositoryFile("docs/runbook.md"),
+    readRepositoryFile("docs/cutover-2026-08-30.md"),
+  ]);
+
+  for (const document of documents) {
+    assert.match(document, /Windows[^.]*single-worker mode/i);
+    assert.match(document, /Linux[\s\S]{0,120}default[\s\S]{0,120}strict/i);
+    assert.doesNotMatch(document, /do not block on teardown-only failures/i);
+  }
+});
+
 test("chat configs and operations docs agree on the resolved production limits", async () => {
   const [routelessConfig, cutoverConfig, runbook, cutoverRecord] = await Promise.all([
     readRepositoryFile("workers/chat-api/wrangler.jsonc"),

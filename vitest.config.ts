@@ -33,6 +33,7 @@ export default defineWorkersConfig({
     ],
     poolOptions: {
       workers: {
+        singleWorker: process.platform === 'win32',
         wrangler: { configPath: './workers/chat-api/wrangler.jsonc' },
       },
     },
