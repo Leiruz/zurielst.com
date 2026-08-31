@@ -250,11 +250,13 @@ describe('Footer terminal opener', () => {
 });
 
 describe('SiteNav terminal opener', () => {
-  it('renders the compact ZST wordmark instead of the domain label', () => {
+  it('renders the non-wrapping Zuriel Shanley wordmark without changing its controls', () => {
     const markup = renderToStaticMarkup(createElement(SiteNav));
 
-    expect(markup).toContain('aria-label="Open terminal"');
-    expect(markup).toMatch(/>ZST<\/span>/);
+    expect(markup).toContain('aria-label="Zuriel Shanley"');
+    expect(markup).toMatch(/data-slot="shimmering-text"[^>]*>Zuriel Shanley<\/span>/);
+    expect(markup).toContain('whitespace-nowrap');
+    expect(markup).not.toMatch(/>ZST<\/span>/);
     expect(markup).not.toContain('>zurielst.com<');
     expect(markup).toContain('lg:flex');
     expect(markup).toContain('lg:hidden');

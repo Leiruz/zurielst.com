@@ -127,15 +127,19 @@ describe('core dossier sections', () => {
     expect(brandsMarkup).not.toContain('M12 5v14');
 
     expect(markup).toContain('href="#stack"');
-    expect(markup).toContain('>Stack</a>');
-    expect(navMarkup).not.toContain('href="#intro"');
-    expect(navMarkup).toContain('href="#brands"');
-    expect(navMarkup).toContain('href="#insights"');
-    expect(navMarkup.indexOf('href="#brands"')).toBeLessThan(navMarkup.indexOf('href="#stack"'));
-    expect(navMarkup.indexOf('href="#faq"')).toBeLessThan(navMarkup.indexOf('href="#insights"'));
-    expect(navMarkup.indexOf('href="#insights"')).toBeLessThan(navMarkup.indexOf('href="#contact"'));
+    expect(markup).toContain('href="#stack" aria-label="Stack"');
+    const topNavTargets = [...navMarkup.matchAll(/href="#([^"]+)"/g)]
+      .map((match) => match[1]);
+    expect(topNavTargets).toEqual([
+      'work', 'products', 'timeline', 'contact',
+      'work', 'products', 'timeline', 'contact',
+    ]);
+    expect(navMarkup.match(/data-mobile-nav-link="true"/g)).toHaveLength(4);
+    for (const hiddenTarget of ['brands', 'stack', 'education', 'proof', 'faq', 'insights']) {
+      expect(navMarkup).not.toContain(`href="#${hiddenTarget}"`);
+    }
     expect(markup).toContain('href="#proof"');
-    expect(markup).toContain('>Accolades</a>');
+    expect(markup).toContain('href="#proof" aria-label="Accolades"');
     expect(markup).not.toContain('>Proof</a>');
   });
 
@@ -245,7 +249,7 @@ describe('core dossier sections', () => {
       .toBeLessThan(educationMarkup.indexOf(educationEntries[1].org));
   });
 
-  it('orders Timeline, Education, and Accolades and links Education from the site navigation', () => {
+  it('orders Timeline, Education, and Accolades and links Education from the line navigation', () => {
     const markup = renderToStaticMarkup(createElement(Home));
     const timelineStart = markup.indexOf('id="timeline"');
     const educationStart = markup.indexOf('id="education"');
@@ -255,7 +259,7 @@ describe('core dossier sections', () => {
     expect(educationStart).toBeGreaterThan(timelineStart);
     expect(proofStart).toBeGreaterThan(educationStart);
     expect(markup).toContain('href="#education"');
-    expect(markup).toContain('>Education</a>');
+    expect(markup).toContain('href="#education" aria-label="Education"');
   });
 
   it('keeps a long single-sentence work summary visible without an empty disclosure', () => {

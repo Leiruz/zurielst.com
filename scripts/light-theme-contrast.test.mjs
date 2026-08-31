@@ -4,7 +4,9 @@ import test from 'node:test';
 
 const styles = await readFile(new URL('../styles/globals.css', import.meta.url), 'utf8');
 const rootTokens = /:root\s*\{([\s\S]*?)\n\}/.exec(styles)?.[1];
+const darkTokens = /\.dark\s*\{([\s\S]*?)\n\}/.exec(styles)?.[1];
 assert.ok(rootTokens, 'styles/globals.css must define a :root token block');
+assert.ok(darkTokens, 'styles/globals.css must define a .dark token block');
 
 function readHexToken(name, tokens = rootTokens) {
   const effectiveTokens = tokens.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -41,4 +43,15 @@ test('light --text-3 meets WCAG AA on canvas and card backgrounds', () => {
     const ratio = contrastRatio(text, readHexToken(backgroundName));
     assert.ok(ratio >= 4.5, `--text-3 contrast against --${backgroundName} is ${ratio.toFixed(3)}:1`);
   }
+});
+
+test('the shimmer base token meets WCAG AA against both header themes', () => {
+  for (const [theme, tokens] of [['light', rootTokens], ['dark', darkTokens]]) {
+    const ratio = contrastRatio(
+      readHexToken('text-3', tokens),
+      readHexToken('canvas', tokens),
+    );
+    assert.ok(ratio >= 4.5, `${theme} shimmer base contrast is ${ratio.toFixed(3)}:1`);
+  }
+  assert.match(styles, /\.shimmering-text\s*\{[\s\S]*?var\(--text-3\)/);
 });

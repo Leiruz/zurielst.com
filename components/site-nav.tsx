@@ -1,16 +1,10 @@
 import { DeferredThemeSwitcher } from '@/components/registry/client-enhancements';
-import { SpotlightLogo } from '@/components/registry/spotlight-logo';
+import { ShimmeringText } from '@/components/registry/shimmering-text';
 
-const LINKS = [
-  ['Brands', '#brands'],
-  ['Stack', '#stack'],
+export const SITE_NAV_LINKS = [
   ['Work', '#work'],
-  ['Timeline', '#timeline'],
-  ['Education', '#education'],
-  ['Accolades', '#proof'],
   ['Products', '#products'],
-  ['FAQ', '#faq'],
-  ['Insights', '#insights'],
+  ['Timeline', '#timeline'],
   ['Contact', '#contact'],
 ] as const;
 
@@ -83,16 +77,19 @@ export function SiteNav() {
       <div className="dossier-shell flex min-h-14 items-center gap-3">
         <button
           type="button"
-          aria-label="Open terminal"
+          aria-label="Zuriel Shanley"
           data-terminal-trigger="true"
           data-haptic
-          className="group inline-flex size-11 shrink-0 items-center justify-center rounded-sm font-mono text-text-1 transition-colors duration-150 hover:text-ring motion-reduce:transition-none"
+          className="group inline-flex h-11 min-w-0 shrink-0 items-center justify-start rounded-sm font-mono transition-colors duration-150 motion-reduce:transition-none"
         >
-          <SpotlightLogo className="text-sm font-semibold tracking-[0.16em]" />
+          <ShimmeringText
+            text="Zuriel Shanley"
+            className="block whitespace-nowrap text-xs font-semibold tracking-[0.04em] sm:text-sm sm:tracking-[0.08em]"
+          />
         </button>
 
         <div className="ml-auto hidden items-center gap-5 lg:flex">
-          {LINKS.map(([label, href]) => (
+          {SITE_NAV_LINKS.map(([label, href]) => (
             <a key={href} href={href} className="font-mono text-xs text-text-2 transition-colors duration-150 hover:text-text-1">
               {label}
             </a>
@@ -109,7 +106,7 @@ export function SiteNav() {
             </span>
           </summary>
           <div className="absolute right-0 top-[calc(100%+0.5rem)] w-48 rounded-lg border border-line bg-surface p-2 shadow-xl">
-            {LINKS.map(([label, href]) => (
+            {SITE_NAV_LINKS.map(([label, href]) => (
               <a key={href} href={href} data-mobile-nav-link="true" className="block rounded-md px-3 py-2 font-mono text-sm text-text-2 transition-colors duration-150 hover:bg-surface-hover hover:text-text-1">
                 {label}
               </a>
