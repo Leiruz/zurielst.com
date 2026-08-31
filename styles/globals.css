@@ -366,6 +366,38 @@ canvas {
     transform 150ms cubic-bezier(.32, .72, 0, 1);
 }
 
+.glow-card {
+  --glow-pointer-x: 50%;
+  --glow-pointer-y: 50%;
+  isolation: isolate;
+}
+
+.glow-card::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    24rem circle at var(--glow-pointer-x) var(--glow-pointer-y),
+    color-mix(in oklab, var(--ring) 24%, transparent),
+    transparent 58%
+  );
+  content: '';
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms cubic-bezier(.32, .72, 0, 1);
+}
+
+.glow-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.glow-card:hover::before,
+.glow-card:focus-visible::before {
+  opacity: 1;
+}
+
 @media (hover: hover) {
   .dossier-card:hover {
     border-color: var(--line-strong);
@@ -1241,6 +1273,15 @@ body[data-chat] .return-to-top {
   .text-flip-track {
     animation: none !important;
     transform: none !important;
+  }
+
+  .glow-card {
+    --glow-pointer-x: 50%;
+    --glow-pointer-y: 50%;
+  }
+
+  .glow-card::before {
+    transition: none;
   }
 
   .spotlight-logo-highlight {
