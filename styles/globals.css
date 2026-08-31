@@ -14,6 +14,7 @@
 :root {
   --section-line-nav-width: 10rem;
   --section-line-nav-gutter: 12rem;
+  --dossier-shell-padding: clamp(1rem, 3vw, 2rem);
 
   /* dossier: light */
   --canvas: #fafafa;
@@ -271,7 +272,7 @@ canvas {
 .dossier-shell {
   width: min(100%, 80rem);
   margin-inline: auto;
-  padding-inline: clamp(1rem, 3vw, 2rem);
+  padding-inline: var(--dossier-shell-padding);
 }
 
 @media (min-width: 80rem) {
@@ -281,8 +282,16 @@ canvas {
   }
 
   .dossier-page .dossier-shell {
-    width: min(calc(100% - var(--section-line-nav-gutter)), 80rem);
-    margin-left: max(var(--section-line-nav-gutter), calc((100% - 80rem) / 2));
+    width: min(
+      calc(
+        100% - var(--section-line-nav-gutter) - var(--dossier-shell-padding) - var(--dossier-shell-padding)
+      ),
+      80rem
+    );
+    margin-left: max(
+      calc(var(--section-line-nav-gutter) + var(--dossier-shell-padding)),
+      calc((100% + var(--section-line-nav-gutter) - 80rem) / 2)
+    );
     margin-right: auto;
   }
 }
@@ -312,6 +321,16 @@ canvas {
   max-width: 65ch;
   font-size: 1rem;
   line-height: 1.65;
+}
+
+.intro-copy {
+  max-width: 65ch;
+}
+
+@media (min-width: 80rem) {
+  .intro-copy .dossier-prose {
+    font-size: clamp(0.9375rem, calc(0.6875rem + 0.3125vw), 1rem);
+  }
 }
 
 .dossier-eyebrow {

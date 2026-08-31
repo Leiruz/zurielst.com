@@ -14,8 +14,11 @@ export function Introduction({ contributions, profile }: IntroductionProps) {
   return (
     <section id="intro" className="dossier-section bg-canvas-raised" aria-labelledby="intro-title">
       <div className="dossier-shell min-w-0">
-        <div className="grid min-w-0 gap-12 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] md:items-start">
-          <div className="min-w-0">
+        <div
+          data-intro-layout="true"
+          className="grid min-w-0 gap-12 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] md:items-center"
+        >
+          <div data-intro-copy-column="true" className="min-w-0">
             <ScrollFadeEffect entrance>
               <p className="fig-label">Fig. 2. Introduction</p>
               <h2
@@ -28,7 +31,10 @@ export function Introduction({ contributions, profile }: IntroductionProps) {
             </ScrollFadeEffect>
 
             <ScrollFadeEffect entrance className="mt-10">
-              <ul className="max-w-prose list-disc space-y-4 pl-5 marker:text-text-3">
+              <ul
+                data-intro-copy="true"
+                className="intro-copy list-disc space-y-4 pl-5 marker:text-text-3"
+              >
                 {profile.intro.bullets.map((bullet) => (
                   <li key={bullet} data-intro-bullet="true" className="dossier-prose pl-2 text-text-2">
                     {bullet}
@@ -38,7 +44,11 @@ export function Introduction({ contributions, profile }: IntroductionProps) {
             </ScrollFadeEffect>
           </div>
 
-          <ScrollFadeEffect entrance className="min-w-0 md:pt-6">
+          <ScrollFadeEffect
+            entrance
+            data-intro-contributions-column="true"
+            className="min-w-0"
+          >
             <GitHubContributionsFigure snapshot={contributions} />
           </ScrollFadeEffect>
         </div>

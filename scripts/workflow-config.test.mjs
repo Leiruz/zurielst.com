@@ -81,6 +81,17 @@ for (const [fileName, followingStep] of [
   });
 }
 
+test("PR and deploy pipelines execute the Chromium layout gate after build", async () => {
+  for (const fileName of ["pr-ci.yml", "deploy.yml"]) {
+    const workflow = await readWorkflow(fileName);
+    const buildIndex = workflow.indexOf("- run: npm run build");
+    const gateIndex = workflow.indexOf("- run: npm run layout:gate");
+    assert.notEqual(buildIndex, -1, `${fileName} builds the site`);
+    assert.notEqual(gateIndex, -1, `${fileName} runs the layout gate`);
+    assert.ok(gateIndex > buildIndex, `${fileName} runs the layout gate after the build`);
+  }
+});
+
 test("preview comments identify the enforced noindex header", async () => {
   const workflow = await readWorkflow("preview-deploy.yml");
 

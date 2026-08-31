@@ -101,28 +101,64 @@ describe('final registry sections', () => {
     }
   });
 
-  it.each([1280, 1440, 1920])(
-    'reserves a non-overlapping line-nav gutter at %ipx',
+  it('defines one shell inset and centers wide shells in the space beside the line nav', () => {
+    const wideShellRule = styles.match(/\.dossier-page\s+\.dossier-shell\s*\{([^}]*)\}/)?.[1] ?? '';
+
+    expect(styles).toMatch(/--section-line-nav-width:\s*10rem/);
+    expect(styles).toMatch(/--section-line-nav-gutter:\s*12rem/);
+    expect(styles).toMatch(/--dossier-shell-padding:\s*clamp\(1rem,\s*3vw,\s*2rem\)/);
+    expect(styles).toMatch(
+      /\.dossier-shell\s*\{[^}]*padding-inline:\s*var\(--dossier-shell-padding\)/,
+    );
+    expect(styles).toMatch(/@media\s*\(min-width:\s*80rem\)[\s\S]*\.section-line-nav\s*\{[^}]*width:\s*var\(--section-line-nav-width\)/);
+    expect(wideShellRule).toMatch(
+      /width:\s*min\(\s*calc\(\s*100%\s*-\s*var\(--section-line-nav-gutter\)\s*-\s*var\(--dossier-shell-padding\)\s*-\s*var\(--dossier-shell-padding\)\s*\),\s*80rem\s*\)/,
+    );
+    expect(wideShellRule).toMatch(
+      /margin-left:\s*max\(\s*calc\(var\(--section-line-nav-gutter\)\s*\+\s*var\(--dossier-shell-padding\)\),\s*calc\(\(100%\s*\+\s*var\(--section-line-nav-gutter\)\s*-\s*80rem\)\s*\/\s*2\)\s*\)/,
+    );
+    expect(wideShellRule).toMatch(/margin-right:\s*auto/);
+  });
+
+  it.each([1280, 1440, 1600, 1920, 2560])(
+    'keeps a balanced shell, a bounded width, and line-nav clearance at %ipx',
     (viewportWidth) => {
       const rootFontSize = 16;
-      const navRect = {
-        left: 0,
-        right: 10 * rootFontSize,
-      };
-      const shellRect = {
-        left: Math.max(12 * rootFontSize, (viewportWidth - 80 * rootFontSize) / 2),
-      };
-      const contentRect = {
-        left: shellRect.left + 2 * rootFontSize,
-      };
+      const navRight = 10 * rootFontSize;
+      const navGutter = 12 * rootFontSize;
+      const shellPadding = 2 * rootFontSize;
+      const maxShellWidth = 80 * rootFontSize;
+      const availableWidth = viewportWidth - navGutter;
+      const shellWidth = Math.min(
+        availableWidth - (2 * shellPadding),
+        maxShellWidth,
+      );
+      const shellLeft = navGutter + ((availableWidth - shellWidth) / 2);
+      const shellRightGap = viewportWidth - shellLeft - shellWidth;
 
-      expect(styles).toMatch(/--section-line-nav-width:\s*10rem/);
-      expect(styles).toMatch(/--section-line-nav-gutter:\s*12rem/);
-      expect(styles).toMatch(/@media\s*\(min-width:\s*80rem\)[\s\S]*\.section-line-nav\s*\{[^}]*width:\s*var\(--section-line-nav-width\)/);
-      expect(styles).toMatch(/@media\s*\(min-width:\s*80rem\)[\s\S]*\.dossier-page\s+\.dossier-shell\s*\{[^}]*margin-left:\s*max\(var\(--section-line-nav-gutter\),\s*calc\(\(100%\s*-\s*80rem\)\s*\/\s*2\)\)/);
-      expect(navRect.right).toBeLessThan(contentRect.left);
+      expect(shellRightGap).toBeGreaterThanOrEqual(shellPadding);
+      expect(shellWidth).toBeLessThanOrEqual(maxShellWidth);
+      expect(shellLeft - navGutter).toBeCloseTo(shellRightGap, 5);
+      expect(navRight).toBeLessThan(shellLeft + shellPadding);
     },
   );
+
+  it('caps and scales intro copy while vertically centering the desktop graph', () => {
+    const markup = renderToStaticMarkup(createElement(Home));
+    const intro = between(markup, '<section id="intro"', '<section id="brands"');
+
+    expect(intro).toContain('data-intro-layout="true"');
+    expect(intro).toContain('md:items-center');
+    expect(intro).not.toContain('md:items-start');
+    expect(intro).toContain('data-intro-copy="true"');
+    expect(intro).toContain('class="intro-copy');
+    expect(intro).toContain('data-intro-contributions-column="true"');
+    expect(intro).not.toContain('md:pt-6');
+    expect(styles).toMatch(/\.intro-copy\s*\{[^}]*max-width:\s*65ch/);
+    expect(styles).toMatch(
+      /@media\s*\(min-width:\s*80rem\)[\s\S]*\.intro-copy\s+\.dossier-prose\s*\{[^}]*font-size:\s*clamp\(0\.9375rem,\s*calc\(0\.6875rem\s*\+\s*0\.3125vw\),\s*1rem\)/,
+    );
+  });
 
   it('scopes the line-nav gutter to the landing dossier', () => {
     const homeMarkup = renderToStaticMarkup(createElement(Home));
