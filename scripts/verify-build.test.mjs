@@ -687,6 +687,36 @@ test("requires the exported metrics-01 Insights values and chart contract", () =
   }
 });
 
+test("insights contract derives its expectations from the committed snapshot", async () => {
+  const validateInsightsContract = requireSubjectFunction(
+    "validateInsightsContract",
+  );
+  const committed = JSON.parse(
+    await readFile(new URL("../content/analytics-snapshot.json", import.meta.url), "utf8"),
+  );
+
+  const shifted = {
+    ...committed,
+    days: committed.days.map((day, index) =>
+      index === 0 ? { ...day, visits: day.visits + 1 } : day,
+    ),
+  };
+  assert.throws(() => validateInsightsContract(validLandingPage, shifted), /Insights/i);
+
+  const unsampled = {
+    ...committed,
+    days: committed.days.map((day) => ({ ...day, sampled: false })),
+  };
+  assert.throws(
+    () => validateInsightsContract(validLandingPage, unsampled),
+    /omit the sampled-data note/i,
+  );
+  assert.doesNotThrow(() => validateInsightsContract(
+    validLandingPage.replace(/<p[^>]*>\s*Sampled estimate:[\s\S]*?<\/p>/i, ""),
+    unsampled,
+  ));
+});
+
 test("requires the exported landing page to reference the SVG favicon", () => {
   const validateLandingPageContract = requireSubjectFunction(
     "validateLandingPageContract",

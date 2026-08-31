@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -885,7 +886,37 @@ export function validateTimelineContract(html) {
   }
 }
 
-export function validateInsightsContract(html) {
+const ANALYTICS_MONTH_LABELS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+const committedAnalyticsSnapshot = JSON.parse(
+  readFileSync(new URL("../content/analytics-snapshot.json", import.meta.url), "utf8"),
+);
+
+// Independent recomputation over the committed snapshot; mirrors
+// lib/analytics-snapshot.ts, which this plain node script cannot import.
+export function summarizeCommittedAnalytics(snapshot) {
+  const [firstDay] = snapshot.days;
+  return snapshot.days.reduce(
+    (summary, day) => ({
+      busiestDay: day.visits > summary.busiestDay.visits ? day : summary.busiestDay,
+      sampled: summary.sampled || day.sampled,
+      views: summary.views + day.views,
+      visits: summary.visits + day.visits,
+    }),
+    { busiestDay: firstDay, sampled: false, views: 0, visits: 0 },
+  );
+}
+
+export function formatCommittedAnalyticsDate(date) {
+  const month = ANALYTICS_MONTH_LABELS[Number.parseInt(date.slice(5, 7), 10) - 1] ?? "";
+  return [date.slice(8, 10), month, date.slice(0, 4)].filter(Boolean).join(" ");
+}
+
+export function validateInsightsContract(html, snapshot = committedAnalyticsSnapshot) {
+  const summary = summarizeCommittedAnalytics(snapshot);
   const insights = topLevelSections(html).find((section) => section.id === "insights")?.markup ?? "";
   if (!insights.includes('data-registry-block="metrics-01"')) {
     throw new Error("Insights must use the metrics-01 registry block");
@@ -918,21 +949,21 @@ export function validateInsightsContract(html) {
     insights.indexOf('data-insight-metric="busiest-day"'),
     insights.indexOf('data-analytics-summary="true"'),
   );
-  if (!/>30-day visits<\/dt>[\s\S]*>40<\/dd>/i.test(visitsMetric)) {
-    throw new Error("Insights must export the committed 40-visit total");
+  if (!new RegExp(`>30-day visits</dt>[\\s\\S]*>${summary.visits}</dd>`, "i").test(visitsMetric)) {
+    throw new Error(`Insights must export the committed ${summary.visits}-visit total`);
   }
-  if (!/>30-day views<\/dt>[\s\S]*>60<\/dd>/i.test(viewsMetric)) {
-    throw new Error("Insights must export the committed 60-view total");
+  if (!new RegExp(`>30-day views</dt>[\\s\\S]*>${summary.views}</dd>`, "i").test(viewsMetric)) {
+    throw new Error(`Insights must export the committed ${summary.views}-view total`);
   }
   if (
     !/>Busiest day<\/dt>/i.test(busiestMetric) ||
-    !/<time\b[^>]*\bdatetime=(['"])2026-08-30\1/i.test(busiestMetric) ||
-    !/>40(?:<!-- -->)? visits<\/span>/i.test(busiestMetric)
+    !new RegExp(`<time\\b[^>]*\\bdatetime=(['"])${summary.busiestDay.date}\\1`, "i").test(busiestMetric) ||
+    !new RegExp(`>${summary.busiestDay.visits}(?:<!-- -->)? visits</span>`, "i").test(busiestMetric)
   ) {
-    throw new Error("Insights must export 2026-08-30 as the committed busiest day");
+    throw new Error(`Insights must export ${summary.busiestDay.date} as the committed busiest day`);
   }
 
-  const expectedSummary = "Over the trailing 30 days, Cloudflare Web Analytics recorded 40 visits and 60 views. The busiest day was 30 Aug 2026 with 40 visits.";
+  const expectedSummary = `Over the trailing 30 days, Cloudflare Web Analytics recorded ${summary.visits} visits and ${summary.views} views. The busiest day was ${formatCommittedAnalyticsDate(summary.busiestDay.date)} with ${summary.busiestDay.visits} visits.`;
   const escapedSummary = expectedSummary.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   if (!new RegExp(
     `<p[^>]*data-analytics-summary=(['"])true\\1[^>]*>${escapedSummary}</p>\\s*<div[^>]*data-bklit-line-chart=(['"])true\\2`,
@@ -946,8 +977,12 @@ export function validateInsightsContract(html) {
   if (!insights.includes("Fig. 13. Daily visits and views, trailing 30 days. Source: Cloudflare Web Analytics, committed snapshot.")) {
     throw new Error("Insights must preserve the committed Cloudflare source caption");
   }
-  if (!insights.includes("Sampled estimate:")) {
-    throw new Error("Insights must preserve the sampled-data note");
+  if (summary.sampled !== insights.includes("Sampled estimate:")) {
+    throw new Error(
+      summary.sampled
+        ? "Insights must preserve the sampled-data note"
+        : "Insights must omit the sampled-data note for an unsampled snapshot",
+    );
   }
   if (/<table\b|data-analytics-table|Daily data table|data-analytics-day/i.test(insights)) {
     throw new Error("Insights must not export a daily data table");
