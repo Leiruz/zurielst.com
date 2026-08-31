@@ -49,7 +49,6 @@ registryDependencies legend: plain name = shadcn base component (ui.shadcn.com);
 | line-nav | registry:component | 1 | 4283 | motion | - | next/link | `3c038ee717cc910037fb4e723479cc5dc9f91665a8fc1d9cb649fafd257244ed` |
 | toc-minimap | registry:component | 1 | 5139 | - | hover-card, @soundcn/u-mini-map-open [3rd-party] | - | `f9c495049d059c63d975ccbfcd1f8228766167bd8340aea24558024109b8ba07` |
 | copy-button | registry:component | 2 | 5835 | motion, @rexa-developer/tiks, web-haptics | button, icon-swap [internal] | - | `7fe369045f23338d92dfed9ea18265223be4b02b03d7e8a7970faca810506085` |
-| status-button | registry:component | 1 | 8887 | motion, radix-ui | button | - | `7d17df7db65dd2b16fac518546541f3a04680238860793e3eaae6efc2f5ed647` |
 | share-menu | registry:component | 1 | 4995 | - | button, dropdown-menu, sonner | - | `0081ac5d250141df7341759f9db6fc80d4affc94c0a8943808f1d3c233bb64fc` |
 | github-stars | registry:component | 1 | 3115 | - | button, tooltip | - | `f9a8f667eaecd0a3952dda89432019dd7443569d7798926ef88d1543f917aa59` |
 | middle-truncation | registry:component | 1 | 8235 | - | - | - | `3a753f27dab77307a522bf6d140eb59aad05c98aa798523e3b966d1c5ae6ea14` |
@@ -109,7 +108,7 @@ CyberArk uses the CyberArk-owned documentation mark at `https://raw.githubuserco
 ## Adaptation flags (Next.js coupling)
 
 - spotlight-logo: newly vendored for the nav terminal control; replaces registry artwork and sound dependencies with the decorative ZST wordmark and a dossier-token CSS hover spotlight.
-- status-button: remains vendored and covered as a semantic anchor, but is no longer mounted in the identity section after the availability action was removed.
+- status-button: removed 2026-08-31 with the availability action (owner request); the vendored component, its test, and the `.status-button-dot` rule were deleted rather than kept unmounted.
 - scroll-fade-effect: newly vendored site-wide; preserves horizontal and vertical overflow masks and adds the `entrance` and `delayIndex` progressive CSS scroll-driven adapter without client observers. Staggering shifts bounded view-progress ranges instead of mixing time delays with a scroll timeline.
 - shimmering-text: composes with each rotating identity role, preserves the one-second default pace through progressive CSS, and becomes static under reduced motion. The identity tagline is plain text.
 - text-flip: newly vendored for identity roles; defaults to a span, uses a three-second CSS interval, keeps `aria-live="off"`, composes each role with shimmering-text, and leaves the first role fixed under reduced motion.
@@ -142,7 +141,7 @@ CyberArk uses the CyberArk-owned documentation mark at `https://raw.githubuserco
 
 7 components, resolved transitively across the whole staged set including internal items, then expanded through the shadcn base graph itself (verified live on 2026-08-30 against ui.shadcn.com item JSONs). None of the directly required base components pulls a further base component.
 
-- button (required by consent-manager, copy-button, github-stars, hero-01, share-menu, status-button; brings npm: @radix-ui/react-slot)
+- button (required by consent-manager, copy-button, github-stars, hero-01, share-menu; brings npm: @radix-ui/react-slot)
 - collapsible (required by work-experience; brings npm: @radix-ui/react-collapsible)
 - dropdown-menu (required by share-menu; brings npm: @radix-ui/react-dropdown-menu)
 - hover-card (required by toc-minimap; brings npm: @radix-ui/react-hover-card)
@@ -157,9 +156,9 @@ Install: `npx shadcn@latest add button collapsible dropdown-menu hover-card sepa
 - @c15t/nextjs (for consent-manager)
 - @rexa-developer/tiks (for copy-button)
 - date-fns (for contribution-graph, metrics-01, work-experience)
-- motion (for apple-hello-effect, chevrons-up-down-icon, copy-button, fluid-gradient-text, icon-swap, line-nav, logos-carousel, shimmering-text, spotlight-logo, status-button, text-flip, theme-switcher)
+- motion (for apple-hello-effect, chevrons-up-down-icon, copy-button, fluid-gradient-text, icon-swap, line-nav, logos-carousel, shimmering-text, spotlight-logo, text-flip, theme-switcher)
 - next-themes (for theme-switcher)
-- radix-ui (for status-button)
+- radix-ui (for the base button component)
 - react-markdown (for work-experience)
 - web-haptics (for copy-button)
 - @tailwindcss/typography (devDependency, for typography)

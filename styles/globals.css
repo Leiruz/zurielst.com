@@ -550,14 +550,6 @@ canvas {
   background-position: 50% 50%;
 }
 
-.status-button-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 9999px;
-  background: var(--ring);
-  box-shadow: 0 0 0 0.2rem color-mix(in oklab, var(--ring) 18%, transparent);
-}
-
 .fluid-gradient-text,
 .fluid-gradient-text svg {
   width: 100%;

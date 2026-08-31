@@ -6,7 +6,6 @@ import { describe, expect, it } from 'vitest';
 import * as fluidGradientModule from '@/components/registry/fluid-gradient-text';
 import { ShimmeringText } from '@/components/registry/shimmering-text';
 import { SpotlightLogo } from '@/components/registry/spotlight-logo';
-import { StatusButton } from '@/components/registry/status-button';
 import { TextFlip } from '@/components/registry/text-flip';
 import { SiteNav } from '@/components/site-nav';
 
@@ -20,17 +19,6 @@ describe('registry identity and motion adapters', () => {
     expect(markup).toContain('aria-hidden="true"');
     expect(markup).toContain('ZST');
     expect(markup).not.toContain('chanhdai');
-  });
-
-  it('renders the status action as a semantic anchor', () => {
-    const markup = renderToStaticMarkup(createElement(StatusButton, {
-      href: 'mailto:zurielst@u.nus.edu',
-      children: 'Open to opportunities',
-    }));
-
-    expect(markup).toContain('data-slot="status-button"');
-    expect(markup).toContain('href="mailto:zurielst@u.nus.edu"');
-    expect(markup).toContain('Open to opportunities');
   });
 
   it('keeps text effects accessible in server markup', () => {
