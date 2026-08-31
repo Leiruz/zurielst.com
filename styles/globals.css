@@ -449,7 +449,7 @@ canvas {
 
 @keyframes role-light-up-sweep {
   0% { background-position: 100% 50%; }
-  50%, 100% { background-position: 0 50%; }
+  66.666%, 100% { background-position: 0 50%; }
 }
 
 @keyframes role-rotation {
@@ -485,7 +485,7 @@ canvas {
     100deg,
     var(--text-1) 0%,
     var(--text-1) 32%,
-    var(--ring) 47%,
+    color-mix(in oklab, var(--text-1) 72%, transparent) 47%,
     var(--text-1) 62%,
     var(--text-1) 100%
   );
@@ -553,12 +553,11 @@ canvas {
   transition: color 150ms, border-color 150ms;
 }
 
-.theme-switcher-button:hover,
-.theme-switcher-button[aria-pressed='true'] {
+.theme-switcher-button:hover {
   color: var(--foreground);
 }
 
-.theme-switcher-button[aria-pressed='true'] {
+.theme-switcher-button:focus-visible {
   border-color: var(--border);
 }
 

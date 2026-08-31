@@ -25,7 +25,7 @@ export const DeferredThemeSwitcher = dynamic(
       (module) => module.ThemeSwitcher,
     ),
   {
-    loading: () => <div className="flex h-11 w-[5.5rem]" />,
+    loading: () => <div className="flex h-11 w-11" />,
     ssr: false,
   },
 );
