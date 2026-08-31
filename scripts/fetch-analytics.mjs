@@ -82,6 +82,7 @@ export function buildDateRange(now = new Date()) {
     now.getUTCMonth(),
     now.getUTCDate(),
   ));
+  toDate.setUTCDate(toDate.getUTCDate() - 1);
   const fromDate = new Date(toDate);
   fromDate.setUTCDate(fromDate.getUTCDate() - (DAY_COUNT - 1));
 
@@ -138,7 +139,9 @@ export function createAnalyticsSnapshot(groups, { generatedAt, range }) {
 }
 
 function graphqlErrorMessage(errors) {
-  if (!Array.isArray(errors) || errors.length === 0) return null;
+  if (errors == null) return null;
+  if (!Array.isArray(errors)) return "malformed GraphQL errors envelope";
+  if (errors.length === 0) return null;
   return errors
     .map((error) => error?.message)
     .filter((message) => typeof message === "string" && message.trim() !== "")

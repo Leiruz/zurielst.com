@@ -178,16 +178,17 @@ const validLandingPage = `<!doctype html>
     <section id="identity"><p class="fig-label">Fig. 1. Identity</p></section>
     <section id="intro"><p class="fig-label">Fig. 2. Introduction</p></section>
     <section id="contributions"><p class="fig-label">Fig. 3. Contributions</p></section>
-    <section id="capabilities"><p class="fig-label">Fig. 4. Capabilities</p></section>
-    <section id="stack"><p class="fig-label">Fig. 5. Stack</p></section>
-    <section id="work"><p class="fig-label">Fig. 6. Selected work</p></section>
-    <section id="timeline"><p class="fig-label">Fig. 7. Timeline</p></section>
-    <section id="education"><p class="fig-label">Fig. 8. Education</p></section>
-    <section id="proof"><p class="fig-label">Fig. 9. Accolades</p></section>
-    <section id="products"><p class="fig-label">Fig. 10. Products</p></section>
-    <section id="brands"><p class="fig-label">Fig. 11. Worked with</p></section>
-    <section id="faq"><p class="fig-label">Fig. 12. FAQ</p></section>
-    <section id="contact"><p class="fig-label">Fig. 13. Contact</p></section>
+    <section id="insights"><p class="fig-label">Fig. 4. Insights</p></section>
+    <section id="capabilities"><p class="fig-label">Fig. 5. Capabilities</p></section>
+    <section id="stack"><p class="fig-label">Fig. 6. Stack</p></section>
+    <section id="work"><p class="fig-label">Fig. 7. Selected work</p></section>
+    <section id="timeline"><p class="fig-label">Fig. 8. Timeline</p></section>
+    <section id="education"><p class="fig-label">Fig. 9. Education</p></section>
+    <section id="proof"><p class="fig-label">Fig. 10. Accolades</p></section>
+    <section id="products"><p class="fig-label">Fig. 11. Products</p></section>
+    <section id="brands"><p class="fig-label">Fig. 12. Worked with</p></section>
+    <section id="faq"><p class="fig-label">Fig. 13. FAQ</p></section>
+    <section id="contact"><p class="fig-label">Fig. 14. Contact</p></section>
   </main>`;
 
 function requireSubjectFunction(name) {
@@ -562,7 +563,7 @@ test("rejects incorrect landing-page figure numbers", () => {
   );
 
   assert.throws(
-    () => validateLandingPageContract(validLandingPage.replace("Fig. 8. Education", "Fig. 7. Education")),
+    () => validateLandingPageContract(validLandingPage.replace("Fig. 9. Education", "Fig. 8. Education")),
     /figure labels/i,
   );
 });
@@ -571,12 +572,12 @@ test("rejects an orphaned figure label when its required section has none", () =
   const validateLandingPageContract = requireSubjectFunction(
     "validateLandingPageContract",
   );
-  const workSection = '<section id="work"><p class="fig-label">Fig. 6. Selected work</p></section>';
+  const workSection = '<section id="work"><p class="fig-label">Fig. 7. Selected work</p></section>';
 
   assert.throws(
     () => validateLandingPageContract(validLandingPage.replace(
       workSection,
-      '<p class="fig-label">Fig. 6. Selected work</p><section id="work"></section>',
+      '<p class="fig-label">Fig. 7. Selected work</p><section id="work"></section>',
     )),
     /figure labels/i,
   );
@@ -589,7 +590,7 @@ test("rejects a figure label with the right number and wrong caption", () => {
 
   assert.throws(
     () => validateLandingPageContract(
-      validLandingPage.replace("Fig. 6. Selected work", "Fig. 6. Timeline"),
+      validLandingPage.replace("Fig. 7. Selected work", "Fig. 7. Timeline"),
     ),
     /figure labels/i,
   );

@@ -25,7 +25,7 @@ export function Contact({ email, socials }: ContactProps) {
   return (
     <section id="contact" className="dossier-section bg-canvas" aria-labelledby="contact-title">
       <div className="dossier-shell">
-        <p className="fig-label">Fig. 13. Contact</p>
+        <p className="fig-label">Fig. 14. Contact</p>
         <h2 id="contact-title" className="dossier-title mt-4 text-text-1">
           The dossier is open. <SectionAnchor href="#contact" label="contact" />
         </h2>

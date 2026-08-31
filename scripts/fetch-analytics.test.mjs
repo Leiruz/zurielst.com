@@ -30,12 +30,12 @@ test.after(async () => {
   );
 });
 
-test("buildDateRange returns 30 inclusive UTC calendar days", () => {
+test("buildDateRange returns the latest 30 completed UTC calendar days", () => {
   const buildDateRange = requireSubjectFunction("buildDateRange");
 
   assert.deepEqual(
     buildDateRange(new Date("2026-08-31T19:20:21.000Z")),
-    { from: "2026-08-02", to: "2026-08-31" },
+    { from: "2026-08-01", to: "2026-08-30" },
   );
 });
 
@@ -104,7 +104,7 @@ test("fetchAnalyticsSnapshot posts the required query and writes the snapshot", 
                 rumPageloadEventsAdaptiveGroups: [{
                   avg: { sampleInterval: 1 },
                   count: 7,
-                  dimensions: { date: "2026-08-31" },
+                  dimensions: { date: "2026-08-30" },
                   sum: { visits: 3 },
                 }],
               }],
@@ -131,9 +131,9 @@ test("fetchAnalyticsSnapshot posts the required query and writes the snapshot", 
   const body = JSON.parse(request.init.body);
   assert.deepEqual(body.variables, {
     accountTag: "bfa514fe29643bf52b4999fa21e7b393",
-    from: "2026-08-02",
+    from: "2026-08-01",
     siteTag: "132089a6cdb94c13b46d32c7f2061e18",
-    to: "2026-08-31",
+    to: "2026-08-30",
   });
   assert.match(body.query, /rumPageloadEventsAdaptiveGroups/);
   assert.match(body.query, /orderBy:\s*\[date_ASC\]/);
@@ -146,7 +146,7 @@ test("fetchAnalyticsSnapshot posts the required query and writes the snapshot", 
   assert.deepEqual(written, snapshot);
   assert.equal(written.days.length, 30);
   assert.deepEqual(written.days.at(-1), {
-    date: "2026-08-31",
+    date: "2026-08-30",
     sampled: false,
     views: 7,
     visits: 3,
@@ -188,6 +188,36 @@ test("fetchAnalyticsSnapshot surfaces GraphQL errors and does not write output",
       token: "test-token",
     }),
     /Cloudflare GraphQL error: access denied/,
+  );
+  await assert.rejects(readFile(outputPath, "utf8"), /ENOENT/);
+});
+
+test("fetchAnalyticsSnapshot rejects a malformed GraphQL errors envelope", async () => {
+  const fetchAnalyticsSnapshot = requireSubjectFunction("fetchAnalyticsSnapshot");
+  const outputDirectory = await createTemporaryDirectory();
+  const outputPath = path.join(outputDirectory, "analytics-snapshot.json");
+
+  await assert.rejects(
+    fetchAnalyticsSnapshot({
+      fetchImpl: async () => ({
+        ok: true,
+        status: 200,
+        statusText: "OK",
+        async json() {
+          return {
+            data: {
+              viewer: {
+                accounts: [{ rumPageloadEventsAdaptiveGroups: [] }],
+              },
+            },
+            errors: { message: "unexpected envelope" },
+          };
+        },
+      }),
+      outputPath,
+      token: "test-token",
+    }),
+    /malformed GraphQL errors envelope/i,
   );
   await assert.rejects(readFile(outputPath, "utf8"), /ENOENT/);
 });

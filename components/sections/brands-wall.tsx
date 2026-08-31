@@ -11,7 +11,7 @@ export function BrandsWall({ profile }: BrandsWallProps) {
     <section id="brands" className="dossier-section bg-canvas" aria-labelledby="brands-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
-          <p className="fig-label">Fig. 11. Worked with</p>
+          <p className="fig-label">Fig. 12. Worked with</p>
           <h2 id="brands-title" className="dossier-title mt-4 text-text-1">
             Worked with <SectionAnchor href="#brands" label="worked with" />
           </h2>

@@ -1,5 +1,6 @@
 import { Fragment } from 'react';
 import profileJson from '@/content/profile.json';
+import analyticsJson from '@/content/analytics-snapshot.json';
 import contributionJson from '@/content/github-contributions.json';
 import type { Profile } from '@/content/schema';
 import { Footer } from '@/components/footer';
@@ -12,6 +13,7 @@ import { IdentityHeader } from '@/components/sections/identity-header';
 import { Introduction } from '@/components/sections/introduction';
 import { CapabilityActs } from '@/components/sections/capability-acts';
 import { ContributionHeatmap, type ContributionSnapshot } from '@/components/sections/contribution-heatmap';
+import { VisitorInsights } from '@/components/sections/visitor-insights';
 import { Stack } from '@/components/sections/stack';
 import { BrandsWall } from '@/components/sections/brands-wall';
 import { SelectedWork } from '@/components/sections/selected-work';
@@ -21,6 +23,7 @@ import { ProofWall } from '@/components/sections/proof-wall';
 import { Products } from '@/components/sections/products';
 import { Faq } from '@/components/sections/faq';
 import { hasPublicMedia } from '@/lib/media';
+import type { AnalyticsSnapshot } from '@/lib/analytics-snapshot';
 import { withSiteUtm } from '@/lib/outbound-links';
 import {
   GLOBAL_SECTION_SHORTCUTS,
@@ -109,6 +112,7 @@ const COPY_DISCLOSURE_STATE_SCRIPT = `(() => {
 
 export default function Home() {
   const profile = profileJson as Profile;
+  const analytics = analyticsJson as AnalyticsSnapshot;
   const contributions = contributionJson as ContributionSnapshot;
   const resumeAvailable = hasPublicMedia('/media/resume.pdf');
   const githubUrl = withSiteUtm(profile.identity.socials.find((social) => social.platform === 'GitHub')?.url ?? profile.identity.github.url);
@@ -123,6 +127,7 @@ export default function Home() {
           <IdentityHeader profile={profile} />
           <Introduction profile={profile} />
           <ContributionHeatmap data={contributions} />
+          <VisitorInsights data={analytics} />
           <CapabilityActs profile={profile} />
           <Stack profile={profile} />
           <SelectedWork profile={profile} />

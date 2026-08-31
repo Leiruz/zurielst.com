@@ -67,6 +67,7 @@ const SECTION_ACTIONS: readonly CommandPaletteAction[] = [
   { id: 'identity', group: 'Sections', keywords: ['home', 'about'], label: 'Identity', kind: 'section', targetId: 'identity', shortcut: ['g', 'i'] },
   { id: 'intro', group: 'Sections', keywords: ['hello', 'about', 'bio'], label: 'Introduction', kind: 'section', targetId: 'intro' },
   { id: 'contributions', group: 'Sections', keywords: ['github', 'activity', 'heatmap'], label: 'Contributions', kind: 'section', targetId: 'contributions' },
+  { id: 'insights', group: 'Sections', keywords: ['analytics'], label: 'Insights', kind: 'section', targetId: 'insights' },
   { id: 'capabilities', group: 'Sections', keywords: ['skills', 'security', 'engineering'], label: 'Capabilities', kind: 'section', targetId: 'capabilities' },
   { id: 'stack', group: 'Sections', keywords: ['skills', 'tools', 'technologies'], label: 'Stack', kind: 'section', targetId: 'stack', shortcut: ['g', 's'] },
   { id: 'work', group: 'Sections', keywords: ['projects', 'case studies', 'portfolio'], label: 'Selected work', kind: 'section', targetId: 'work', shortcut: ['g', 'w'] },

@@ -20,7 +20,7 @@ export function ProofWall({ profile }: ProofWallProps) {
     <section id="proof" className="dossier-section bg-canvas-raised" aria-labelledby="proof-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
-          <p className="fig-label">Fig. 9. Accolades</p>
+          <p className="fig-label">Fig. 10. Accolades</p>
           <h2 id="proof-title" className="dossier-title mt-4 text-text-1">
             Accolades <SectionAnchor href="#proof" label="accolades" />
           </h2>

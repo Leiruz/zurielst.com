@@ -13,7 +13,7 @@ vi.mock('server-only', () => ({}));
 
 const profile = profileJson as Profile;
 const sectionIds = [
-  'identity', 'intro', 'contributions', 'capabilities', 'stack', 'work',
+  'identity', 'intro', 'contributions', 'insights', 'capabilities', 'stack', 'work',
   'timeline', 'education', 'proof', 'products', 'brands', 'faq', 'contact',
 ] as const;
 
@@ -60,7 +60,7 @@ describe('chanhdai dossier direction', () => {
 
     const markup = renderToStaticMarkup(createElement(Home));
     const anchoredIds = [
-      'intro', 'capabilities', 'stack', 'work', 'timeline', 'education',
+      'intro', 'insights', 'capabilities', 'stack', 'work', 'timeline', 'education',
       'proof', 'products', 'brands', 'faq', 'contact',
     ] as const;
     for (const id of anchoredIds) {

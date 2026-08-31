@@ -1,10 +1,16 @@
 {
-  "generated_at": "2026-08-31T02:35:53.385Z",
+  "generated_at": "2026-08-31T02:55:53.248Z",
   "range": {
-    "from": "2026-08-02",
-    "to": "2026-08-31"
+    "from": "2026-08-01",
+    "to": "2026-08-30"
   },
   "days": [
+    {
+      "date": "2026-08-01",
+      "views": 0,
+      "visits": 0,
+      "sampled": false
+    },
     {
       "date": "2026-08-02",
       "views": 0,
@@ -177,12 +183,6 @@
       "date": "2026-08-30",
       "views": 60,
       "visits": 40,
-      "sampled": true
-    },
-    {
-      "date": "2026-08-31",
-      "views": 10,
-      "visits": 0,
       "sampled": true
     }
   ]
