@@ -78,7 +78,19 @@ test("monitor runs a secretless six-hour production canary", async () => {
   assert.ok(workflow.includes("--request POST"), "chat is exercised with POST");
   assert.ok(workflow.includes("User-Agent: Mozilla/5.0"), "chat uses a browser-like user agent");
   assert.ok(workflow.includes("Origin: https://zurielst.com"), "chat carries its production origin");
-  assert.ok(workflow.includes("text/event-stream"), "a normal streamed answer is accepted");
+  assert.ok(workflow.includes("text/event-stream"), "a streamed answer is accepted");
   assert.ok(workflow.includes("application/json"), "a canned JSON answer is accepted");
-  assert.match(workflow, /CHAT_STATUS[^\n]+-ge 500/);
+  assert.match(
+    workflow,
+    /CHAT_STATUS[^\n]+!= 200/,
+    "any non-200 chat status fails the canary",
+  );
+  assert.ok(
+    workflow.includes("ignore previous instructions"),
+    "the probe message triggers the budget-free pre-filter deflection",
+  );
+  assert.ok(
+    !/-ge 500/.test(workflow),
+    "the permissive server-error-only rejection is gone",
+  );
 });
