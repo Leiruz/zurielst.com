@@ -30,11 +30,19 @@ Result: exit code 0, with 33 passing tests in 1 file.
 
 Checkpoint: `3151f14 feat: harden slide intro gate`
 
-### Full gates
+### Refactor
+
+Command: `npx vitest run components/registry/intro-gate.test.tsx`
+
+Result: exit code 0, with 33 passing tests after removing the unreachable reduced-motion Enter branch. Reduced motion is now handled only by the first-paint and hydration eligibility guards, while the slide handle retains Enter and Space activation.
+
+Checkpoint: `9f2b7c8 refactor: remove bypassed intro entry path`
+
+### Final full gates
 
 - `npx vitest run`: exit code 0, 39 files and 428 tests passed.
 - `npm run build`: exit code 0, Next.js compilation and TypeScript passed, 3 static pages exported, and the build verifier checked 3 HTML files, 2 stylesheets, and `out/_headers`.
-- `node scripts/perf-gate.mjs`: exit code 0, performance median 0.96 and Brotli JavaScript size 183,747 bytes.
+- `node scripts/perf-gate.mjs`: exit code 0, performance median 0.96 and Brotli JavaScript size 183,610 bytes.
 
 ## Test specification
 
@@ -54,4 +62,4 @@ The repository does not configure a Vitest coverage command or install a Vitest 
 
 ## Merge evidence
 
-The branch preserves separate RED and GREEN commits. If the commits are later squashed, retain the RED result of 5 intended failures, the focused GREEN result of 33 passes, and the full-gate results above in the merge record.
+The branch preserves separate RED, GREEN, and refactor commits. If the commits are later squashed, retain the RED result of 5 intended failures, the focused GREEN and refactor results of 33 passes, and the final full-gate results above in the merge record.
