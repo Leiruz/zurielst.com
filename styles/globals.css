@@ -589,31 +589,6 @@ canvas {
   animation: none;
 }
 
-.spotlight-logo {
-  display: inline-grid;
-  position: relative;
-}
-
-.spotlight-logo-base,
-.spotlight-logo-highlight {
-  grid-area: 1 / 1;
-}
-
-.spotlight-logo-highlight {
-  background: radial-gradient(circle at 50% 50%, var(--ring) 0 28%, transparent 72%);
-  background-position: 100% 50%;
-  background-size: 300% 300%;
-  background-clip: text;
-  color: transparent;
-  transition: background-position 300ms cubic-bezier(.32, .72, 0, 1);
-  -webkit-background-clip: text;
-}
-
-.group:hover .spotlight-logo-highlight,
-.group:focus-visible .spotlight-logo-highlight {
-  background-position: 50% 50%;
-}
-
 .fluid-gradient-text,
 .fluid-gradient-text svg {
   width: 100%;
@@ -1282,10 +1257,6 @@ body[data-chat] .return-to-top {
 
   .glow-card::before {
     transition: none;
-  }
-
-  .spotlight-logo-highlight {
-    display: none;
   }
 
   .logos-carousel {

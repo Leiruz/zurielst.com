@@ -3,6 +3,9 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
+// @ts-expect-error Vite virtual module has no type declaration.
+import styles from 'virtual:globals-css-source';
+
 import * as fluidGradientModule from '@/components/registry/fluid-gradient-text';
 import { ShimmeringText } from '@/components/registry/shimmering-text';
 import { TextFlip } from '@/components/registry/text-flip';
@@ -20,6 +23,15 @@ describe('registry identity and motion adapters', () => {
     expect(markup).not.toContain('data-slot="spotlight-logo"');
     expect(markup).not.toMatch(/>ZST</);
     expect(markup).not.toContain('chanhdai');
+  });
+
+  it('retains no spotlight-logo implementation in source', () => {
+    const registryModules = Object.keys(
+      import.meta.glob('/components/registry/*.tsx'),
+    );
+
+    expect(registryModules.some((m) => m.includes('spotlight-logo'))).toBe(false);
+    expect(styles).not.toContain('spotlight-logo');
   });
 
   it('keeps text effects accessible in server markup', () => {

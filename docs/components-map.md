@@ -43,7 +43,6 @@ registryDependencies legend: plain name = shadcn base component (ui.shadcn.com);
 | text-flip | registry:component | 1 | 3009 | motion | - | - | `58483c6fa826914d310af33b99df5f5c711b9b93f5663c084b2559bc48235e78` |
 | shimmering-text | registry:component | 1 | 2673 | motion | - | - | `4893a4a34bb01df9fd9e857cdd426c3dbf76e8dcc214d3742cc374d98169056d` |
 | fluid-gradient-text | registry:component | 1 | 3224 | motion | - | - | `341d98d8d33408c398f79d0c18bd943d6cb35f4ddc49692c6486a4d03d59762b` |
-| spotlight-logo | registry:component | 1 | 9953 | motion | @soundcn/metal-click [3rd-party] | - | `9c7aecc16a01be0222bc23525b901b50e1d884ef910667ed9bc1818fbf7a3f95` |
 | dot-grid-spotlight | registry:component | 1 | 6631 | - | - | - | `8e9189d97d31c2feebb521dbbac41a7cc6711c87d27bcc7c7f1178354943cf92` |
 | scroll-fade-effect | registry:component | 1 | 4166 | - | - | - | `6f58faaac39e2058ff3fbe46fa8122a4fcae5800bd2c69731b89b0aca1879f53` |
 | line-nav | registry:component | 1 | 4283 | motion | - | next/link | `3c038ee717cc910037fb4e723479cc5dc9f91665a8fc1d9cb649fafd257244ed` |
@@ -107,7 +106,7 @@ CyberArk uses the CyberArk-owned documentation mark at `https://raw.githubuserco
 
 ## Adaptation flags (Next.js coupling)
 
-- spotlight-logo: remains vendored with its dossier-token CSS hover spotlight, but is no longer mounted after the navbar adopted the full shimmering name.
+- spotlight-logo: removed 2026-08-31 when the navbar adopted the shimmering full-name wordmark; the vendored component and every .spotlight-logo CSS rule were deleted rather than kept unmounted.
 - status-button: removed 2026-08-31 with the availability action (owner request); the vendored component, its test, and the `.status-button-dot` rule were deleted rather than kept unmounted.
 - scroll-fade-effect: newly vendored site-wide; preserves horizontal and vertical overflow masks and adds the `entrance` and `delayIndex` progressive CSS scroll-driven adapter without client observers. Staggering shifts bounded view-progress ranges instead of mixing time delays with a scroll timeline.
 - shimmering-text: composes with the navbar's Zuriel Shanley wordmark, each rotating identity role, and the intro gate's single Slide to unlock label. It preserves the one-second default pace through progressive CSS and becomes static under reduced motion. The identity tagline is plain text.
