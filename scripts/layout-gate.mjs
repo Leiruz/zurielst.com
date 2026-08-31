@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 import { getChromePath } from "chrome-launcher";
 import puppeteer from "puppeteer-core";
@@ -234,7 +235,7 @@ export async function runLayoutGate() {
 }
 
 const entryPoint = process.argv[1]
-  ? new URL(`file:///${path.resolve(process.argv[1]).replaceAll("\\", "/")}`).href
+  ? pathToFileURL(path.resolve(process.argv[1])).href
   : "";
 if (import.meta.url === entryPoint) {
   runLayoutGate().catch((error) => {
