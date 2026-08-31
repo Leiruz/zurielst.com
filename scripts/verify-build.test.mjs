@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test, { after } from "node:test";
@@ -156,15 +157,38 @@ const validLandingPage = `<!doctype html>
     <section id="capabilities"><p class="fig-label">Fig. 4. Capabilities</p></section>
     <section id="stack"><p class="fig-label">Fig. 5. Stack</p></section>
     <section id="work"><p class="fig-label">Fig. 6. Selected work</p></section>
-    <section id="timeline"><p class="fig-label">Fig. 7. Timeline</p></section>
+    <section id="timeline"><p class="fig-label">Fig. 7. Timeline</p><div data-slot="experience-01" class="max-w-screen overflow-x-clip"><div class="container mx-auto px-4"><div class="border-x border-line py-8"><h2 class="screen-line-top screen-line-bottom">Timeline</h2><div data-slot="work-experience"><article data-work-organization="true"><h3>Singtel</h3><ol><li data-work-position="true"><h4>Forward Deployed AI &amp; Automation Security Engineer</h4><p>Aug 2026 to present</p><details data-copy-disclosure="timeline" data-copy-id="singtel-fd-engineer"><summary aria-expanded="false">Read more</summary><p>I build customised AI and automation solutions for Singtel MSSP with SMEs.</p></details></li><li data-work-position="true"><h4>Cybersecurity Consultant Intern</h4><p>May 2026 to Aug 2026</p><details data-copy-disclosure="timeline" data-copy-id="singtel-intern"><summary aria-expanded="false">Read more</summary><p>Akamai WAF API automation for reporting; developed ConfigProof AI for vendor security risk assurance.</p></details></li></ol></article><article data-work-organization="true"><h3>CiTaDel Cybersecurity Solutions</h3><ol><li data-work-position="true"><h4>Founder</h4><p>Mar 2023 to May 2026</p><details data-copy-disclosure="timeline" data-copy-id="citadel-founder"><summary aria-expanded="false">Read more</summary><p>Affordable, open-source SOC for SMEs: 80% lower SOC cost, up to 90% detection uplift, deep learning in SOC workflows cutting false positives by 20%.</p></details></li></ol></article><article data-work-organization="true"><h3>Singapore Armed Forces</h3><ol><li data-work-position="true"><h4>Full-Stack Web Developer</h4><p>Jan 2023 to Mar 2023</p><details data-copy-disclosure="timeline" data-copy-id="saf-developer"><summary aria-expanded="false">Read more</summary><p>Led a four-person team digitizing paper-based processes with a 3-tier web application; efficiency and cost improved by up to 20%.</p></details></li></ol></article><article data-work-organization="true"><h3>NCS Pte Ltd</h3><ol><li data-work-position="true"><h4>Cybersecurity Consultant Intern</h4><p>Aug 2021 to Feb 2022</p><details data-copy-disclosure="timeline" data-copy-id="ncs-intern"><summary aria-expanded="false">Read more</summary><p>Installed, configured and troubleshot EDR for government-managed endpoints: 40% increase in threat detection, 99.9% uptime, and recognition as the Carbon Black subject matter expert.</p></details></li></ol></article><article data-work-organization="true"><h3>NullSec</h3><ol><li data-work-position="true"><h4>Head of Publicity</h4><p>Apr 2019 to May 2021</p><details data-copy-disclosure="timeline" data-copy-id="nullsec"><summary aria-expanded="false">Read more</summary><p>Helped organize the Lag n Crash inter-poly CTF and plan the YCEP CTF and the annual Hack'n'Flag CTF.</p></details></li></ol></article><article data-work-organization="true"><h3>Genesis</h3><ol><li data-work-position="true"><h4>Vice-President of Startup</h4><p>Apr 2019 to May 2021</p><details data-copy-disclosure="timeline" data-copy-id="genesis"><summary aria-expanded="false">Read more</summary><p>Nominated into the Zero to One Entrepreneurship Program with Meet Ventures and NUS Business School; the runway CiTaDel launched from.</p></details></li></ol></article><article data-work-organization="true"><h3>Homeless Hearts of Singapore</h3><ol><li data-work-position="true"><h4>Volunteer</h4><p>Jun 2021 to Dec 2022</p><details data-copy-disclosure="timeline" data-copy-id="homeless-hearts"><summary aria-expanded="false">Read more</summary><p>Befriended and distributed food and basic necessities to people in need during the pandemic.</p></details></li></ol></article></div></div></div></div></section>
     <section id="education"><p class="fig-label">Fig. 8. Education</p></section>
     <section id="proof"><p class="fig-label">Fig. 9. Accolades</p></section>
     <section id="products"><p class="fig-label">Fig. 10. Products</p></section>
     <section id="testimonials"><p class="fig-label">Fig. 11. Testimonials</p></section>
     <section id="faq"><p class="fig-label">Fig. 12. FAQ</p></section>
-    <section id="insights"><p class="fig-label">Fig. 13. Insights</p></section>
+    <section id="insights">
+      <p class="fig-label">Fig. 13. Insights</p>
+      <div data-registry-block="metrics-01" class="screen-line-top screen-line-bottom">
+        <div data-metrics-divider="true"></div>
+        <dl>
+          <div data-insight-metric="visits"><dt>30-day visits</dt><dd>40</dd></div>
+          <div data-insight-metric="views"><dt>30-day views</dt><dd>60</dd></div>
+          <div data-insight-metric="busiest-day"><dt>Busiest day</dt><dd><time datetime="2026-08-30">30 Aug</time><span>40 visits</span></dd></div>
+        </dl>
+        <p data-analytics-summary="true" class="sr-only">Over the trailing 30 days, Cloudflare Web Analytics recorded 40 visits and 60 views. The busiest day was 30 Aug 2026 with 40 visits.</p>
+        <div data-bklit-line-chart="true" data-series="visits views"></div>
+        <figcaption>Fig. 13. Daily visits and views, trailing 30 days. Source: Cloudflare Web Analytics, committed snapshot.</figcaption>
+        <p>Sampled estimate: at least one daily count was reported from an adaptively sampled interval.</p>
+      </div>
+    </section>
     <section id="contact"><p class="fig-label">Fig. 14. Contact</p></section>
   </main>`;
+
+const validNotFoundPage = '<!doctype html><html><head><title>Page Not Found</title></head><body><p>FIG. 404. MISSING DOCUMENT</p><p data-not-found-mark="true">ZST</p><h1>The requested record is absent.</h1><a href="/">Return to the dossier</a></body></html>';
+
+// The fixture markup encodes these analytics values; binding them as the
+// test default decouples fixture tests from the weekly-refreshed committed
+// snapshot, which only the real build pipeline validates against.
+const fixtureAnalyticsSnapshot = {
+  days: [{ date: "2026-08-30", views: 60, visits: 40, sampled: true }],
+};
 
 function requireSubjectFunction(name) {
   assert.equal(
@@ -172,13 +196,26 @@ function requireSubjectFunction(name) {
     "function",
     `scripts/verify-build.mjs must export ${name}`,
   );
-  return buildVerifier[name];
+  const fn = buildVerifier[name];
+  if (name === "validateLandingPageContract" || name === "validateInsightsContract") {
+    return (html, snapshot = fixtureAnalyticsSnapshot) => fn(html, snapshot);
+  }
+  if (name === "verifyBuildOutput") {
+    return (outputDirectory, snapshot = fixtureAnalyticsSnapshot) =>
+      fn(outputDirectory, snapshot);
+  }
+  return fn;
 }
 
 async function createTemporaryDirectory() {
   const directory = await mkdtemp(path.join(tmpdir(), "verify-build-"));
   temporaryDirectories.add(directory);
   return directory;
+}
+
+async function readOptionalSource(relativePath) {
+  return readFile(new URL(relativePath, import.meta.url), "utf8")
+    .catch((error) => (error?.code === "ENOENT" ? "" : Promise.reject(error)));
 }
 
 async function writeValidCapstoneExport(
@@ -192,7 +229,7 @@ async function writeValidCapstoneExport(
   await writeFile(path.join(outputDirectory, "media", "resume.pdf"), "resume");
 
   const files = new Map([
-    ["404.html", '<!doctype html><html><head><title>Page Not Found</title></head><body><p>FIG. 404. MISSING DOCUMENT</p><a href="/">Return to the dossier</a></body></html>'],
+    ["404.html", validNotFoundPage],
     ["dossier.md", "# Zuriel Shanley Tanyory\n\nForward Deployed AI & Automation Security Engineer\n"],
     ["llms.txt", "# zurielst.com\n\n- [Full public dossier](https://zurielst.com/dossier.md)\n"],
     ["zurielst.vcf", "BEGIN:VCARD\nFN:Zuriel Shanley Tanyory\nTITLE:Forward Deployed AI & Automation Security Engineer\nEMAIL:zurielst@u.nus.edu\nURL:https://zurielst.com\nURL;TYPE=LinkedIn:https://www.linkedin.com/in/zuriel-shanley/\nEND:VCARD\n"],
@@ -204,6 +241,129 @@ async function writeValidCapstoneExport(
     ),
   );
 }
+
+test("keeps the staged not-found registry manifest byte-exact", async () => {
+  const manifest = await readFile(
+    new URL("../registry-stage/not-found-01.json", import.meta.url),
+  );
+
+  assert.equal(manifest.byteLength, 21688);
+  assert.equal(
+    createHash("sha256").update(manifest).digest("hex"),
+    "fba756a446d848845eba5b2edd12d07b1697f27dcf7fa2b71bd4dd9dcc4a4f34",
+  );
+});
+
+test("keeps the staged Bklit line-chart payload byte-exact", async () => {
+  const manifest = await readFile(
+    new URL("../registry-stage/bklit-line-chart.json", import.meta.url),
+  );
+
+  assert.equal(manifest.byteLength, 101750);
+  assert.equal(
+    createHash("sha256").update(manifest).digest("hex"),
+    "5f02c2f5c45c8a8405d452fae901e018b4a7c05e4c33127e86528ff0173653ff",
+  );
+});
+
+test("retains the Bklit MIT notice and the imported line-chart closure", async () => {
+  const bklitRoot = new URL("../components/registry/bklit/", import.meta.url);
+  const license = await readFile(new URL("LICENSE", bklitRoot), "utf8");
+  const adapter = await readFile(new URL("analytics-line-chart.tsx", bklitRoot), "utf8");
+  const paths = await readdir(bklitRoot, { recursive: true });
+  const sourcePaths = paths.filter((relativePath) => /\.(?:ts|tsx)$/.test(relativePath));
+  const sources = await Promise.all(sourcePaths.map((relativePath) =>
+    readFile(new URL(relativePath.replaceAll("\\", "/"), bklitRoot), "utf8"),
+  ));
+
+  assert.match(license, /MIT License/);
+  assert.match(license, /Copyright \(c\) 2026 uixmat/);
+  assert.match(license, /Permission is hereby granted, free of charge/);
+  assert.match(license, /THE SOFTWARE IS PROVIDED "AS IS"/);
+  assert.equal(sourcePaths.length, 67);
+  assert.ok(sourcePaths.includes(path.join("charts", "line-chart.tsx")));
+  assert.ok(sourcePaths.includes("analytics-line-chart.tsx"));
+  assert.ok(sourcePaths.includes("analytics-line-chart-loader.tsx"));
+  assert.ok(!sourcePaths.includes(path.join("charts", "x-axis.tsx")));
+  assert.ok(sources.every((source) => !source.includes("packages/studio")));
+  assert.deepEqual(
+    [...adapter.matchAll(/dataKey="([^"]+)"/g)].map((match) => match[1]),
+    ["views", "visits"],
+  );
+});
+
+test("routes metrics-01 chart data through the shared analytics builder", async () => {
+  const [analyticsSource, metricsSource, adapterSource] = await Promise.all([
+    readFile(new URL("../lib/analytics-snapshot.ts", import.meta.url), "utf8"),
+    readFile(new URL("../components/registry/metrics-01.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/registry/bklit/analytics-line-chart.tsx", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(analyticsSource, /series:\s*AnalyticsChartSeriesPoint\[\]/);
+  assert.match(metricsSource, /const chart = buildAnalyticsChart\(data\.days\)/);
+  assert.match(metricsSource, /<AnalyticsLineChartLoader data=\{chart\.series\}/);
+  assert.doesNotMatch(adapterSource, /\.map\(/);
+});
+
+test("declares the manifest-pinned p5 runtime and type packages", async () => {
+  const packageJson = JSON.parse(await readFile(
+    new URL("../package.json", import.meta.url),
+    "utf8",
+  ));
+
+  assert.equal(packageJson.dependencies.p5, "^1.9.4");
+  assert.equal(packageJson.devDependencies["@types/p5"], "^1.7.7");
+});
+
+test("guards the route-only game import before loading its canvas", async () => {
+  const loader = await readOptionalSource(
+    "../components/registry/not-found-game-loader.tsx",
+  );
+
+  assert.match(loader, /matchMedia\(['"]\(prefers-reduced-motion: reduce\)['"]\)\.matches/);
+  assert.match(loader, /import\(['"]\.\/not-found-game-canvas['"]\)/);
+  assert.match(loader, /if\s*\([^)]*(?:reducedMotion|prefersReducedMotion)[^)]*\)\s*(?:\{|return)/);
+  assert.match(loader, /<button\b/);
+});
+
+test("keeps keyboard control focus-scoped and the p5 game primitive-only", async () => {
+  const canvas = await readOptionalSource(
+    "../components/registry/not-found-game-canvas.tsx",
+  );
+
+  assert.match(canvas, /onKeyDown=/);
+  assert.match(canvas, /onKeyUp=/);
+  assert.match(canvas, /aria-live=["']polite["']/);
+  assert.match(canvas, /\bp\.(?:rect|circle|ellipse|line|text)\s*\(/);
+  assert.doesNotMatch(canvas, /(?:window|document)\.addEventListener\([^\n]*(?:key|keypress)/i);
+  assert.doesNotMatch(canvas, /\b(?:loadImage|loadFont|loadSound|createAudio)\s*\(|https?:\/\//i);
+});
+
+test("keeps adapted 404 runtime source free of upstream identity and media", async () => {
+  const sources = await Promise.all([
+    readOptionalSource("../app/not-found.tsx"),
+    readOptionalSource("../components/registry/not-found-game-loader.tsx"),
+    readOptionalSource("../components/registry/not-found-game-canvas.tsx"),
+  ]);
+  const runtime = sources.join("\n");
+
+  assert.doesNotMatch(
+    runtime,
+    /chanhdai|ncdai|daikanoid|departuremono|assets\.chanhdai\.com|\b(?:loadImage|loadFont|loadSound|createAudio)\b/i,
+  );
+});
+
+test("rejects p5 or not-found game references from landing HTML", () => {
+  const validateLandingRouteIsolation = requireSubjectFunction(
+    "validateLandingRouteIsolation",
+  );
+
+  assert.throws(
+    () => validateLandingRouteIsolation(`${validLandingPage}<script src="/p5-game.js"></script>`),
+    /landing.*(?:p5|not-found game)/i,
+  );
+  assert.doesNotThrow(() => validateLandingRouteIsolation(validLandingPage));
+});
 
 after(async () => {
   await Promise.all(
@@ -496,6 +656,74 @@ test("accepts the ordered landing-page section and figure contract", () => {
   assert.doesNotThrow(() => validateLandingPageContract(validLandingPage));
 });
 
+test("requires the exported experience-01 Timeline shell and every profile position", () => {
+  const validateLandingPageContract = requireSubjectFunction(
+    "validateLandingPageContract",
+  );
+
+  assert.doesNotThrow(() => validateLandingPageContract(validLandingPage));
+  for (const [needle, replacement] of [
+    ['data-slot="experience-01"', 'data-slot="other"'],
+    ['screen-line-top screen-line-bottom', 'screen-line-top'],
+    ['data-work-organization="true"', 'data-work-organization="false"'],
+    ['data-work-position="true"', 'data-work-position="false"'],
+    ['data-copy-id="homeless-hearts"', 'data-copy-id="missing-position"'],
+    ['aria-expanded="false"', 'aria-expanded="true"'],
+    ['<details data-copy-disclosure="timeline"', '<details open data-copy-disclosure="timeline"'],
+    ['<h3>Singtel</h3>', '<h3>shadcncraft</h3>'],
+    ['<h3>Singtel</h3>', '<img src="https://assets.chanhdai.com/images/companies/shadcncraft.svg"><h3>Singtel</h3>'],
+  ]) {
+    assert.throws(
+      () => validateLandingPageContract(validLandingPage.replace(needle, replacement)),
+      /Timeline/i,
+    );
+  }
+});
+
+test("requires the exported metrics-01 Insights values and chart contract", () => {
+  const validateInsightsContract = requireSubjectFunction(
+    "validateInsightsContract",
+  );
+
+  assert.doesNotThrow(() => validateInsightsContract(validLandingPage));
+  for (const [needle, replacement] of [
+    ['data-registry-block="metrics-01"', 'data-registry-block="other"'],
+    [">40</dd>", ">41</dd>"],
+    [">60</dd>", ">61</dd>"],
+    ['datetime="2026-08-30"', 'datetime="2026-08-29"'],
+    ['data-series="visits views"', 'data-series="sessions views"'],
+    ["Source: Cloudflare Web Analytics, committed snapshot.", "Source: demo."],
+    ["Sampled estimate:", "Estimate:"],
+  ]) {
+    assert.throws(
+      () => validateInsightsContract(validLandingPage.replace(needle, replacement)),
+      /Insights/i,
+    );
+  }
+});
+
+test("insights contract derives its expectations from the provided snapshot", () => {
+  const validateInsightsContract = requireSubjectFunction(
+    "validateInsightsContract",
+  );
+  const shifted = {
+    days: [{ ...fixtureAnalyticsSnapshot.days[0], visits: 41 }],
+  };
+  assert.throws(() => validateInsightsContract(validLandingPage, shifted), /Insights/i);
+
+  const unsampled = {
+    days: [{ ...fixtureAnalyticsSnapshot.days[0], sampled: false }],
+  };
+  assert.throws(
+    () => validateInsightsContract(validLandingPage, unsampled),
+    /omit the sampled-data note/i,
+  );
+  assert.doesNotThrow(() => validateInsightsContract(
+    validLandingPage.replace(/<p[^>]*>\s*Sampled estimate:[\s\S]*?<\/p>/i, ""),
+    unsampled,
+  ));
+});
+
 test("requires the exported landing page to reference the SVG favicon", () => {
   const validateLandingPageContract = requireSubjectFunction(
     "validateLandingPageContract",
@@ -633,6 +861,36 @@ test("requires the effective exported 404 head title", async () => {
     verifyBuildOutput(outputDirectory),
     /404.*Page Not Found/i,
   );
+});
+
+test("requires the ZST mark and missing-page copy in exported 404 HTML", () => {
+  const validateNotFoundPage = requireSubjectFunction("validateNotFoundPage");
+
+  assert.throws(
+    () => validateNotFoundPage(validNotFoundPage.replace(' data-not-found-mark="true">ZST', ">404")),
+    /404.*ZST/i,
+  );
+  assert.throws(
+    () => validateNotFoundPage(validNotFoundPage.replace("The requested record is absent.", "Missing")),
+    /404.*missing-page copy/i,
+  );
+});
+
+test("rejects upstream identity, artwork, and media from exported 404 HTML", () => {
+  const validateNotFoundPage = requireSubjectFunction("validateNotFoundPage");
+
+  for (const prohibited of [
+    "ChanhDai",
+    "Daikanoid",
+    "departuremono.com",
+    "https://assets.chanhdai.com/images/ball.png",
+    "https://assets.chanhdai.com/sounds/bounce.mp3",
+  ]) {
+    assert.throws(
+      () => validateNotFoundPage(validNotFoundPage.replace("</body>", `<p>${prohibited}</p></body>`)),
+      /404.*upstream/i,
+    );
+  }
 });
 
 test("requires key public-profile strings in the generated artifacts", async () => {

@@ -1,6 +1,17 @@
 ﻿# Components map
 
 Vendored from ncdai's registry (chanhdai.com/r, MIT license; TRADEMARK.md restricts only chanhdai branding, none of which is vendored here). Each original manifest item was fetched 2026-08-30 and saved byte-exact before extraction; the SHA256 lets any future registry state be diffed against what we shipped. Owner-excluded items (checklist 2026-08-30) are not vendored: not-found-01, login-01, wheel-picker, elastic-slider, brand-assets-menu, code-block-command, blog-01, blog-02.
+
+## Bklit line chart and Insights
+
+The Insights section adapts ncdai's staged `metrics-01` structure to the committed Cloudflare Web Analytics snapshot. `components/registry/metrics-01.tsx` keeps the header lines, divider, and three-metric grid while removing demo-only visitor, session, duration, change, and total-screen-view fields. Static metrics, the accessibility summary, source caption, and sampling note remain server rendered.
+
+The visualization uses Bklit's `line-chart` registry component from `https://ui.bklit.com/r/line-chart.json`. The byte-exact 101,750-byte response is tracked as `registry-stage/bklit-line-chart.json` with SHA256 `5f02c2f5c45c8a8405d452fae901e018b4a7c05e4c33127e86528ff0173653ff`. The Bklit repository's root `LICENSE` applies MIT terms to `packages/ui` and the shadcn registry, copyright 2026 uixmat. Its complete notice is retained at `components/registry/bklit/LICENSE`. No `packages/studio` or hosted Studio source is copied because `LICENSE-STUDIO` keeps that code proprietary.
+
+The local Bklit namespace contains every file from the exact line-chart payload plus the imported `chart-context`, `chart-animation`, `chart-series`, `chart-tooltip`, `chart-utils`, `grid`, `shimmering-text`, and `utils` registry closures, 65 unique upstream source files in total. The separately declared `x-axis` item is omitted because neither metrics-01 nor any retained source imports it. Local adaptations are limited to provenance headers, two React DOM declaration guards required by this repository, and the analytics adapter/loader. The loader waits until the chart is near the viewport before importing the client-heavy Visx and Motion runtime.
+
+Runtime dependencies added for retained source are `@visx/curve`, `@visx/event`, `@visx/grid`, `@visx/responsive`, `@visx/scale`, and `@visx/shape` at registry-pinned `4.0.1-alpha.0`, plus `d3-array` and `d3-shape`. Existing React, React DOM, Motion, clsx, and tailwind-merge declarations satisfy the remaining imports. The chart receives only `date`, `visits`, and `views`; only visits and views render as series.
+
 # Registry stage manifest: chanhdai.com KEEP set
 
 Fetched 2026-08-30 from https://chanhdai.com/r/registry.json (registry name "ncdai", 64 published items).
@@ -84,6 +95,14 @@ Fetched byte-exact on 2026-08-31 before extraction.
 |---|---|---|---|---|
 | github-contributions | registry:component | 2 | `ec6b72c078edfc3c19aa3be56d8fa078145195d0c7fe7acaf6b1eb4d1a4ecbbb` | `https://chanhdai.com/r/github-contributions.json` |
 
+## Task 1 supplemental 404 fetch
+
+Fetched byte-exact on 2026-08-31 before adaptation.
+
+| Item | Bytes | SHA256 (saved JSON) | Source |
+|---|---:|---|---|
+| not-found-01 | 21,688 | `fba756a446d848845eba5b2edd12d07b1697f27dcf7fa2b71bd4dd9dcc4a4f34` | `https://chanhdai.com/r/not-found-01.json` |
+
 ## Task 4 registry extraction and brand sources
 
 The staged `line-nav`, `logos-carousel`, `testimonial`, and `testimonials-marquee` manifests were extracted with the repository extractor on 2026-08-31. The `testimonials-marquee` manifest is metadata-only and writes no file. Its local adapter composes the extracted testimonial primitives and replaces the uninstalled `@kibo-ui/marquee` dependency with site-owned CSS.
@@ -105,6 +124,7 @@ CyberArk uses the CyberArk-owned documentation mark at `https://raw.githubuserco
 
 ## Adaptation flags (Next.js coupling)
 
+- not-found-01: preserves the static missing-document copy and home route, adds a static ZST mark, and replaces upstream identity, artwork, audio, remote assets, Motion, and theme dependencies with a local p5 draw-primitives game. The loader checks reduced motion before requesting the canvas module, and keyboard controls remain scoped to its focused game surface.
 - spotlight-logo: removed 2026-08-31 when the navbar adopted the shimmering full-name wordmark; the vendored component and every .spotlight-logo CSS rule were deleted rather than kept unmounted.
 - status-button: removed 2026-08-31 with the availability action (owner request); the vendored component, its test, and the `.status-button-dot` rule were deleted rather than kept unmounted.
 - scroll-fade-effect: newly vendored site-wide; preserves horizontal and vertical overflow masks and adds the `entrance` and `delayIndex` progressive CSS scroll-driven adapter without client observers. Staggering shifts bounded view-progress ranges instead of mixing time delays with a scroll timeline.
@@ -116,10 +136,12 @@ CyberArk uses the CyberArk-owned documentation mark at `https://raw.githubuserco
 - slide-to-unlock: replaces the intro skip control, adapts the handle to a real button, adds Enter, Space, and ArrowRight-hold keyboard completion, and guards duplicate unlocks. Reduced-motion sessions bypass the entire intro before the control mounts.
 - theme-toggle-effect-circle-blur-top-left: integrates the registry CSS payload exactly with the blurred SVG mask anchored at top left and a `350vmax` final mask size. Theme state is committed synchronously inside the view-transition update callback.
 - work-experience: preserves the registry organization and nested-position structure while accepting the profile's prose periods directly. It removes date-fns, React Markdown, Collapsible, Separator, and icon dependencies, and composes the existing CopyDisclosure for all eight summaries.
+- experience-01: frames the profile-driven Timeline with the staged max-width, container, border, and structural-line layout. The existing Fig. 7 title and section anchor remain the only Timeline heading, while work-experience receives the seven organizations and eight native collapsed disclosures.
 - contribution-graph: replaces date-fns with native UTC date grouping, uses the five dossier heat tokens, renders the committed 365 days in 53 SVG week groups, and adds labelled roving-tab-stop cells with boundary-safe arrow navigation.
 - github-contributions: accepts a direct Activity array from the committed snapshot adapter. The extracted cache helper, Promise path, tooltip, spinner, and all network access are removed for pure static export.
 - line-nav: keeps the registry's exact 24px normal and 40px active, hover, and focus geometry, visible labels, two between-item marks, and `aria-current="location"` semantics. It deliberately replaces the registry Motion spring with native hash anchors and a 160ms CSS width transition so the fixed desktop navigation does not pull Motion into the initial landing-route boundary. The global reduced-motion kill switch makes that transition instant, `scrollActiveIntoView` selects instant scrolling for the same preference, and one IntersectionObserver adapter tracks the active section.
 - logos-carousel: keeps four distributed columns, a monotonic 2400ms cycle, and a 125ms left-to-right wave. Every logo stays in static markup exactly once; inactive items remain in their column instead of being removed by AnimatePresence. A small `next/dynamic` enhancement cycles only while near the viewport and the document is visible. An interrupted wave normalizes every column to the shared step before playback can resume, and reduced-motion users receive all ten items as a static grid with no interval.
+- social-proof-01: adapted as the structural wrapper for the existing Worked with carousel. This logo-forward block belongs in Worked with because it presents public hands-on technology experience, not endorsements.
 - testimonial: trims unused avatar presentation and applies dossier borders, typography, and colors to the quote and attribution primitives.
 - testimonials-marquee: the registry manifest has no component file, so the local provenance-marked adapter composes testimonial primitives. It provides one semantic primary copy, an `aria-hidden` animation copy, pause on hover or focus, and a static reduced-motion grid without adding `@kibo-ui/marquee`.
 - glow-card-grid: newly vendored for Products from staged SHA `697511424edc76ff595359fdf5a32641096b62a102ca54d3fdac6d5d4954ad73`. The local adapter keeps the dependency-free grid and glow primitives, scopes pointer tracking to the grid, uses dossier tokens, exposes keyboard-focusable article cards, and disables pointer tracking under reduced motion.
@@ -133,6 +155,7 @@ CyberArk uses the CyberArk-owned documentation mark at `https://raw.githubuserco
 - theme-switcher: uses hand-drawn inline sun and moon SVG geometry so the landing route does not load an icon-library runtime, and adds a lazy WebAudio direction cue that safely falls back to silence.
 - npm-level: @c15t/nextjs declared by consent-manager.
 - npm-level: next-themes declared by theme-switcher.
+- npm-level: p5 declared by not-found-01; @types/p5 is its development-only type package.
 - shadcn base sonner: its stock wrapper declares next-themes as an npm dependency.
 - Everything else staged here has no next/* or next-themes import.
 
@@ -167,4 +190,3 @@ Supplementary, installed automatically with the shadcn base components above: @r
 ## Total vendored size
 
 39 staged item JSONs, 278,710 bytes (272.2 KiB). Excludes _registry-index.json (59,470 bytes, reference only) and this manifest.
-

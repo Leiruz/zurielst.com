@@ -511,6 +511,34 @@ canvas {
     repeating-linear-gradient(135deg, var(--hatch) 0 1px, transparent 1px 7px);
 }
 
+.not-found-mark {
+  width: fit-content;
+  border: 1px solid var(--line-strong);
+  background:
+    linear-gradient(90deg, transparent 0 47%, var(--line) 47% 53%, transparent 53%) 0 0 / 0.55rem 100%,
+    var(--canvas-raised);
+  color: var(--text-1);
+  font-family: var(--font-mono);
+  font-size: clamp(2.5rem, 10vw, 5.5rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  padding: 0.2em 0.28em;
+}
+
+.not-found-game-focus {
+  border: 1px solid var(--line-strong);
+  background: var(--canvas);
+}
+
+.not-found-game-canvas {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 3 / 2;
+  touch-action: none;
+}
+
 .contribution-cell:focus-visible {
   outline: none;
 }
@@ -527,8 +555,62 @@ canvas {
   color: var(--text-3);
 }
 
-.analytics-chart-label {
-  font-size: 12px;
+.screen-line-top,
+.screen-line-bottom {
+  position: relative;
+}
+
+.screen-line-top::before,
+.screen-line-bottom::after {
+  background: var(--line);
+  content: '';
+  height: 1px;
+  left: calc(50% - 50vw);
+  pointer-events: none;
+  position: absolute;
+  width: 100vw;
+}
+
+.screen-line-top::before {
+  top: 0;
+}
+
+.screen-line-bottom::after {
+  bottom: 0;
+}
+
+.bklit-chart-boundary {
+  --chart-background: var(--canvas-raised);
+  --chart-crosshair: var(--text-3);
+  --chart-foreground: var(--text-1);
+  --chart-foreground-muted: var(--text-3);
+  --chart-grid: var(--line-strong);
+  --chart-label: var(--text-3);
+  --chart-line-primary: var(--ring);
+  --chart-line-secondary: var(--text-2);
+  --chart-tooltip-background: var(--surface);
+  --chart-tooltip-foreground: var(--text-1);
+  aspect-ratio: 2 / 1;
+  width: 100%;
+}
+
+.bklit-analytics-chart {
+  aspect-ratio: 2 / 1;
+}
+
+.bklit-chart-boundary > .bklit-analytics-chart {
+  height: 100%;
+  width: 100%;
+}
+
+@media (min-width: 48rem) {
+  .bklit-chart-boundary {
+    aspect-ratio: 3 / 1;
+  }
+
+  .bklit-analytics-chart {
+    aspect-ratio: 3 / 1;
+  }
 }
 
 @keyframes text-flip-cycle {
@@ -770,6 +852,23 @@ canvas {
 
 .brand-carousel-card {
   border: 0;
+}
+
+.social-proof-01 {
+  margin-top: 2.5rem;
+  overflow: hidden;
+  border-inline: 1px solid var(--line);
+}
+
+.social-proof-01-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-inline: 0;
+}
+
+@media (min-width: 48rem) {
+  .social-proof-01-grid {
+    grid-template-columns: repeat(var(--logos-column-count), minmax(0, 1fr));
+  }
 }
 
 @keyframes testimonials-marquee-scroll {
@@ -1278,6 +1377,10 @@ body[data-chat] .return-to-top {
     transition: none !important;
   }
 
+  .social-proof-01-grid {
+    display: grid;
+  }
+
   .testimonials-marquee-track {
     display: block;
     width: auto;
@@ -1312,6 +1415,10 @@ body[data-chat] .return-to-top {
 
   .return-to-top {
     transition: none !important;
+  }
+
+  .not-found-game-shell {
+    display: none;
   }
 }
 

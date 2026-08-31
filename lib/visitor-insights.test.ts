@@ -3,17 +3,97 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
+const analyticsChartRuntime = vi.hoisted(() => ({
+  lineChartProps: [] as Array<Record<string, unknown>>,
+  reducedMotion: false,
+}));
+
+vi.mock('@/components/dossier/use-prefers-reduced-motion', () => ({
+  usePrefersReducedMotion: () => analyticsChartRuntime.reducedMotion,
+}));
+
+vi.mock('@/components/registry/bklit/charts/line-chart', async () => {
+  const { createElement: createMockElement } = await import('react');
+
+  return {
+    default: (props: Record<string, unknown>) => {
+      analyticsChartRuntime.lineChartProps.push(props);
+      return createMockElement('div');
+    },
+    Line: () => null,
+  };
+});
+
 import Home from '@/app/page';
+import { AnalyticsLineChart } from '@/components/registry/bklit/analytics-line-chart';
+import {
+  shortDateFmt,
+  weekdayDateFmt,
+} from '@/components/registry/bklit/charts/chart-formatters';
 import { VisitorInsights } from '@/components/sections/visitor-insights';
 import snapshotJson from '@/content/analytics-snapshot.json';
-import type { AnalyticsSnapshot } from '@/lib/analytics-snapshot';
+import {
+  buildAnalyticsChart,
+  type AnalyticsSnapshot,
+} from '@/lib/analytics-snapshot';
 // @ts-expect-error The Vitest config exposes the stylesheet source as a virtual text module.
 import styles from 'virtual:globals-css-source';
 
 vi.mock('server-only', () => ({}));
 
 describe('visitor insights section', () => {
-  it('renders the committed snapshot as static dossier metrics and an inline chart', () => {
+  it('disables the Motion reveal when reduced motion is requested', () => {
+    analyticsChartRuntime.lineChartProps = [];
+    analyticsChartRuntime.reducedMotion = true;
+
+    renderToStaticMarkup(createElement(AnalyticsLineChart, { data: [] }));
+
+    expect(analyticsChartRuntime.lineChartProps.at(-1)?.animationDuration).toBe(0);
+    analyticsChartRuntime.reducedMotion = false;
+  });
+
+  it('keeps the Bklit reveal timing when reduced motion is not requested', () => {
+    analyticsChartRuntime.lineChartProps = [];
+    analyticsChartRuntime.reducedMotion = false;
+
+    renderToStaticMarkup(createElement(AnalyticsLineChart, { data: [] }));
+
+    expect(analyticsChartRuntime.lineChartProps.at(-1)?.animationDuration).toBe(1100);
+  });
+
+  it('leaves touch gestures to page scrolling and browser zoom', () => {
+    analyticsChartRuntime.lineChartProps = [];
+
+    renderToStaticMarkup(createElement(AnalyticsLineChart, { data: [] }));
+
+    expect(analyticsChartRuntime.lineChartProps.at(-1)?.style).toEqual({
+      pointerEvents: 'none',
+      touchAction: 'auto',
+    });
+  });
+
+  it('formats analytics calendar dates in UTC', () => {
+    const date = new Date('2026-08-30');
+
+    expect(shortDateFmt.resolvedOptions().timeZone).toBe('UTC');
+    expect(weekdayDateFmt.resolvedOptions().timeZone).toBe('UTC');
+    expect(shortDateFmt.format(date)).toBe('Aug 30');
+    expect(weekdayDateFmt.format(date)).toBe('Sun, Aug 30');
+  });
+
+  it('builds the Bklit series once with only date, visits, and views', () => {
+    const chart = buildAnalyticsChart([
+      { date: '2026-08-29', sampled: true, views: 9, visits: 4 },
+      { date: '2026-08-30', sampled: false, views: 12, visits: 7 },
+    ]);
+
+    expect(chart.series).toEqual([
+      { date: '2026-08-29', views: 9, visits: 4 },
+      { date: '2026-08-30', views: 12, visits: 7 },
+    ]);
+  });
+
+  it('renders the committed snapshot in the metrics-01 Insights structure', () => {
     const markup = renderToStaticMarkup(createElement(Home));
     const visits = snapshotJson.days.reduce((total, day) => total + day.visits, 0);
     const views = snapshotJson.days.reduce((total, day) => total + day.views, 0);
@@ -31,7 +111,11 @@ describe('visitor insights section', () => {
     expect(insightsMarkup).toContain('id="insights-title"');
     expect(insightsMarkup).toContain('>Visitor insights <a');
     expect(insightsMarkup).toContain('Fig. 13. Insights');
+    expect(insightsMarkup).toContain('data-registry-block="metrics-01"');
+    expect(insightsMarkup).toContain('screen-line-top screen-line-bottom');
+    expect(insightsMarkup).toContain('data-metrics-divider="true"');
 
+    expect(insightsMarkup.match(/data-insight-metric=/g)).toHaveLength(3);
     expect(insightsMarkup).toContain('data-insight-metric="visits"');
     expect(insightsMarkup).toContain('>30-day visits</dt>');
     expect(insightsMarkup).toContain(`>${visits.toLocaleString('en-US')}</dd>`);
@@ -44,20 +128,18 @@ describe('visitor insights section', () => {
     expect(insightsMarkup).toContain(`${busiest.visits.toLocaleString('en-US')} visits`);
 
     const summaryStart = insightsMarkup.indexOf('data-analytics-summary="true"');
-    const svgStart = insightsMarkup.indexOf('<svg');
+    const chartBoundaryStart = insightsMarkup.indexOf('data-bklit-line-chart="true"');
     expect(summaryStart).toBeGreaterThanOrEqual(0);
-    expect(svgStart).toBeGreaterThan(summaryStart);
-    expect(insightsMarkup.slice(svgStart, insightsMarkup.indexOf('>', svgStart) + 1))
-      .toMatch(/aria-hidden="true"[^>]*focusable="false"/);
-    expect(insightsMarkup).toContain('data-series="visits-area"');
-    expect(insightsMarkup).toContain('data-series="views"');
-    expect(insightsMarkup).toContain('data-series="visits"');
-    expect(insightsMarkup.match(/data-date-tick="true"/g)).toHaveLength(5);
+    expect(chartBoundaryStart).toBeGreaterThan(summaryStart);
+    expect(insightsMarkup).toContain('data-series="visits views"');
     expect(insightsMarkup).toContain('data-chart-legend="true"');
     expect(insightsMarkup).toContain('>Visits</span>');
     expect(insightsMarkup).toContain('>Views</span>');
     expect(insightsMarkup).not.toMatch(/(?:NaN|Infinity)/);
     expect(insightsMarkup).not.toContain('unique');
+    expect(insightsMarkup).not.toContain('Sessions');
+    expect(insightsMarkup).not.toContain('Session duration');
+    expect(insightsMarkup).not.toMatch(/13,573|16,017|100,563|380\.563/);
   });
 
   it('precedes the hidden chart with a summary and omits the daily data table', () => {
@@ -67,7 +149,7 @@ describe('visitor insights section', () => {
     const insightsMarkup = markup.slice(insightsStart, contactStart);
 
     expect(insightsMarkup).toMatch(
-      /<p[^>]*data-analytics-summary="true"[^>]*class="[^"]*sr-only[^"]*"[^>]*>[^<]+<\/p>\s*<svg/,
+      /<p[^>]*data-analytics-summary="true"[^>]*class="[^"]*sr-only[^"]*"[^>]*>[^<]+<\/p>\s*<div[^>]*data-bklit-line-chart="true"/,
     );
     expect(insightsMarkup).not.toContain('data-analytics-table="true"');
     expect(insightsMarkup).not.toContain('Daily data table');
@@ -105,21 +187,23 @@ describe('visitor insights section', () => {
     expect(markup).not.toContain('Sampled estimate:');
   });
 
-  it('keeps date labels outside the scaled SVG at readable CSS pixels', () => {
-    const markup = renderToStaticMarkup(createElement(Home));
-    const insightsStart = markup.indexOf('<section id="insights"');
-    const contactStart = markup.indexOf('<section id="contact"');
-    const insightsMarkup = markup.slice(insightsStart, contactStart);
-    const svgStart = insightsMarkup.indexOf('<svg');
-    const svgEnd = insightsMarkup.indexOf('</svg>', svgStart);
-    const labelsStart = insightsMarkup.indexOf('data-analytics-axis-labels="true"');
-
-    expect(labelsStart).toBeGreaterThan(svgEnd);
-    expect(insightsMarkup.slice(svgStart, svgEnd)).not.toContain('analytics-chart-label');
-    expect(insightsMarkup.match(/data-analytics-date-label="true"/g)).toHaveLength(5);
-    expect(styles).toMatch(/\.analytics-chart-label\s*\{\s*font-size:\s*12px/);
-    expect(styles).not.toMatch(
-      /@media\s*\(max-width:\s*40rem\)\s*\{[\s\S]*\.analytics-chart-label/,
+  it('reserves the same responsive aspect ratio before and after the Bklit chart mounts', () => {
+    expect(styles).toMatch(
+      /\.bklit-chart-boundary\s*\{[^}]*aspect-ratio:\s*2\s*\/\s*1/,
     );
+    expect(styles).toMatch(
+      /\.bklit-analytics-chart\s*\{[^}]*aspect-ratio:\s*2\s*\/\s*1/,
+    );
+    const desktopStyles = styles.slice(styles.indexOf('@media (min-width: 48rem)'));
+    expect(desktopStyles).toMatch(
+      /\.bklit-chart-boundary\s*\{[^}]*aspect-ratio:\s*3\s*\/\s*1/,
+    );
+    expect(desktopStyles).toMatch(
+      /\.bklit-analytics-chart\s*\{[^}]*aspect-ratio:\s*3\s*\/\s*1/,
+    );
+    expect(styles).toMatch(
+      /\.bklit-chart-boundary\s*>\s*\.bklit-analytics-chart\s*\{[^}]*height:\s*100%[^}]*width:\s*100%/,
+    );
+    expect(styles).not.toContain('.analytics-chart-label');
   });
 });

@@ -9,6 +9,8 @@ import graphSource from '../components/registry/contribution-graph.tsx?raw';
 // @ts-expect-error Vite exposes source files through its raw query during tests.
 import workSource from '../components/registry/work-experience.tsx?raw';
 // @ts-expect-error Vite exposes source files through its raw query during tests.
+import experienceSource from '../components/registry/experience-01.tsx?raw';
+// @ts-expect-error Vite exposes source files through its raw query during tests.
 import homeSource from '../app/page.tsx?raw';
 // @ts-expect-error Vite exposes source files through its raw query during tests.
 import dossierSource from './dossier.ts?raw';
@@ -19,6 +21,7 @@ import {
   contributionSnapshotToActivities,
 } from '@/components/registry/github-contributions';
 import { WorkExperience, groupTimelineExperience } from '@/components/registry/work-experience';
+import { BrandsWall } from '@/components/sections/brands-wall';
 import contributionJson from '@/content/github-contributions.json';
 import profileJson from '@/content/profile.json';
 import type { Profile } from '@/content/schema';
@@ -26,6 +29,22 @@ import type { Profile } from '@/content/schema';
 vi.mock('server-only', () => ({}));
 
 const profile = profileJson as Profile;
+
+describe('social proof registry adapter', () => {
+  it('maps only the public worked-with brands into the social-proof structure', () => {
+    const markup = renderToStaticMarkup(createElement(BrandsWall, { profile }));
+
+    expect(markup).toContain('data-slot="social-proof-01"');
+    expect(markup).toContain('role="list"');
+    expect(markup.match(/role="listitem"/g)).toHaveLength(profile.stack_brands.brands.length);
+    for (const brand of profile.stack_brands.brands) {
+      expect(markup.match(new RegExp(`<h3[^>]*>${brand.name}</h3>`, 'g'))).toHaveLength(1);
+      expect(markup.match(new RegExp(`<p[^>]*>${brand.context}</p>`, 'g'))).toHaveLength(1);
+    }
+    expect(markup).toContain(profile.stack_brands.disclaimer);
+    expect(markup).not.toMatch(/Vercel|1Password for Open Source|Trusted by people at|endorsed by/i);
+  });
+});
 
 describe('work experience registry adapter', () => {
   it('groups eight raw positions into seven organizations in first-seen order', () => {
@@ -218,5 +237,11 @@ describe('GitHub contribution registry adapters', () => {
     expect(workSource).not.toMatch(/date-fns|react-markdown/);
     expect(homeSource).not.toContain('contribution-heatmap');
     expect(dossierSource).not.toContain('contributionHeatBucket');
+  });
+
+  it('keeps experience-01 provenance neutral while retaining its MIT notice', () => {
+    expect(experienceSource).toContain('ncdai registry item "experience-01"');
+    expect(experienceSource).toContain('MIT');
+    expect(experienceSource).not.toContain('chanhdai.com/r');
   });
 });

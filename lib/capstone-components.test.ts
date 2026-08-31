@@ -12,10 +12,11 @@ import contributionJson from '@/content/github-contributions.json';
 import packageJson from '@/package.json';
 
 const notFoundModule = await import('@/app/not-found').catch(() => ({}));
+const notFoundGameLoaderModule = await import('@/components/registry/not-found-game-loader').catch(() => ({}));
 const footerTriggerModule = await import('@/components/footer-terminal-trigger').catch(() => ({}));
 
 describe('branded not found page', () => {
-  it('renders the dossier missing-document treatment and correct title', () => {
+  it('renders the static ZST missing-document treatment and home route', () => {
     const NotFound = Reflect.get(notFoundModule, 'default') as ComponentType | undefined;
 
     expect(NotFound).toBeTypeOf('function');
@@ -24,10 +25,16 @@ describe('branded not found page', () => {
     const markup = renderToStaticMarkup(createElement(NotFound));
     expect(markup).toContain('<title>Page Not Found</title>');
     expect(markup).toContain('FIG. 404. MISSING DOCUMENT');
+    expect(markup).toContain('data-not-found-mark="true"');
+    expect(markup).toContain('ZST');
+    expect(markup).toContain('The requested record is absent.');
     expect(markup).toContain('data-redaction-bar="true"');
     expect(markup).toContain('href="/"');
     expect(markup).toContain('Return to the dossier');
-    expect(markup.toLowerCase()).not.toContain('game');
+  });
+
+  it('extracts the optional game into a dedicated client loader', () => {
+    expect(Reflect.get(notFoundGameLoaderModule, 'NotFoundGameLoader')).toBeTypeOf('function');
   });
 });
 

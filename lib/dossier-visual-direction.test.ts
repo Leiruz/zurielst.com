@@ -136,9 +136,12 @@ describe('chanhdai dossier direction', () => {
 });
 
 describe('existing dossier motifs', () => {
-  it('keeps the branded 404 redaction bars and accessible focus ring', () => {
+  it('keeps the branded 404 mark, game surface, and accessible focus ring', () => {
     expect(styles).toContain('.not-found-redactions {');
     expect(styles).toMatch(/\.not-found-redactions\s*\{[\s\S]*repeating-linear-gradient/);
+    expect(styles).toMatch(/\.not-found-mark\s*\{[\s\S]*font-family:\s*var\(--font-mono\)/);
+    expect(styles).toMatch(/\.not-found-game-canvas\s*\{[\s\S]*touch-action:\s*none/);
+    expect(styles).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*\.not-found-game-shell/);
     expect(styles).toMatch(/:where\([^)]*\[tabindex\][^)]*\):focus-visible\s*\{[\s\S]*outline:\s*2px solid var\(--ring\)/);
   });
 });

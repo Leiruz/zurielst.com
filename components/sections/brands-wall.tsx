@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic';
 import { LogosCarousel } from '@/components/registry/logos-carousel';
+import { SocialProof01 } from '@/components/registry/social-proof-01';
 import { ScrollFadeEffect } from '@/components/registry/scroll-fade-effect';
 import { SectionAnchor } from '@/components/dossier/section-anchor';
 import { BrandIcon } from '@/components/sections/brand-icons';
@@ -28,23 +29,28 @@ export function BrandsWall({ profile }: BrandsWallProps) {
           </h2>
         </ScrollFadeEffect>
 
-        <LogosCarousel id={BRAND_CAROUSEL_ID} className="mt-10">
-          {profile.stack_brands.brands.map((brand, index) => (
-            <article
-              key={brand.name}
-              data-brand-item="true"
-              className="brand-carousel-card h-full min-w-0 bg-canvas p-5"
-              style={{ '--brand-delay-index': index } as React.CSSProperties}
-            >
-              <BrandIcon
-                name={brand.name as BrandName}
-                className="size-9 text-text-1"
-              />
-              <h3 className="mt-5 text-lg font-semibold tracking-tight text-text-1">{brand.name}</h3>
-              <p className="mt-2 text-sm leading-6 text-text-2">{brand.context}</p>
-            </article>
-          ))}
-        </LogosCarousel>
+        <SocialProof01>
+          <div role="list">
+            <LogosCarousel id={BRAND_CAROUSEL_ID} className="social-proof-01-grid">
+              {profile.stack_brands.brands.map((brand, index) => (
+                <article
+                  key={brand.name}
+                  role="listitem"
+                  data-brand-item="true"
+                  className="brand-carousel-card h-full min-w-0 bg-canvas p-5"
+                  style={{ '--brand-delay-index': index } as React.CSSProperties}
+                >
+                  <BrandIcon
+                    name={brand.name as BrandName}
+                    className="size-9 text-text-1"
+                  />
+                  <h3 className="mt-5 text-lg font-semibold tracking-tight text-text-1">{brand.name}</h3>
+                  <p className="mt-2 text-sm leading-6 text-text-2">{brand.context}</p>
+                </article>
+              ))}
+            </LogosCarousel>
+          </div>
+        </SocialProof01>
         <LogosCarouselEnhancement
           direction="ltr"
           targetId={BRAND_CAROUSEL_ID}

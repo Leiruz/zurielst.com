@@ -206,7 +206,12 @@ function sendStaticResponse(outputDirectory, request, response) {
   }
 
   const requestPath = (request.url ?? "/").split(/[?#]/, 1)[0];
-  const assetPath = resolveOutputPath(outputDirectory, requestPath);
+  let assetPath = resolveOutputPath(outputDirectory, requestPath);
+  let statusCode = 200;
+  if (!assetPath && ["", ".html"].includes(path.extname(requestPath).toLowerCase())) {
+    assetPath = resolveOutputPath(outputDirectory, "/404.html");
+    statusCode = 404;
+  }
   if (!assetPath) {
     response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
     response.end("Not found");
@@ -245,7 +250,7 @@ function sendStaticResponse(outputDirectory, request, response) {
     headers["Content-Encoding"] = "br";
   }
 
-  response.writeHead(200, headers);
+  response.writeHead(statusCode, headers);
   if (request.method === "HEAD") {
     response.end();
     return;
