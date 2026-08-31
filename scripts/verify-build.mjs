@@ -829,6 +829,80 @@ export function validateLandingPageContract(html) {
   if (html.includes("\u2014")) {
     throw new Error("Landing-page HTML must not contain an em dash");
   }
+
+  validateInsightsContract(html);
+}
+
+export function validateInsightsContract(html) {
+  const insights = topLevelSections(html).find((section) => section.id === "insights")?.markup ?? "";
+  if (!insights.includes('data-registry-block="metrics-01"')) {
+    throw new Error("Insights must use the metrics-01 registry block");
+  }
+  if (!/class=(['"])[^'"]*\bscreen-line-top\b[^'"]*\bscreen-line-bottom\b[^'"]*\1/i.test(insights)) {
+    throw new Error("Insights metrics-01 must preserve its top and bottom structural lines");
+  }
+  if (!insights.includes('data-metrics-divider="true"')) {
+    throw new Error("Insights metrics-01 must preserve its header divider");
+  }
+
+  const metricNames = [...insights.matchAll(/\bdata-insight-metric=(['"])([^'"]+)\1/gi)]
+    .map((match) => match[2]);
+  if (
+    metricNames.length !== 3 ||
+    JSON.stringify(metricNames) !== JSON.stringify(["visits", "views", "busiest-day"])
+  ) {
+    throw new Error("Insights must contain exactly visits, views, and busiest-day metrics");
+  }
+
+  const visitsMetric = insights.slice(
+    insights.indexOf('data-insight-metric="visits"'),
+    insights.indexOf('data-insight-metric="views"'),
+  );
+  const viewsMetric = insights.slice(
+    insights.indexOf('data-insight-metric="views"'),
+    insights.indexOf('data-insight-metric="busiest-day"'),
+  );
+  const busiestMetric = insights.slice(
+    insights.indexOf('data-insight-metric="busiest-day"'),
+    insights.indexOf('data-analytics-summary="true"'),
+  );
+  if (!/>30-day visits<\/dt>[\s\S]*>40<\/dd>/i.test(visitsMetric)) {
+    throw new Error("Insights must export the committed 40-visit total");
+  }
+  if (!/>30-day views<\/dt>[\s\S]*>60<\/dd>/i.test(viewsMetric)) {
+    throw new Error("Insights must export the committed 60-view total");
+  }
+  if (
+    !/>Busiest day<\/dt>/i.test(busiestMetric) ||
+    !/<time\b[^>]*\bdatetime=(['"])2026-08-30\1/i.test(busiestMetric) ||
+    !/>40(?:<!-- -->)? visits<\/span>/i.test(busiestMetric)
+  ) {
+    throw new Error("Insights must export 2026-08-30 as the committed busiest day");
+  }
+
+  const expectedSummary = "Over the trailing 30 days, Cloudflare Web Analytics recorded 40 visits and 60 views. The busiest day was 30 Aug 2026 with 40 visits.";
+  const escapedSummary = expectedSummary.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (!new RegExp(
+    `<p[^>]*data-analytics-summary=(['"])true\\1[^>]*>${escapedSummary}</p>\\s*<div[^>]*data-bklit-line-chart=(['"])true\\2`,
+    "i",
+  ).test(insights)) {
+    throw new Error("Insights must place the unchanged screen-reader summary immediately before the Bklit chart");
+  }
+  if (!/data-bklit-line-chart=(['"])true\1[^>]*data-series=(['"])visits views\2/i.test(insights)) {
+    throw new Error("Insights Bklit chart must contain only visits and views series");
+  }
+  if (!insights.includes("Fig. 13. Daily visits and views, trailing 30 days. Source: Cloudflare Web Analytics, committed snapshot.")) {
+    throw new Error("Insights must preserve the committed Cloudflare source caption");
+  }
+  if (!insights.includes("Sampled estimate:")) {
+    throw new Error("Insights must preserve the sampled-data note");
+  }
+  if (/<table\b|data-analytics-table|Daily data table|data-analytics-day/i.test(insights)) {
+    throw new Error("Insights must not export a daily data table");
+  }
+  if (/Unique visitors|Sessions|Session duration|totalSessions|totalScreenViews|13,573|16,017|100,563|380\.563/i.test(insights)) {
+    throw new Error("Insights must not export metrics-01 demo terminology or values");
+  }
 }
 
 export function validateStructuredData(html) {

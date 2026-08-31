@@ -13,7 +13,7 @@ import styles from 'virtual:globals-css-source';
 vi.mock('server-only', () => ({}));
 
 describe('visitor insights section', () => {
-  it('renders the committed snapshot as static dossier metrics and an inline chart', () => {
+  it('renders the committed snapshot in the metrics-01 Insights structure', () => {
     const markup = renderToStaticMarkup(createElement(Home));
     const visits = snapshotJson.days.reduce((total, day) => total + day.visits, 0);
     const views = snapshotJson.days.reduce((total, day) => total + day.views, 0);
@@ -31,7 +31,11 @@ describe('visitor insights section', () => {
     expect(insightsMarkup).toContain('id="insights-title"');
     expect(insightsMarkup).toContain('>Visitor insights <a');
     expect(insightsMarkup).toContain('Fig. 13. Insights');
+    expect(insightsMarkup).toContain('data-registry-block="metrics-01"');
+    expect(insightsMarkup).toContain('screen-line-top screen-line-bottom');
+    expect(insightsMarkup).toContain('data-metrics-divider="true"');
 
+    expect(insightsMarkup.match(/data-insight-metric=/g)).toHaveLength(3);
     expect(insightsMarkup).toContain('data-insight-metric="visits"');
     expect(insightsMarkup).toContain('>30-day visits</dt>');
     expect(insightsMarkup).toContain(`>${visits.toLocaleString('en-US')}</dd>`);
@@ -44,20 +48,18 @@ describe('visitor insights section', () => {
     expect(insightsMarkup).toContain(`${busiest.visits.toLocaleString('en-US')} visits`);
 
     const summaryStart = insightsMarkup.indexOf('data-analytics-summary="true"');
-    const svgStart = insightsMarkup.indexOf('<svg');
+    const chartBoundaryStart = insightsMarkup.indexOf('data-bklit-line-chart="true"');
     expect(summaryStart).toBeGreaterThanOrEqual(0);
-    expect(svgStart).toBeGreaterThan(summaryStart);
-    expect(insightsMarkup.slice(svgStart, insightsMarkup.indexOf('>', svgStart) + 1))
-      .toMatch(/aria-hidden="true"[^>]*focusable="false"/);
-    expect(insightsMarkup).toContain('data-series="visits-area"');
-    expect(insightsMarkup).toContain('data-series="views"');
-    expect(insightsMarkup).toContain('data-series="visits"');
-    expect(insightsMarkup.match(/data-date-tick="true"/g)).toHaveLength(5);
+    expect(chartBoundaryStart).toBeGreaterThan(summaryStart);
+    expect(insightsMarkup).toContain('data-series="visits views"');
     expect(insightsMarkup).toContain('data-chart-legend="true"');
     expect(insightsMarkup).toContain('>Visits</span>');
     expect(insightsMarkup).toContain('>Views</span>');
     expect(insightsMarkup).not.toMatch(/(?:NaN|Infinity)/);
     expect(insightsMarkup).not.toContain('unique');
+    expect(insightsMarkup).not.toContain('Sessions');
+    expect(insightsMarkup).not.toContain('Session duration');
+    expect(insightsMarkup).not.toMatch(/13,573|16,017|100,563|380\.563/);
   });
 
   it('precedes the hidden chart with a summary and omits the daily data table', () => {
@@ -67,7 +69,7 @@ describe('visitor insights section', () => {
     const insightsMarkup = markup.slice(insightsStart, contactStart);
 
     expect(insightsMarkup).toMatch(
-      /<p[^>]*data-analytics-summary="true"[^>]*class="[^"]*sr-only[^"]*"[^>]*>[^<]+<\/p>\s*<svg/,
+      /<p[^>]*data-analytics-summary="true"[^>]*class="[^"]*sr-only[^"]*"[^>]*>[^<]+<\/p>\s*<div[^>]*data-bklit-line-chart="true"/,
     );
     expect(insightsMarkup).not.toContain('data-analytics-table="true"');
     expect(insightsMarkup).not.toContain('Daily data table');
@@ -105,21 +107,8 @@ describe('visitor insights section', () => {
     expect(markup).not.toContain('Sampled estimate:');
   });
 
-  it('keeps date labels outside the scaled SVG at readable CSS pixels', () => {
-    const markup = renderToStaticMarkup(createElement(Home));
-    const insightsStart = markup.indexOf('<section id="insights"');
-    const contactStart = markup.indexOf('<section id="contact"');
-    const insightsMarkup = markup.slice(insightsStart, contactStart);
-    const svgStart = insightsMarkup.indexOf('<svg');
-    const svgEnd = insightsMarkup.indexOf('</svg>', svgStart);
-    const labelsStart = insightsMarkup.indexOf('data-analytics-axis-labels="true"');
-
-    expect(labelsStart).toBeGreaterThan(svgEnd);
-    expect(insightsMarkup.slice(svgStart, svgEnd)).not.toContain('analytics-chart-label');
-    expect(insightsMarkup.match(/data-analytics-date-label="true"/g)).toHaveLength(5);
-    expect(styles).toMatch(/\.analytics-chart-label\s*\{\s*font-size:\s*12px/);
-    expect(styles).not.toMatch(
-      /@media\s*\(max-width:\s*40rem\)\s*\{[\s\S]*\.analytics-chart-label/,
-    );
+  it('keeps the deferred Bklit chart sized without the retired SVG renderer', () => {
+    expect(styles).toMatch(/\.bklit-chart-boundary\s*\{[\s\S]*min-height:/);
+    expect(styles).not.toContain('.analytics-chart-label');
   });
 });

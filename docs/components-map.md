@@ -1,6 +1,17 @@
 ﻿# Components map
 
 Vendored from ncdai's registry (chanhdai.com/r, MIT license; TRADEMARK.md restricts only chanhdai branding, none of which is vendored here). Each original manifest item was fetched 2026-08-30 and saved byte-exact before extraction; the SHA256 lets any future registry state be diffed against what we shipped. Owner-excluded items (checklist 2026-08-30) are not vendored: not-found-01, login-01, wheel-picker, elastic-slider, brand-assets-menu, code-block-command, blog-01, blog-02.
+
+## Bklit line chart and Insights
+
+The Insights section adapts ncdai's staged `metrics-01` structure to the committed Cloudflare Web Analytics snapshot. `components/registry/metrics-01.tsx` keeps the header lines, divider, and three-metric grid while removing demo-only visitor, session, duration, change, and total-screen-view fields. Static metrics, the accessibility summary, source caption, and sampling note remain server rendered.
+
+The visualization uses Bklit's `line-chart` registry component from `https://ui.bklit.com/r/line-chart.json`. The byte-exact 101,750-byte response is tracked as `registry-stage/bklit-line-chart.json` with SHA256 `5f02c2f5c45c8a8405d452fae901e018b4a7c05e4c33127e86528ff0173653ff`. The Bklit repository's root `LICENSE` applies MIT terms to `packages/ui` and the shadcn registry, copyright 2026 uixmat. Its complete notice is retained at `components/registry/bklit/LICENSE`. No `packages/studio` or hosted Studio source is copied because `LICENSE-STUDIO` keeps that code proprietary.
+
+The local Bklit namespace contains every file from the exact line-chart payload plus the imported `chart-context`, `chart-animation`, `chart-series`, `chart-tooltip`, `chart-utils`, `grid`, `shimmering-text`, and `utils` registry closures, 65 unique upstream source files in total. The separately declared `x-axis` item is omitted because neither metrics-01 nor any retained source imports it. Local adaptations are limited to provenance headers, two React DOM declaration guards required by this repository, and the analytics adapter/loader. The loader waits until the chart is near the viewport before importing the client-heavy Visx and Motion runtime.
+
+Runtime dependencies added for retained source are `@visx/curve`, `@visx/event`, `@visx/grid`, `@visx/responsive`, `@visx/scale`, and `@visx/shape` at registry-pinned `4.0.1-alpha.0`, plus `d3-array` and `d3-shape`. Existing React, React DOM, Motion, clsx, and tailwind-merge declarations satisfy the remaining imports. The chart receives only `date`, `visits`, and `views`; only visits and views render as series.
+
 # Registry stage manifest: chanhdai.com KEEP set
 
 Fetched 2026-08-30 from https://chanhdai.com/r/registry.json (registry name "ncdai", 64 published items).

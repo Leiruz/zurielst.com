@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test, { after } from "node:test";
@@ -163,7 +163,21 @@ const validLandingPage = `<!doctype html>
     <section id="products"><p class="fig-label">Fig. 10. Products</p></section>
     <section id="testimonials"><p class="fig-label">Fig. 11. Testimonials</p></section>
     <section id="faq"><p class="fig-label">Fig. 12. FAQ</p></section>
-    <section id="insights"><p class="fig-label">Fig. 13. Insights</p></section>
+    <section id="insights">
+      <p class="fig-label">Fig. 13. Insights</p>
+      <div data-registry-block="metrics-01" class="screen-line-top screen-line-bottom">
+        <div data-metrics-divider="true"></div>
+        <dl>
+          <div data-insight-metric="visits"><dt>30-day visits</dt><dd>40</dd></div>
+          <div data-insight-metric="views"><dt>30-day views</dt><dd>60</dd></div>
+          <div data-insight-metric="busiest-day"><dt>Busiest day</dt><dd><time datetime="2026-08-30">30 Aug</time><span>40 visits</span></dd></div>
+        </dl>
+        <p data-analytics-summary="true" class="sr-only">Over the trailing 30 days, Cloudflare Web Analytics recorded 40 visits and 60 views. The busiest day was 30 Aug 2026 with 40 visits.</p>
+        <div data-bklit-line-chart="true" data-series="visits views"></div>
+        <figcaption>Fig. 13. Daily visits and views, trailing 30 days. Source: Cloudflare Web Analytics, committed snapshot.</figcaption>
+        <p>Sampled estimate: at least one daily count was reported from an adaptively sampled interval.</p>
+      </div>
+    </section>
     <section id="contact"><p class="fig-label">Fig. 14. Contact</p></section>
   </main>`;
 
@@ -222,6 +236,44 @@ test("keeps the staged not-found registry manifest byte-exact", async () => {
   assert.equal(
     createHash("sha256").update(manifest).digest("hex"),
     "fba756a446d848845eba5b2edd12d07b1697f27dcf7fa2b71bd4dd9dcc4a4f34",
+  );
+});
+
+test("keeps the staged Bklit line-chart payload byte-exact", async () => {
+  const manifest = await readFile(
+    new URL("../registry-stage/bklit-line-chart.json", import.meta.url),
+  );
+
+  assert.equal(manifest.byteLength, 101750);
+  assert.equal(
+    createHash("sha256").update(manifest).digest("hex"),
+    "5f02c2f5c45c8a8405d452fae901e018b4a7c05e4c33127e86528ff0173653ff",
+  );
+});
+
+test("retains the Bklit MIT notice and the imported line-chart closure", async () => {
+  const bklitRoot = new URL("../components/registry/bklit/", import.meta.url);
+  const license = await readFile(new URL("LICENSE", bklitRoot), "utf8");
+  const adapter = await readFile(new URL("analytics-line-chart.tsx", bklitRoot), "utf8");
+  const paths = await readdir(bklitRoot, { recursive: true });
+  const sourcePaths = paths.filter((relativePath) => /\.(?:ts|tsx)$/.test(relativePath));
+  const sources = await Promise.all(sourcePaths.map((relativePath) =>
+    readFile(new URL(relativePath.replaceAll("\\", "/"), bklitRoot), "utf8"),
+  ));
+
+  assert.match(license, /MIT License/);
+  assert.match(license, /Copyright \(c\) 2026 uixmat/);
+  assert.match(license, /Permission is hereby granted, free of charge/);
+  assert.match(license, /THE SOFTWARE IS PROVIDED "AS IS"/);
+  assert.equal(sourcePaths.length, 67);
+  assert.ok(sourcePaths.includes(path.join("charts", "line-chart.tsx")));
+  assert.ok(sourcePaths.includes("analytics-line-chart.tsx"));
+  assert.ok(sourcePaths.includes("analytics-line-chart-loader.tsx"));
+  assert.ok(!sourcePaths.includes(path.join("charts", "x-axis.tsx")));
+  assert.ok(sources.every((source) => !source.includes("packages/studio")));
+  assert.deepEqual(
+    [...adapter.matchAll(/dataKey="([^"]+)"/g)].map((match) => match[1]),
+    ["views", "visits"],
   );
 });
 
@@ -574,6 +626,28 @@ test("accepts the ordered landing-page section and figure contract", () => {
   );
 
   assert.doesNotThrow(() => validateLandingPageContract(validLandingPage));
+});
+
+test("requires the exported metrics-01 Insights values and chart contract", () => {
+  const validateInsightsContract = requireSubjectFunction(
+    "validateInsightsContract",
+  );
+
+  assert.doesNotThrow(() => validateInsightsContract(validLandingPage));
+  for (const [needle, replacement] of [
+    ['data-registry-block="metrics-01"', 'data-registry-block="other"'],
+    [">40</dd>", ">41</dd>"],
+    [">60</dd>", ">61</dd>"],
+    ['datetime="2026-08-30"', 'datetime="2026-08-29"'],
+    ['data-series="visits views"', 'data-series="sessions views"'],
+    ["Source: Cloudflare Web Analytics, committed snapshot.", "Source: demo."],
+    ["Sampled estimate:", "Estimate:"],
+  ]) {
+    assert.throws(
+      () => validateInsightsContract(validLandingPage.replace(needle, replacement)),
+      /Insights/i,
+    );
+  }
 });
 
 test("requires the exported landing page to reference the SVG favicon", () => {
