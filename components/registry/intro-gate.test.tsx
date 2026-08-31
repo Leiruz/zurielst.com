@@ -414,6 +414,7 @@ describe('IntroOverlay', () => {
     expect(markup).toContain('data-slot="slide-to-unlock"');
     expect(markup).toContain('Slide to unlock');
     expect(markup).toContain('data-slot="shimmering-text"');
+    expect(markup).toContain('aria-label="Slide to unlock"');
     expect(markup).not.toContain('Skip intro');
   });
 
@@ -465,6 +466,17 @@ describe('IntroOverlay', () => {
     expect(styles).toMatch(
       /@media \(prefers-reduced-motion: reduce\)\s*\{[\s\S]*?\.shimmering-text\s*\{[\s\S]*?animation:\s*none !important;/,
     );
+  });
+
+  it('keeps the shimmer base color readable over the black cover', () => {
+    const base = styles.match(
+      /\.intro-entry-shimmer\s*\{[\s\S]*?--text-3:\s*rgba\(255,\s*255,\s*255,\s*([0-9.]+)\)/,
+    );
+    expect(base).not.toBeNull();
+    const alpha = Number(base?.[1]);
+    const srgb = alpha <= 0.03928 ? alpha / 12.92 : ((alpha + 0.055) / 1.055) ** 2.4;
+    const contrast = (srgb + 0.05) / 0.05;
+    expect(contrast).toBeGreaterThanOrEqual(4.5);
   });
 
   it('reveals the slider on animation completion and dismisses only on unlock', () => {

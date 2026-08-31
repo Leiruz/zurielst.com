@@ -189,7 +189,9 @@ html[data-intro='leaving'] .intro-cover {
 
 .intro-entry-shimmer {
   --text-1: #fff;
-  --text-3: rgba(255, 255, 255, 0.42);
+  /* Base must hold >= 4.5:1 over the black cover for the 12px label; only
+     the moving highlight may exceed it. 0.65 white over #000 is ~8.6:1. */
+  --text-3: rgba(255, 255, 255, 0.65);
 }
 
 .intro-static-hello path:first-of-type {
