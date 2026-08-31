@@ -1,6 +1,6 @@
 ﻿# Components map
 
-Vendored from ncdai's registry (chanhdai.com/r, MIT license; TRADEMARK.md restricts only chanhdai branding, none of which is vendored here). Each item below was fetched 2026-08-30 and saved byte-exact before extraction; the SHA256 lets any future registry state be diffed against what we shipped. Owner-excluded items (checklist 2026-08-30) are not vendored: not-found-01, login-01, slide-to-unlock, wheel-picker, elastic-slider, brand-assets-menu, code-block-command, blog-01, blog-02.
+Vendored from ncdai's registry (chanhdai.com/r, MIT license; TRADEMARK.md restricts only chanhdai branding, none of which is vendored here). Each original manifest item was fetched 2026-08-30 and saved byte-exact before extraction; the SHA256 lets any future registry state be diffed against what we shipped. Owner-excluded items (checklist 2026-08-30) are not vendored: not-found-01, login-01, wheel-picker, elastic-slider, brand-assets-menu, code-block-command, blog-01, blog-02.
 # Registry stage manifest: chanhdai.com KEEP set
 
 Fetched 2026-08-30 from https://chanhdai.com/r/registry.json (registry name "ncdai", 64 published items).
@@ -69,6 +69,16 @@ registryDependencies legend: plain name = shadcn base component (ui.shadcn.com);
 | chevrons-up-down-icon (transitive) | registry:component | 1 | 2385 | motion | - | - | `857a7651130d771f9ec0617fb4502fb1ed82d468352d558899ab067e9264b7e0` |
 | testimonial (transitive) | registry:component | 1 | 3574 | - | - | - | `e2d6707b2d9ab472de8529c3e506520ec270698dd5ffa2beb25579ca579ddb8d` |
 
+## Task 2 supplemental fetches
+
+Fetched byte-exact on 2026-08-31 from `https://chanhdai.com/r/{name}.json` before extraction.
+
+| Item | Type | Files | SHA256 (saved JSON) |
+|---|---|---|---|
+| haptic | registry:lib | 1 | `a423c7b9c12dba5db376f3cb14dd48669cac5e635814514474b135e1fd6f991f` |
+| slide-to-unlock | registry:component | 1 | `25d67d9ead49d8eb675df6cc4fe0e34ffa2873184611fdcccfd46169f0c7248b` |
+| theme-toggle-effect-circle-blur-top-left | registry:style | 0 | `6431089c5f69489cce88728bfeb0d674974de4e38e0bca7b7d66d6ca6c7601ff` |
+
 ## Adaptation flags (Next.js coupling)
 
 - spotlight-logo: newly vendored for the nav terminal control; replaces registry artwork and sound dependencies with the decorative ZST wordmark and a dossier-token CSS hover spotlight.
@@ -77,13 +87,17 @@ registryDependencies legend: plain name = shadcn base component (ui.shadcn.com);
 - shimmering-text: newly vendored for the identity tagline; preserves the one-second default pace through progressive CSS and stops under reduced motion.
 - text-flip: newly vendored for identity roles; defaults to a span, uses a three-second CSS interval, keeps `aria-live="off"`, and leaves the first role fixed under reduced motion.
 - fluid-gradient-text: newly vendored for the footer bookend; keeps the registry pointer-driven spring gradient, uses unique SVG gradient IDs, dossier typography, and an accessible label, and fixes the gradient at center under reduced motion. Its footer wrapper is loaded through `next/dynamic` with a plain Zuriel fallback.
+- icon-swap: newly integrated in the single theme action; adds stable slot markers and disables its Motion spring through `useReducedMotion`.
+- haptic: keeps the vendored Vibration API and iOS checkbox fallback, with one delegated document click bridge for exact `data-haptic` controls.
+- slide-to-unlock: replaces the intro skip control, adapts the handle to a real button, adds Enter, Space, and ArrowRight-hold keyboard completion, and guards duplicate unlocks. Reduced-motion sessions use a plain instant Enter button.
+- theme-toggle-effect-circle-blur-top-left: integrates the registry CSS payload exactly with the blurred SVG mask anchored at top left and a `350vmax` final mask size. Theme state is committed synchronously inside the view-transition update callback.
 - consent-manager: imports @c15t/nextjs.
 - consent-manager: local component overrides registry copy with site-specific measurement-only privacy wording.
 - consent-manager: uses c15t's headless provider and state with a site-owned automatic banner, and loads the split c15t dialog only after Customize opens it.
 - theme-switcher: imports next-themes.
 - apple-hello-effect: replaces the Motion runtime with a native SVG and CSS stroke animation while retaining duration scaling and completion signaling.
 - apple-hello-effect: joins its two static class names directly so the automatic intro does not load a class-merging runtime.
-- theme-switcher: replaces the Motion runtime with CSS reveal and an action-labelled 44px toggle that shows the active-theme icon, removes the explicit system option while preserving system defaults in the provider, and waits for a resolved active theme before rendering the control.
+- theme-switcher: keeps a CSS outer reveal and an action-labelled 44px toggle with a keyed IconSwap for the active-theme icon, removes the explicit system option while preserving system defaults in the provider, and waits for a resolved active theme before rendering the control.
 - theme-switcher: uses hand-drawn inline sun and moon SVG geometry so the landing route does not load an icon-library runtime, and adds a lazy WebAudio direction cue that safely falls back to silence.
 - line-nav: imports next/link.
 - npm-level: @c15t/nextjs declared by consent-manager.

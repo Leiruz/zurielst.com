@@ -92,6 +92,7 @@ export function ChatLauncher({
       aria-expanded={open}
       onClick={(event) => onToggle(event.currentTarget)}
       className={`chat-launcher chat-control${reducedMotion ? '' : ' chat-control-motion'}`}
+      data-haptic
     >
       <svg
         data-chat-icon={open ? 'close' : 'terminal'}

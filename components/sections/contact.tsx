@@ -41,6 +41,7 @@ export function Contact({ email, socials }: ContactProps) {
           <button
             type="button"
             data-copy-email={email}
+            data-haptic
             aria-describedby="contact-copy-status"
             className="contact-copy-button"
           >

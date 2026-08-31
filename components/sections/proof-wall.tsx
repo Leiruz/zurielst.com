@@ -99,6 +99,7 @@ function CredentialLink({ src, title }: { src: string | undefined; title: string
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`View credential for ${title}`}
+      data-haptic
       className="mt-auto pt-6 font-mono text-xs text-text-2 underline decoration-line-strong underline-offset-4 transition-colors duration-150 hover:text-text-1"
     >
       View credential ↗

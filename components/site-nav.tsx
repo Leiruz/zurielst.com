@@ -83,6 +83,7 @@ export function SiteNav() {
           type="button"
           aria-label="Open terminal"
           data-terminal-trigger="true"
+          data-haptic
           className="group inline-flex size-11 shrink-0 items-center justify-center rounded-sm font-mono text-text-1 transition-colors duration-150 hover:text-ring motion-reduce:transition-none"
         >
           <SpotlightLogo className="text-sm font-semibold tracking-[0.16em]" />
@@ -118,6 +119,7 @@ export function SiteNav() {
           type="button"
           aria-label="Open command palette"
           data-command-palette-trigger="true"
+          data-haptic
           className="inline-flex h-8 items-center gap-1 rounded-full border border-line bg-surface px-2.5 font-mono text-[0.65rem] text-text-2 transition-colors duration-150 hover:bg-surface-hover hover:text-text-1 motion-reduce:transition-none"
         >
           <span aria-hidden="true" className="inline-flex items-center gap-1">

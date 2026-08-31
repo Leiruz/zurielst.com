@@ -3,13 +3,19 @@
 /**
  * IntroGate (ours, not vendored): plays the apple-hello-effect once per
  * session as a fixed overlay. Plan rev 3 contract:
- * - session-gated (sessionStorage), skippable, absent under reduced motion
+ * - session-gated (sessionStorage), explicitly entered for every motion mode
  * - the identity content underneath is prerendered, so LCP never waits on it
  * - storage failures degrade to "show nothing"
  */
 
 import { useEffect, useRef, useState } from 'react';
 import { AppleHelloEffectEnglish } from '@/components/registry/apple-hello-effect-english';
+import {
+  SlideToUnlock,
+  SlideToUnlockHandle,
+  SlideToUnlockText,
+  SlideToUnlockTrack,
+} from '@/components/registry/slide-to-unlock';
 import {
   INTRO_COVER_ID,
   INTRO_HELLO_SIZE_CLASS,
@@ -18,18 +24,26 @@ import {
 } from '@/components/registry/intro-first-paint';
 
 export function hasSeenIntro(
-  storage?: Pick<Storage, 'getItem' | 'setItem'>,
+  storage?: Pick<Storage, 'getItem' | 'setItem'> &
+    Partial<Pick<Storage, 'removeItem'>>,
 ): boolean {
   try {
     const availableStorage = storage ?? window.sessionStorage;
     const seen = availableStorage.getItem(INTRO_SEEN_KEY) === '1';
     if (seen) return true;
 
-    availableStorage.setItem(INTRO_SEEN_KEY, '1');
-    return availableStorage.getItem(INTRO_SEEN_KEY) !== '1';
+    const probeKey = `zst-intro-storage-probe-${Math.random()}`;
+    availableStorage.setItem(probeKey, '1');
+    const storageIsWritable = availableStorage.getItem(probeKey) === '1';
+    availableStorage.removeItem?.(probeKey);
+    return !storageIsWritable;
   } catch {
     return true;
   }
+}
+
+export function getIntroLeavingDelay(reducedMotion: boolean) {
+  return reducedMotion ? 0 : 500;
 }
 
 function markSeen() {
@@ -44,6 +58,7 @@ export function IntroGate() {
   // Render nothing on the server and on first client paint: hydration-neutral.
   const [show, setShow] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(true);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const introWasVisibleRef = useRef(false);
   const dismissingRef = useRef(false);
@@ -61,8 +76,7 @@ export function IntroGate() {
       // A missing media-query API fails closed just like unavailable storage.
     }
 
-    if (!stampedPending || seen || reduced || !cover) {
-      if (reduced) markSeen();
+    if (!stampedPending || seen || !cover) {
       root.dataset.intro = 'done';
       cover?.remove();
       return;
@@ -72,6 +86,7 @@ export function IntroGate() {
     previousFocusRef.current =
       activeElement instanceof HTMLElement ? activeElement : null;
     root.dataset.intro = 'active';
+    setReducedMotion(reduced);
     setShow(true);
   }, []);
 
@@ -101,6 +116,14 @@ export function IntroGate() {
     if (dismissingRef.current) return;
     dismissingRef.current = true;
     markSeen();
+    const delay = getIntroLeavingDelay(reducedMotion);
+    if (delay === 0) {
+      document.documentElement.dataset.intro = 'done';
+      document.getElementById(INTRO_COVER_ID)?.remove();
+      setShow(false);
+      return;
+    }
+
     document.documentElement.dataset.intro = 'leaving';
     setLeaving(true);
     dismissTimerRef.current = window.setTimeout(() => {
@@ -108,20 +131,28 @@ export function IntroGate() {
       document.getElementById(INTRO_COVER_ID)?.remove();
       dismissTimerRef.current = null;
       setShow(false);
-    }, 500);
+    }, delay);
   };
 
   if (!show) return null;
 
-  return <IntroOverlay leaving={leaving} onDismiss={dismiss} />;
+  return (
+    <IntroOverlay
+      leaving={leaving}
+      onDismiss={dismiss}
+      reducedMotion={reducedMotion}
+    />
+  );
 }
 
 export function IntroOverlay({
   leaving,
   onDismiss,
+  reducedMotion,
 }: {
   leaving: boolean;
   onDismiss: () => void;
+  reducedMotion: boolean;
 }) {
   return (
     <div
@@ -143,17 +174,33 @@ export function IntroOverlay({
       <AppleHelloEffectEnglish
         aria-hidden="true"
         className={`${INTRO_HELLO_SIZE_CLASS} text-white`}
-        onAnimationComplete={() => window.setTimeout(onDismiss, 350)}
+        onAnimationComplete={reducedMotion
+          ? undefined
+          : () => window.setTimeout(onDismiss, 350)}
       />
-      <button
-        type="button"
-        autoFocus
-        aria-label="Skip intro"
-        onClick={onDismiss}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 rounded-full border border-white/25 bg-black/60 px-3.5 py-1 font-mono text-xs text-white transition-colors hover:border-white/50 hover:bg-black hover:text-white"
-      >
-        skip
-      </button>
+      {reducedMotion ? (
+        <button
+          type="button"
+          autoFocus
+          data-haptic
+          onClick={onDismiss}
+          className="absolute bottom-8 left-1/2 min-h-11 -translate-x-1/2 rounded-full border border-white/25 bg-black px-5 py-2 font-mono text-xs text-white"
+        >
+          Enter
+        </button>
+      ) : (
+        <SlideToUnlock
+          className="absolute bottom-8 left-1/2 w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 border border-white/25 bg-black/60 text-white"
+          onUnlock={onDismiss}
+        >
+          <SlideToUnlockTrack>
+            <SlideToUnlockText className="font-mono text-xs font-normal tracking-[0.12em] text-white">
+              <span>slide to enter</span>
+            </SlideToUnlockText>
+            <SlideToUnlockHandle autoFocus disabled={leaving} />
+          </SlideToUnlockTrack>
+        </SlideToUnlock>
+      )}
     </div>
   );
 }

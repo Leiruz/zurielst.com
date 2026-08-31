@@ -505,6 +505,7 @@ export function ChatComposer({
           disabled={!sendEnabled}
           aria-label={sendLabel}
           className={`chat-send chat-control flex size-11 shrink-0 items-center justify-center rounded-full border border-line-strong bg-text-1 font-mono text-xs font-medium text-canvas disabled:cursor-not-allowed disabled:bg-canvas-raised disabled:text-text-3 disabled:opacity-100${reducedMotion ? '' : ' chat-control-motion'}`}
+          data-haptic
         >
           {retrySeconds > 0 ? `${retrySeconds}s` : <SendIcon />}
         </button>

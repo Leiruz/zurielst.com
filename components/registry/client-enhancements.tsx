@@ -3,6 +3,8 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 
+import { HapticFeedback } from '@/components/registry/haptic-feedback';
+
 const DeferredConsentManager = dynamic(
   () =>
     import('@/components/registry/consent-manager').then(
@@ -60,6 +62,7 @@ export function ClientEnhancements() {
     <>
       <DeferredConsentManager>{null}</DeferredConsentManager>
       <DeferredIntroGate />
+      <HapticFeedback />
     </>
   );
 }

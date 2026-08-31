@@ -179,6 +179,7 @@ export default function Home() {
           type="button"
           className="return-to-top"
           data-return-to-top="true"
+          data-haptic
           data-visible="false"
           aria-label="Return to top"
           aria-hidden="true"

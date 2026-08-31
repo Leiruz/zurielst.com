@@ -73,6 +73,7 @@ describe('ProofWall media', () => {
       ['cys-eae-hackathon', '/media/certs/cys-eae-hackathon-2020.png'],
     ]);
     expect(credentialItems).toHaveLength(11);
+    expect(markup.match(/data-haptic="true"/g) ?? []).toHaveLength(credentialItems.length + 1);
     expect(markup.match(/>View credential ↗<\/a>/g) ?? []).toHaveLength(credentialItems.length + 1);
     for (const item of credentialItems) {
       const tileMarkup = proofTileMarkup(markup, item.title);

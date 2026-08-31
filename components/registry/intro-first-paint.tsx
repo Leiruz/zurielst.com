@@ -35,7 +35,7 @@ export function stampInitialIntro(
       '(prefers-reduced-motion: reduce)',
     ).matches;
 
-    if (seen || reduced) {
+    if (seen) {
       root.dataset.intro = 'done';
       return;
     }
@@ -51,6 +51,7 @@ export function stampInitialIntro(
     }
 
     root.dataset.intro = 'pending';
+    root.dataset.introMotion = reduced ? 'reduced' : 'full';
 
     // The deferred intro chunk can fail, so release only an unclaimed cover.
     schedule(() => {
@@ -111,7 +112,7 @@ export function IntroCover() {
         />
       </svg>
       <span className="absolute bottom-8 left-1/2 -translate-x-1/2 rounded-full border border-white/25 bg-black/60 px-3.5 py-1 font-mono text-xs text-white">
-        skip
+        slide to enter
       </span>
     </div>
   );
