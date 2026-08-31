@@ -47,19 +47,20 @@ afterEach(() => {
 });
 
 describe('command palette action model', () => {
-  it('exposes exactly 23 actions in the required groups and page order', () => {
+  it('exposes exactly 24 actions in the required groups and page order', () => {
     const actions = createCommandPaletteActions(config);
 
-    expect(actions).toHaveLength(23);
+    expect(actions).toHaveLength(24);
     expect(actions.map((item) => item.group)).toEqual([
-      ...Array<string>(13).fill('Sections'),
+      ...Array<string>(14).fill('Sections'),
       ...Array<string>(6).fill('Actions'),
       ...Array<string>(4).fill('Links'),
     ]);
-    expect(actions.slice(0, 13).map((item) => item.label)).toEqual([
+    expect(actions.slice(0, 14).map((item) => item.label)).toEqual([
       'Identity',
       'Introduction',
       'Contributions',
+      'Insights',
       'Capabilities',
       'Stack',
       'Selected work',
@@ -71,7 +72,7 @@ describe('command palette action model', () => {
       'FAQ',
       'Contact',
     ]);
-    expect(actions.slice(13).map((item) => item.label)).toEqual([
+    expect(actions.slice(14).map((item) => item.label)).toEqual([
       'Download resume',
       'Download vCard',
       'Open terminal',
@@ -545,7 +546,7 @@ describe('command palette markup', () => {
     expect(markup).not.toContain('autofocus');
     expect(markup).toMatch(/role="listbox"/);
     expect(markup).not.toMatch(/role="listbox"[^>]*aria-activedescendant/);
-    expect(markup.match(/role="option"/g)).toHaveLength(23);
+    expect(markup.match(/role="option"/g)).toHaveLength(24);
     expect(markup).toMatch(/href="\/media\/resume\.pdf"[^>]*download=""/);
     expect(markup).toMatch(/href="\/zurielst\.vcf"[^>]*download=""/);
     expect(markup).toMatch(/href="\/llms\.txt"/);

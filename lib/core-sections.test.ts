@@ -14,12 +14,12 @@ vi.mock('server-only', () => ({}));
 const profile = profileJson as Profile;
 
 const expectedSectionIds = [
-  'identity', 'intro', 'contributions', 'capabilities', 'stack', 'work',
+  'identity', 'intro', 'contributions', 'insights', 'capabilities', 'stack', 'work',
   'timeline', 'education', 'proof', 'products', 'brands', 'faq', 'contact',
 ];
 
 const expectedFigureLabels = [
-  'Identity', 'Introduction', 'Contributions', 'Capabilities', 'Stack',
+  'Identity', 'Introduction', 'Contributions', 'Insights', 'Capabilities', 'Stack',
   'Selected work', 'Timeline', 'Education', 'Accolades', 'Products',
   'Worked with', 'FAQ', 'Contact',
 ];
@@ -48,7 +48,7 @@ describe('core dossier sections', () => {
     );
   });
 
-  it('merges Fig. 4 into act 01 without changing the Capabilities navigation name', () => {
+  it('merges Fig. 5 into act 01 without changing the Capabilities navigation name', () => {
     const markup = renderToStaticMarkup(createElement(Home));
     const start = markup.indexOf('<section id="capabilities"');
     const end = markup.indexOf('<section id="stack"', start);
@@ -56,7 +56,7 @@ describe('core dossier sections', () => {
 
     expect(capabilitiesMarkup).toContain('data-capability-header="security"');
     expect(capabilitiesMarkup).toMatch(/data-capability-header="security"[\s\S]*>01<\/p>[\s\S]*id="capabilities-title"[\s\S]*Security/);
-    expect(capabilitiesMarkup).toContain('Fig. 4. Capabilities');
+    expect(capabilitiesMarkup).toContain('Fig. 5. Capabilities');
     expect(capabilitiesMarkup).toContain('href="#capabilities"');
     expect(capabilitiesMarkup).not.toContain('>Capabilities</h2>');
   });
@@ -66,6 +66,7 @@ describe('core dossier sections', () => {
     const identityStart = markup.indexOf('id="identity"');
     const introStart = markup.indexOf('id="intro"');
     const contributionsStart = markup.indexOf('id="contributions"');
+    const insightsStart = markup.indexOf('id="insights"');
     const capabilitiesStart = markup.indexOf('id="capabilities"');
     const stackStart = markup.indexOf('id="stack"');
     const workStart = markup.indexOf('id="work"');
@@ -81,7 +82,8 @@ describe('core dossier sections', () => {
     expect(identityStart).toBeGreaterThanOrEqual(0);
     expect(introStart).toBeGreaterThan(identityStart);
     expect(contributionsStart).toBeGreaterThan(introStart);
-    expect(capabilitiesStart).toBeGreaterThan(contributionsStart);
+    expect(insightsStart).toBeGreaterThan(contributionsStart);
+    expect(capabilitiesStart).toBeGreaterThan(insightsStart);
     expect(stackStart).toBeGreaterThan(capabilitiesStart);
     expect(workStart).toBeGreaterThan(stackStart);
     expect(productsStart).toBeGreaterThan(workStart);

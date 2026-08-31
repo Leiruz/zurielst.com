@@ -11,12 +11,12 @@ vi.mock('server-only', () => ({}));
 const profile = profileJson as Profile;
 
 const expectedSectionIds = [
-  'identity', 'intro', 'contributions', 'capabilities', 'stack', 'work',
+  'identity', 'intro', 'contributions', 'insights', 'capabilities', 'stack', 'work',
   'timeline', 'education', 'proof', 'products', 'brands', 'faq', 'contact',
 ];
 
 const expectedFigureLabels = [
-  'Identity', 'Introduction', 'Contributions', 'Capabilities', 'Stack',
+  'Identity', 'Introduction', 'Contributions', 'Insights', 'Capabilities', 'Stack',
   'Selected work', 'Timeline', 'Education', 'Accolades', 'Products',
   'Worked with', 'FAQ', 'Contact',
 ];
@@ -37,11 +37,11 @@ describe('final dossier sections', () => {
     ];
 
     for (const [id, label] of [
-      ['proof', 'Fig. 9. Accolades'],
-      ['products', 'Fig. 10. Products'],
-      ['brands', 'Fig. 11. Worked with'],
-      ['faq', 'Fig. 12. FAQ'],
-      ['contact', 'Fig. 13. Contact'],
+      ['proof', 'Fig. 10. Accolades'],
+      ['products', 'Fig. 11. Products'],
+      ['brands', 'Fig. 12. Worked with'],
+      ['faq', 'Fig. 13. FAQ'],
+      ['contact', 'Fig. 14. Contact'],
     ] as const) {
       expect(markup).toContain(`id="${id}"`);
       expect(markup).toContain(label);

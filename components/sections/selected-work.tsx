@@ -14,7 +14,7 @@ export function SelectedWork({ profile }: SelectedWorkProps) {
     <section id="work" className="dossier-section bg-canvas-raised" aria-labelledby="work-title">
       <div className="dossier-shell min-w-0">
         <Reveal>
-          <p className="fig-label">Fig. 6. Selected work</p>
+          <p className="fig-label">Fig. 7. Selected work</p>
           <h2 id="work-title" className="dossier-title mt-4 text-text-1">
             Selected work <SectionAnchor href="#work" label="selected work" />
           </h2>
