@@ -128,7 +128,15 @@ test('uses one shared inclusive loop endpoint for every periodic value', async (
     readRequired(new URL('../remotion/src/hero-loop.tsx', import.meta.url), 'utf8'),
   ]);
 
-  assert.match(timingSource, /durationInFrames <= 1 \? 0 : frame \/ \(durationInFrames - 1\)/);
+  assert.match(
+    timingSource,
+    /durationInFrames <= 0 \? 0 : frame \/ durationInFrames/,
+    "loop progress divides by N so the final frame never duplicates frame 0",
+  );
+  assert.ok(
+    !/durationInFrames - 1/.test(timingSource),
+    "the seam-duplicating N - 1 denominator is gone",
+  );
   assert.equal((designSource.match(/getLoopProgress\(frame, durationInFrames\)/g) ?? []).length, 3);
   assert.match(designSource, /const cycle = progress \* 160/);
   assert.match(designSource, /const angle = progress \* 360 - 90/);
