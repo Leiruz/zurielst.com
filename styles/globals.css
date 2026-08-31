@@ -511,6 +511,34 @@ canvas {
     repeating-linear-gradient(135deg, var(--hatch) 0 1px, transparent 1px 7px);
 }
 
+.not-found-mark {
+  width: fit-content;
+  border: 1px solid var(--line-strong);
+  background:
+    linear-gradient(90deg, transparent 0 47%, var(--line) 47% 53%, transparent 53%) 0 0 / 0.55rem 100%,
+    var(--canvas-raised);
+  color: var(--text-1);
+  font-family: var(--font-mono);
+  font-size: clamp(2.5rem, 10vw, 5.5rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  padding: 0.2em 0.28em;
+}
+
+.not-found-game-focus {
+  border: 1px solid var(--line-strong);
+  background: var(--canvas);
+}
+
+.not-found-game-canvas {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 3 / 2;
+  touch-action: none;
+}
+
 .contribution-cell:focus-visible {
   outline: none;
 }
@@ -1312,6 +1340,10 @@ body[data-chat] .return-to-top {
 
   .return-to-top {
     transition: none !important;
+  }
+
+  .not-found-game-shell {
+    display: none;
   }
 }
 

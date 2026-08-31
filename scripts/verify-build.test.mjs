@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -166,6 +167,8 @@ const validLandingPage = `<!doctype html>
     <section id="contact"><p class="fig-label">Fig. 14. Contact</p></section>
   </main>`;
 
+const validNotFoundPage = '<!doctype html><html><head><title>Page Not Found</title></head><body><p>FIG. 404. MISSING DOCUMENT</p><p data-not-found-mark="true">ZST</p><h1>The requested record is absent.</h1><a href="/">Return to the dossier</a></body></html>';
+
 function requireSubjectFunction(name) {
   assert.equal(
     typeof buildVerifier[name],
@@ -181,6 +184,11 @@ async function createTemporaryDirectory() {
   return directory;
 }
 
+async function readOptionalSource(relativePath) {
+  return readFile(new URL(relativePath, import.meta.url), "utf8")
+    .catch((error) => (error?.code === "ENOENT" ? "" : Promise.reject(error)));
+}
+
 async function writeValidCapstoneExport(
   outputDirectory,
   { landingPage = validLandingPage, omit = [] } = {},
@@ -192,7 +200,7 @@ async function writeValidCapstoneExport(
   await writeFile(path.join(outputDirectory, "media", "resume.pdf"), "resume");
 
   const files = new Map([
-    ["404.html", '<!doctype html><html><head><title>Page Not Found</title></head><body><p>FIG. 404. MISSING DOCUMENT</p><a href="/">Return to the dossier</a></body></html>'],
+    ["404.html", validNotFoundPage],
     ["dossier.md", "# Zuriel Shanley Tanyory\n\nForward Deployed AI & Automation Security Engineer\n"],
     ["llms.txt", "# zurielst.com\n\n- [Full public dossier](https://zurielst.com/dossier.md)\n"],
     ["zurielst.vcf", "BEGIN:VCARD\nFN:Zuriel Shanley Tanyory\nTITLE:Forward Deployed AI & Automation Security Engineer\nEMAIL:zurielst@u.nus.edu\nURL:https://zurielst.com\nURL;TYPE=LinkedIn:https://www.linkedin.com/in/zuriel-shanley/\nEND:VCARD\n"],
@@ -204,6 +212,78 @@ async function writeValidCapstoneExport(
     ),
   );
 }
+
+test("keeps the staged not-found registry manifest byte-exact", async () => {
+  const manifest = await readFile(
+    new URL("../registry-stage/not-found-01.json", import.meta.url),
+  );
+
+  assert.equal(manifest.byteLength, 21688);
+  assert.equal(
+    createHash("sha256").update(manifest).digest("hex"),
+    "fba756a446d848845eba5b2edd12d07b1697f27dcf7fa2b71bd4dd9dcc4a4f34",
+  );
+});
+
+test("declares the manifest-pinned p5 runtime and type packages", async () => {
+  const packageJson = JSON.parse(await readFile(
+    new URL("../package.json", import.meta.url),
+    "utf8",
+  ));
+
+  assert.equal(packageJson.dependencies.p5, "^1.9.4");
+  assert.equal(packageJson.devDependencies["@types/p5"], "^1.7.7");
+});
+
+test("guards the route-only game import before loading its canvas", async () => {
+  const loader = await readOptionalSource(
+    "../components/registry/not-found-game-loader.tsx",
+  );
+
+  assert.match(loader, /matchMedia\(['"]\(prefers-reduced-motion: reduce\)['"]\)\.matches/);
+  assert.match(loader, /import\(['"]\.\/not-found-game-canvas['"]\)/);
+  assert.match(loader, /if\s*\([^)]*(?:reducedMotion|prefersReducedMotion)[^)]*\)\s*(?:\{|return)/);
+  assert.match(loader, /<button\b/);
+});
+
+test("keeps keyboard control focus-scoped and the p5 game primitive-only", async () => {
+  const canvas = await readOptionalSource(
+    "../components/registry/not-found-game-canvas.tsx",
+  );
+
+  assert.match(canvas, /onKeyDown=/);
+  assert.match(canvas, /onKeyUp=/);
+  assert.match(canvas, /aria-live=["']polite["']/);
+  assert.match(canvas, /\bp\.(?:rect|circle|ellipse|line|text)\s*\(/);
+  assert.doesNotMatch(canvas, /(?:window|document)\.addEventListener\([^\n]*(?:key|keypress)/i);
+  assert.doesNotMatch(canvas, /\b(?:loadImage|loadFont|loadSound|createAudio)\s*\(|https?:\/\//i);
+});
+
+test("keeps adapted 404 runtime source free of upstream identity and media", async () => {
+  const sources = await Promise.all([
+    readOptionalSource("../app/not-found.tsx"),
+    readOptionalSource("../components/registry/not-found-game-loader.tsx"),
+    readOptionalSource("../components/registry/not-found-game-canvas.tsx"),
+  ]);
+  const runtime = sources.join("\n");
+
+  assert.doesNotMatch(
+    runtime,
+    /chanhdai|ncdai|daikanoid|departuremono|assets\.chanhdai\.com|\b(?:loadImage|loadFont|loadSound|createAudio)\b/i,
+  );
+});
+
+test("rejects p5 or not-found game references from landing HTML", () => {
+  const validateLandingRouteIsolation = requireSubjectFunction(
+    "validateLandingRouteIsolation",
+  );
+
+  assert.throws(
+    () => validateLandingRouteIsolation(`${validLandingPage}<script src="/p5-game.js"></script>`),
+    /landing.*(?:p5|not-found game)/i,
+  );
+  assert.doesNotThrow(() => validateLandingRouteIsolation(validLandingPage));
+});
 
 after(async () => {
   await Promise.all(
@@ -633,6 +713,36 @@ test("requires the effective exported 404 head title", async () => {
     verifyBuildOutput(outputDirectory),
     /404.*Page Not Found/i,
   );
+});
+
+test("requires the ZST mark and missing-page copy in exported 404 HTML", () => {
+  const validateNotFoundPage = requireSubjectFunction("validateNotFoundPage");
+
+  assert.throws(
+    () => validateNotFoundPage(validNotFoundPage.replace(' data-not-found-mark="true">ZST', ">404")),
+    /404.*ZST/i,
+  );
+  assert.throws(
+    () => validateNotFoundPage(validNotFoundPage.replace("The requested record is absent.", "Missing")),
+    /404.*missing-page copy/i,
+  );
+});
+
+test("rejects upstream identity, artwork, and media from exported 404 HTML", () => {
+  const validateNotFoundPage = requireSubjectFunction("validateNotFoundPage");
+
+  for (const prohibited of [
+    "ChanhDai",
+    "Daikanoid",
+    "departuremono.com",
+    "https://assets.chanhdai.com/images/ball.png",
+    "https://assets.chanhdai.com/sounds/bounce.mp3",
+  ]) {
+    assert.throws(
+      () => validateNotFoundPage(validNotFoundPage.replace("</body>", `<p>${prohibited}</p></body>`)),
+      /404.*upstream/i,
+    );
+  }
 });
 
 test("requires key public-profile strings in the generated artifacts", async () => {

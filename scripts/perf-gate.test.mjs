@@ -771,13 +771,36 @@ test("static server rejects unsupported methods with an Allow header", async () 
   }
 });
 
-test("static server returns 404 for a missing asset", async () => {
-  const server = await serveFixture({ "index.html": "safe" });
+test("static server returns the exported 404 document for a bogus page route", async () => {
+  const notFound = "<!doctype html><title>Page Not Found</title><p>ZST missing document</p>";
+  const server = await serveFixture({
+    "404.html": notFound,
+    "index.html": "safe",
+  });
+
+  try {
+    const response = await request(server, { requestPath: "/records/not-here" });
+
+    assert.equal(response.statusCode, 404);
+    assert.equal(response.headers["content-type"], "text/html; charset=utf-8");
+    assert.equal(response.body.toString(), notFound);
+  } finally {
+    await close(server);
+  }
+});
+
+test("static server keeps missing assets as plain 404 responses", async () => {
+  const server = await serveFixture({
+    "404.html": "<!doctype html><p>ZST missing document</p>",
+    "index.html": "safe",
+  });
 
   try {
     const response = await request(server, { requestPath: "/missing.js" });
 
     assert.equal(response.statusCode, 404);
+    assert.equal(response.headers["content-type"], "text/plain; charset=utf-8");
+    assert.equal(response.body.toString(), "Not found");
   } finally {
     await close(server);
   }

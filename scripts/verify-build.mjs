@@ -898,6 +898,26 @@ export function validateNotFoundPage(html) {
   ) {
     throw new Error("404.html must contain the branded dossier return route");
   }
+  if (
+    !/\bdata-not-found-mark=(?:["'])true(?:["'])/i.test(html) ||
+    !/>\s*ZST\s*</i.test(html)
+  ) {
+    throw new Error("404.html must contain the static ZST mark");
+  }
+  if (!html.includes("The requested record is absent.")) {
+    throw new Error("404.html must contain the missing-page copy");
+  }
+  if (
+    /chanhdai|ncdai|daikanoid|departuremono|assets\.chanhdai\.com/i.test(html)
+  ) {
+    throw new Error("404.html must not contain upstream identity, artwork, or media");
+  }
+}
+
+export function validateLandingRouteIsolation(html) {
+  if (/\bp5\b|not-found-game/i.test(html)) {
+    throw new Error("Landing HTML must not reference p5 or the not-found game");
+  }
 }
 
 async function readRequiredExportFile(outputDirectory, relativePath) {
@@ -997,6 +1017,7 @@ export async function verifyBuildOutput(outputDirectory = path.resolve("out")) {
 
   const landingPage = await readFile(indexPath, "utf8");
   validateLandingPageContract(landingPage);
+  validateLandingRouteIsolation(landingPage);
   validateStructuredData(landingPage);
 
   const resumePath = path.join(resolvedOutputDirectory, "media", "resume.pdf");

@@ -84,6 +84,14 @@ Fetched byte-exact on 2026-08-31 before extraction.
 |---|---|---|---|---|
 | github-contributions | registry:component | 2 | `ec6b72c078edfc3c19aa3be56d8fa078145195d0c7fe7acaf6b1eb4d1a4ecbbb` | `https://chanhdai.com/r/github-contributions.json` |
 
+## Task 1 supplemental 404 fetch
+
+Fetched byte-exact on 2026-08-31 before adaptation.
+
+| Item | Bytes | SHA256 (saved JSON) | Source |
+|---|---:|---|---|
+| not-found-01 | 21,688 | `fba756a446d848845eba5b2edd12d07b1697f27dcf7fa2b71bd4dd9dcc4a4f34` | `https://chanhdai.com/r/not-found-01.json` |
+
 ## Task 4 registry extraction and brand sources
 
 The staged `line-nav`, `logos-carousel`, `testimonial`, and `testimonials-marquee` manifests were extracted with the repository extractor on 2026-08-31. The `testimonials-marquee` manifest is metadata-only and writes no file. Its local adapter composes the extracted testimonial primitives and replaces the uninstalled `@kibo-ui/marquee` dependency with site-owned CSS.
@@ -105,6 +113,7 @@ CyberArk uses the CyberArk-owned documentation mark at `https://raw.githubuserco
 
 ## Adaptation flags (Next.js coupling)
 
+- not-found-01: preserves the static missing-document copy and home route, adds a static ZST mark, and replaces upstream identity, artwork, audio, remote assets, Motion, and theme dependencies with a local p5 draw-primitives game. The loader checks reduced motion before requesting the canvas module, and keyboard controls remain scoped to its focused game surface.
 - spotlight-logo: removed 2026-08-31 when the navbar adopted the shimmering full-name wordmark; the vendored component and every .spotlight-logo CSS rule were deleted rather than kept unmounted.
 - status-button: removed 2026-08-31 with the availability action (owner request); the vendored component, its test, and the `.status-button-dot` rule were deleted rather than kept unmounted.
 - scroll-fade-effect: newly vendored site-wide; preserves horizontal and vertical overflow masks and adds the `entrance` and `delayIndex` progressive CSS scroll-driven adapter without client observers. Staggering shifts bounded view-progress ranges instead of mixing time delays with a scroll timeline.
@@ -133,6 +142,7 @@ CyberArk uses the CyberArk-owned documentation mark at `https://raw.githubuserco
 - theme-switcher: uses hand-drawn inline sun and moon SVG geometry so the landing route does not load an icon-library runtime, and adds a lazy WebAudio direction cue that safely falls back to silence.
 - npm-level: @c15t/nextjs declared by consent-manager.
 - npm-level: next-themes declared by theme-switcher.
+- npm-level: p5 declared by not-found-01; @types/p5 is its development-only type package.
 - shadcn base sonner: its stock wrapper declares next-themes as an npm dependency.
 - Everything else staged here has no next/* or next-themes import.
 
@@ -167,4 +177,3 @@ Supplementary, installed automatically with the shadcn base components above: @r
 ## Total vendored size
 
 39 staged item JSONs, 278,710 bytes (272.2 KiB). Excludes _registry-index.json (59,470 bytes, reference only) and this manifest.
-
