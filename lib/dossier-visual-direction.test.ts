@@ -14,7 +14,7 @@ vi.mock('server-only', () => ({}));
 const profile = profileJson as Profile;
 const sectionIds = [
   'identity', 'intro', 'contributions', 'insights', 'capabilities', 'stack', 'work',
-  'timeline', 'education', 'proof', 'products', 'brands', 'faq', 'contact',
+  'timeline', 'education', 'proof', 'products', 'brands', 'testimonials', 'faq', 'contact',
 ] as const;
 
 function sectionMarkup(markup: string, id: (typeof sectionIds)[number]) {
@@ -51,17 +51,18 @@ describe('chanhdai dossier direction', () => {
     expect(styles).not.toContain('.dim-mark {');
   });
 
-  it('keeps the dossier selection, scrollbars, heatmap tooltips, and heading anchors', () => {
+  it('keeps the dossier selection, scrollbars, contribution focus, and heading anchors', () => {
     expect(styles).toMatch(/::selection\s*\{[\s\S]*background:\s*var\(--ring\)[\s\S]*color:\s*var\(--canvas\)/);
     expect(styles).toMatch(/scrollbar-width:\s*thin/);
     expect(styles).toMatch(/::-webkit-scrollbar\s*\{[\s\S]*width:\s*6px[\s\S]*height:\s*6px/);
-    expect(styles).toMatch(/\.heatmap-cell::after\s*\{[\s\S]*content:\s*attr\(data-tooltip\)/);
+    expect(styles).toContain('.contribution-cell:focus-visible');
+    expect(styles).not.toContain('.heatmap-cell::after');
     expect(styles).toContain('.dossier-anchor {');
 
     const markup = renderToStaticMarkup(createElement(Home));
     const anchoredIds = [
       'intro', 'insights', 'capabilities', 'stack', 'work', 'timeline', 'education',
-      'proof', 'products', 'brands', 'faq', 'contact',
+      'proof', 'products', 'brands', 'testimonials', 'faq', 'contact',
     ] as const;
     for (const id of anchoredIds) {
       expect(sectionMarkup(markup, id)).toMatch(

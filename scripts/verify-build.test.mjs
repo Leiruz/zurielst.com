@@ -187,8 +187,9 @@ const validLandingPage = `<!doctype html>
     <section id="proof"><p class="fig-label">Fig. 10. Accolades</p></section>
     <section id="products"><p class="fig-label">Fig. 11. Products</p></section>
     <section id="brands"><p class="fig-label">Fig. 12. Worked with</p></section>
-    <section id="faq"><p class="fig-label">Fig. 13. FAQ</p></section>
-    <section id="contact"><p class="fig-label">Fig. 14. Contact</p></section>
+    <section id="testimonials"><p class="fig-label">Fig. 13. Testimonials</p></section>
+    <section id="faq"><p class="fig-label">Fig. 14. FAQ</p></section>
+    <section id="contact"><p class="fig-label">Fig. 15. Contact</p></section>
   </main>`;
 
 function requireSubjectFunction(name) {

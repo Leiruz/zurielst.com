@@ -30,12 +30,26 @@ describe('content/profile.json', () => {
 
   it('uses the owner-approved AI and security identity framing', () => {
     expect(profile.identity.tagline).toBe('Using AI to automate & solve security solutions.');
+    expect(profile.identity.status).toEqual({
+      label: 'Open to opportunities',
+      href: 'mailto:zurielst@u.nus.edu',
+    });
     expect(profile.identity.metrics).toEqual([
       { value: '40+', label: 'deep learning models trained for security and vision tasks' },
       { value: '200+', label: 'firewalls fed by one automated IOC pipeline' },
       { value: 'Up to 90%', label: 'threat detection uplift from AI-assisted SOC workflows' },
       { value: '100%', label: "of this site's assistant grounded in published profile data" },
     ]);
+  });
+
+  it('rejects any identity status other than the approved mailto action', () => {
+    expect(ProfileSchema.safeParse({
+      ...profile,
+      identity: {
+        ...profile.identity,
+        status: { label: 'Available', href: 'https://example.com' },
+      },
+    }).success).toBe(false);
   });
 
   it('Singtel content stays at resume level: no internal tool names beyond the resume', () => {

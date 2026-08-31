@@ -15,13 +15,13 @@ const profile = profileJson as Profile;
 
 const expectedSectionIds = [
   'identity', 'intro', 'contributions', 'insights', 'capabilities', 'stack', 'work',
-  'timeline', 'education', 'proof', 'products', 'brands', 'faq', 'contact',
+  'timeline', 'education', 'proof', 'products', 'brands', 'testimonials', 'faq', 'contact',
 ];
 
 const expectedFigureLabels = [
   'Identity', 'Introduction', 'Contributions', 'Insights', 'Capabilities', 'Stack',
   'Selected work', 'Timeline', 'Education', 'Accolades', 'Products',
-  'Worked with', 'FAQ', 'Contact',
+  'Worked with', 'Testimonials', 'FAQ', 'Contact',
 ];
 
 function expectRenderedText(markup: string, value: string) {
@@ -39,6 +39,9 @@ describe('core dossier sections', () => {
     }
 
     expect(markup.match(/data-week-column="true"/g)).toHaveLength(53);
+    expect(markup.match(/data-contribution-cell="true"/g)).toHaveLength(365);
+    expect(markup).toContain('data-slot="github-contributions"');
+    expect(markup).toContain('data-slot="contribution-graph"');
     expect(markup).toContain('role="region"');
 
     expect(markup).toContain(`src="${profile.identity.portrait.image}"`);
@@ -72,11 +75,12 @@ describe('core dossier sections', () => {
     const workStart = markup.indexOf('id="work"');
     const productsStart = markup.indexOf('id="products"');
     const brandsStart = markup.indexOf('id="brands"');
+    const testimonialsStart = markup.indexOf('id="testimonials"');
     const faqStart = markup.indexOf('id="faq"');
     const navMarkup = markup.slice(markup.indexOf('<nav'), markup.indexOf('</nav>') + '</nav>'.length);
     const introMarkup = markup.slice(introStart, contributionsStart);
     const stackMarkup = markup.slice(stackStart, workStart);
-    const brandsMarkup = markup.slice(brandsStart, faqStart);
+    const brandsMarkup = markup.slice(brandsStart, testimonialsStart);
     const stackItems = profile.stack.categories.flatMap((category) => category.items);
 
     expect(identityStart).toBeGreaterThanOrEqual(0);
@@ -88,7 +92,8 @@ describe('core dossier sections', () => {
     expect(workStart).toBeGreaterThan(stackStart);
     expect(productsStart).toBeGreaterThan(workStart);
     expect(brandsStart).toBeGreaterThan(productsStart);
-    expect(faqStart).toBeGreaterThan(brandsStart);
+    expect(testimonialsStart).toBeGreaterThan(brandsStart);
+    expect(faqStart).toBeGreaterThan(testimonialsStart);
 
     expect(introMarkup).toContain('data-local-greeting="true">Hello</');
     expect(introMarkup.match(/data-intro-bullet="true"/g)).toHaveLength(profile.intro.bullets.length);
@@ -103,14 +108,15 @@ describe('core dossier sections', () => {
     }
     expect(stackMarkup).not.toMatch(/<(?:img|svg)\b/);
 
-    expect(brandsMarkup.match(/data-brand-tile="true"/g)).toHaveLength(profile.stack_brands.brands.length);
+    expect(brandsMarkup.match(/data-brand-item="true"/g)).toHaveLength(profile.stack_brands.brands.length);
+    expect(brandsMarkup.match(/data-brand-icon="true"/g)).toHaveLength(profile.stack_brands.brands.length);
     for (const brand of profile.stack_brands.brands) {
       expectRenderedText(brandsMarkup, brand.name);
       expectRenderedText(brandsMarkup, brand.context);
     }
     expectRenderedText(brandsMarkup, profile.stack_brands.disclaimer);
     expect(brandsMarkup).not.toMatch(/<img\b/);
-    expect(brandsMarkup).not.toMatch(/<svg\b/);
+    expect(brandsMarkup.match(/<svg\b/g)).toHaveLength(profile.stack_brands.brands.length);
     expect(brandsMarkup).not.toContain('M5 12h14');
     expect(brandsMarkup).not.toContain('M12 5v14');
 
@@ -142,6 +148,8 @@ describe('core dossier sections', () => {
     expect(longWorkCases).toHaveLength(3);
     expect(markup.match(/data-copy-disclosure="work"/g)).toHaveLength(longWorkCases.length);
     const nonEducationEntries = profile.timeline.filter((entry) => entry.type !== 'education');
+    expect(markup.match(/data-work-organization="true"/g)).toHaveLength(7);
+    expect(markup.match(/data-work-position="true"/g)).toHaveLength(8);
     expect(markup.match(/data-copy-disclosure="timeline"/g)).toHaveLength(nonEducationEntries.length);
     const disclosureBlocks = markup.match(/<details(?=[^>]*data-copy-disclosure)[\s\S]*?<\/details>/g) ?? [];
     expect(disclosureBlocks).toHaveLength(

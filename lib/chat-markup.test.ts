@@ -50,6 +50,7 @@ describe('chat launcher', () => {
     expect(closedMarkup).toContain('aria-label="Open the assistant"');
     expect(closedMarkup).toContain('aria-expanded="false"');
     expect(closedMarkup).toContain('aria-controls="dossier-chat-dialog"');
+    expect(closedMarkup).toContain('data-haptic="true"');
     expect(closedMarkup).toContain('data-chat-icon="terminal"');
     expect(closedMarkup).toContain('aria-hidden="true"');
     expect(openMarkup).toContain('aria-label="Close the assistant"');
@@ -123,6 +124,7 @@ describe('chat launcher', () => {
     expect(markup).toContain('aria-haspopup="dialog"');
     expect(markup).toContain('data-chat-open="true"');
     expect(markup).toContain('data-copy-email=');
+    expect(markup).toMatch(/data-copy-email=[^>]*data-haptic="true"/);
     expect(markup).not.toContain('role="dialog"');
     expect(markup).not.toContain(profile.chat.disclaimer.replaceAll("'", '&#x27;'));
   });
@@ -283,6 +285,7 @@ describe('chat panel markup', () => {
 
     expect(streamingMarkup).toContain('aria-label="Send"');
     expect(streamingMarkup).toContain('disabled=""');
+    expect(streamingMarkup).toContain('data-haptic="true"');
     expect(retryMarkup).toContain('aria-label="Send in 12 seconds"');
     expect(retryMarkup).toContain('>12s<');
     expect(retryMarkup).not.toContain('data-chat-icon="send"');

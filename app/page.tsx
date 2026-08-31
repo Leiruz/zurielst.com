@@ -12,10 +12,12 @@ import { Contact } from '@/components/sections/contact';
 import { IdentityHeader } from '@/components/sections/identity-header';
 import { Introduction } from '@/components/sections/introduction';
 import { CapabilityActs } from '@/components/sections/capability-acts';
-import { ContributionHeatmap, type ContributionSnapshot } from '@/components/sections/contribution-heatmap';
+import { GitHubContributionsSection } from '@/components/sections/github-contributions';
+import type { ContributionSnapshot } from '@/components/registry/github-contributions';
 import { VisitorInsights } from '@/components/sections/visitor-insights';
 import { Stack } from '@/components/sections/stack';
 import { BrandsWall } from '@/components/sections/brands-wall';
+import { Testimonials } from '@/components/sections/testimonials';
 import { SelectedWork } from '@/components/sections/selected-work';
 import { Timeline } from '@/components/sections/timeline';
 import { Education } from '@/components/sections/education';
@@ -30,6 +32,7 @@ import {
   installGlobalSectionShortcuts,
 } from '@/lib/section-shortcuts';
 import { installReturnToTop } from '@/lib/return-to-top';
+import { SectionLineNav } from '@/components/section-line-nav';
 
 const GLOBAL_SECTION_SHORTCUTS_SCRIPT = `(${installGlobalSectionShortcuts.toString()})(${JSON.stringify(GLOBAL_SECTION_SHORTCUTS)});`;
 const RETURN_TO_TOP_SCRIPT = `(${installReturnToTop.toString()})(document.querySelector("[data-return-to-top]"));`;
@@ -126,10 +129,11 @@ export default function Home() {
     <>
       <div className="bp-grid min-h-screen overflow-x-clip">
         <SiteNav />
+        <SectionLineNav />
         <main>
           <IdentityHeader profile={profile} />
           <Introduction profile={profile} />
-          <ContributionHeatmap data={contributions} />
+          <GitHubContributionsSection snapshot={contributions} />
           <VisitorInsights data={analytics} />
           <CapabilityActs profile={profile} />
           <Stack profile={profile} />
@@ -139,6 +143,7 @@ export default function Home() {
           <ProofWall profile={profile} />
           <Products profile={profile} />
           <BrandsWall profile={profile} />
+          <Testimonials />
           <Faq profile={profile} />
           <Contact
             email={profile.identity.email}
@@ -179,6 +184,7 @@ export default function Home() {
           type="button"
           className="return-to-top"
           data-return-to-top="true"
+          data-haptic
           data-visible="false"
           aria-label="Return to top"
           aria-hidden="true"

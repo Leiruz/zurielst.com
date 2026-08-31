@@ -4,6 +4,10 @@
 
 import { useRef, useSyncExternalStore } from "react"
 import { useTheme } from "next-themes"
+// @ts-expect-error The installed react-dom runtime has no declaration package in this project.
+import { flushSync } from "react-dom"
+
+import { IconSwap, IconSwapItem } from "@/components/registry/icon-swap"
 
 // Divergence from vendored source (recorded in docs/components-map.md):
 // IconPlaceholder is a registry template shim; replaced with inline SVG icons.
@@ -15,6 +19,8 @@ interface ThemeSelectionDependencies {
   playSound(theme: ThemeChoice): void
   prefersReducedMotion(): boolean
   setTheme(theme: ThemeChoice): void
+  startViewTransition?(update: () => void): unknown
+  commitTheme?(update: () => void): void
 }
 
 function browserAudioContext() {
@@ -46,12 +52,41 @@ function selectThemeChoice(
 ) {
   if (dependencies.currentTheme === nextTheme) return
 
+  let reducedMotion = true
   try {
-    if (!dependencies.prefersReducedMotion()) dependencies.playSound(nextTheme)
+    reducedMotion = dependencies.prefersReducedMotion()
   } catch {
-    // Optional audio can never prevent the explicit theme choice.
+    // Missing motion preferences use the instant, silent fallback.
   }
-  dependencies.setTheme(nextTheme)
+
+  if (!reducedMotion) {
+    try {
+      dependencies.playSound(nextTheme)
+    } catch {
+      // Optional audio can never prevent the explicit theme choice.
+    }
+  }
+
+  const updateTheme = () => {
+    const update = () => dependencies.setTheme(nextTheme)
+    if (dependencies.commitTheme) dependencies.commitTheme(update)
+    else update()
+  }
+
+  if (!reducedMotion && dependencies.startViewTransition) {
+    let updated = false
+    try {
+      dependencies.startViewTransition(() => {
+        updated = true
+        updateTheme()
+      })
+      return
+    } catch {
+      if (updated) return
+    }
+  }
+
+  updateTheme()
 }
 
 function resolveActiveTheme(
@@ -81,11 +116,16 @@ function ThemeSwitcherControl({
         type="button"
         className="theme-switcher-button"
         aria-label={actionLabel}
+        data-haptic
         onClick={() => onSelect(nextTheme)}
       >
-        <svg aria-hidden="true" viewBox="0 0 24 24">
-          <use href={`#theme-${activeTheme}`} />
-        </svg>
+        <IconSwap>
+          <IconSwapItem key={activeTheme} data-icon-key={activeTheme}>
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <use href={`#theme-${activeTheme}`} />
+            </svg>
+          </IconSwapItem>
+        </IconSwap>
       </button>
       <span className="sr-only" aria-live="polite">{actionLabel}</span>
     </div>
@@ -131,6 +171,12 @@ function ThemeSwitcher() {
       prefersReducedMotion: () => typeof window.matchMedia !== "function"
         || window.matchMedia("(prefers-reduced-motion: reduce)").matches,
       setTheme,
+      startViewTransition: (
+        document as Document & {
+          startViewTransition?: (update: () => void) => unknown
+        }
+      ).startViewTransition?.bind(document),
+      commitTheme: flushSync,
     })
   }
 

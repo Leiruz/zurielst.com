@@ -1,5 +1,5 @@
 import { LocalGreeting } from '@/components/dossier/local-greeting';
-import { Reveal } from '@/components/dossier/reveal';
+import { ScrollFadeEffect } from '@/components/registry/scroll-fade-effect';
 import { SectionAnchor } from '@/components/dossier/section-anchor';
 import type { Profile } from '@/content/schema';
 
@@ -11,7 +11,7 @@ export function Introduction({ profile }: IntroductionProps) {
   return (
     <section id="intro" className="dossier-section bg-canvas-raised" aria-labelledby="intro-title">
       <div className="dossier-shell min-w-0">
-        <Reveal>
+        <ScrollFadeEffect entrance>
           <p className="fig-label">Fig. 2. Introduction</p>
           <h2
             id="intro-title"
@@ -20,9 +20,9 @@ export function Introduction({ profile }: IntroductionProps) {
             <LocalGreeting />{' '}
             <SectionAnchor href="#intro" label="introduction" />
           </h2>
-        </Reveal>
+        </ScrollFadeEffect>
 
-        <Reveal className="mt-10">
+        <ScrollFadeEffect entrance className="mt-10">
           <ul className="max-w-prose list-disc space-y-4 pl-5 marker:text-text-3">
             {profile.intro.bullets.map((bullet) => (
               <li key={bullet} data-intro-bullet="true" className="dossier-prose pl-2 text-text-2">
@@ -30,7 +30,7 @@ export function Introduction({ profile }: IntroductionProps) {
               </li>
             ))}
           </ul>
-        </Reveal>
+        </ScrollFadeEffect>
       </div>
     </section>
   );

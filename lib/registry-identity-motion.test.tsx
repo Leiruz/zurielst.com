@@ -1,0 +1,64 @@
+import { createElement } from 'react';
+// @ts-expect-error The installed react-dom runtime has no declaration package in this project.
+import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it } from 'vitest';
+
+import * as fluidGradientModule from '@/components/registry/fluid-gradient-text';
+import { ShimmeringText } from '@/components/registry/shimmering-text';
+import { SpotlightLogo } from '@/components/registry/spotlight-logo';
+import { StatusButton } from '@/components/registry/status-button';
+import { TextFlip } from '@/components/registry/text-flip';
+import { SiteNav } from '@/components/site-nav';
+
+const FluidGradientText = fluidGradientModule.FluidGradientText;
+
+describe('registry identity and motion adapters', () => {
+  it('renders the decorative ZST spotlight in the terminal button', () => {
+    const markup = renderToStaticMarkup(createElement(SiteNav));
+
+    expect(markup).toContain('data-slot="spotlight-logo"');
+    expect(markup).toContain('aria-hidden="true"');
+    expect(markup).toContain('ZST');
+    expect(markup).not.toContain('chanhdai');
+  });
+
+  it('renders the status action as a semantic anchor', () => {
+    const markup = renderToStaticMarkup(createElement(StatusButton, {
+      href: 'mailto:zurielst@u.nus.edu',
+      children: 'Open to opportunities',
+    }));
+
+    expect(markup).toContain('data-slot="status-button"');
+    expect(markup).toContain('href="mailto:zurielst@u.nus.edu"');
+    expect(markup).toContain('Open to opportunities');
+  });
+
+  it('keeps text effects accessible in server markup', () => {
+    const shimmer = renderToStaticMarkup(createElement(ShimmeringText, null, 'Tagline'));
+    const flip = renderToStaticMarkup(createElement(TextFlip, { words: ['First', 'Second'] }));
+    const gradient = renderToStaticMarkup(createElement(FluidGradientText, null, 'Zuriel'));
+
+    expect(shimmer).toContain('data-slot="shimmering-text"');
+    expect(flip).toContain('data-slot="text-flip"');
+    expect(flip).toContain('aria-live="off"');
+    expect(flip).toContain('First');
+    expect(gradient).toContain('data-slot="fluid-gradient-text"');
+    expect(gradient).toContain('aria-label="Zuriel"');
+  });
+
+  it('maps pointer movement into the fluid gradient and fixes it under reduced motion', () => {
+    const resolvePosition = Reflect.get(fluidGradientModule, 'resolveFluidGradientPosition');
+
+    expect(resolvePosition).toBeTypeOf('function');
+    expect(resolvePosition(75, { left: 25, width: 100 }, false)).toBe(0.5);
+    expect(resolvePosition(200, { left: 25, width: 100 }, false)).toBe(1);
+    expect(resolvePosition(75, { left: 25, width: 100 }, true)).toBe(0.5);
+
+    const markup = renderToStaticMarkup(createElement(FluidGradientText, { text: 'Zuriel' }));
+    expect(markup).toContain('data-gradient-motion="pointer"');
+  });
+
+  it('exports the registry components as functions', () => {
+    expect(SpotlightLogo).toBeTypeOf('function');
+  });
+});

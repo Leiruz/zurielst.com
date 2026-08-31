@@ -5,8 +5,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
 import { Footer } from '@/components/footer';
-import { ContributionHeatmap, type ContributionSnapshot } from '@/components/sections/contribution-heatmap';
-import * as contributionHeatmapModule from '@/components/sections/contribution-heatmap';
+import { enhanceContributionGraph } from '@/components/registry/contribution-graph';
+import type { ContributionSnapshot } from '@/components/registry/github-contributions';
+import { GitHubContributionsSection } from '@/components/sections/github-contributions';
 import contributionJson from '@/content/github-contributions.json';
 
 const notFoundModule = await import('@/app/not-found').catch(() => ({}));
@@ -29,14 +30,14 @@ describe('branded not found page', () => {
   });
 });
 
-describe('contribution heatmap finishers', () => {
-  it('renders month labels, opacity legend, CSS tooltip hooks, and the exact snapshot caption', () => {
+describe('registry contribution graph finishers', () => {
+  it('renders month labels, dossier legend, labelled cells, and the exact snapshot caption', () => {
     const data = contributionJson as ContributionSnapshot;
-    const markup = renderToStaticMarkup(createElement(ContributionHeatmap, { data }));
-    const monthLabels = [...markup.matchAll(/data-month-label="true"[^>]*>([^<]+)<\/span>/g)]
+    const markup = renderToStaticMarkup(createElement(GitHubContributionsSection, { snapshot: data }));
+    const monthLabels = [...markup.matchAll(/data-month-label="true"[^>]*>([^<]+)</g)]
       .map((match) => match[1]);
     const contributionDays = data.weeks.flatMap((week) => week.contributionDays);
-    const cellTags = [...markup.matchAll(/<span[^>]*class="heatmap-cell[^"]*"[^>]*>/g)]
+    const cellTags = [...markup.matchAll(/<g[^>]*class="contribution-cell"[^>]*>/g)]
       .map((match) => match[0]);
     const regionTag = markup.match(/<div[^>]*role="region"[^>]*>/)?.[0] ?? '';
 
@@ -44,23 +45,22 @@ describe('contribution heatmap finishers', () => {
       'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb',
       'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
     ]);
-    expect(markup).toContain('data-heat-legend="true"');
+    expect(markup).toContain('data-contribution-legend="true"');
     expect(markup).toContain('>Less</span>');
     expect(markup).toContain('>More</span>');
     expect(markup.match(/data-legend-level="[0-4]"/g)).toHaveLength(5);
-    expect(markup.match(/data-tooltip="/g)).toHaveLength(contributionDays.length);
     expect(cellTags).toHaveLength(contributionDays.length);
     expect(cellTags.filter((tag) => tag.includes('tabindex="0"'))).toHaveLength(1);
     expect(cellTags.filter((tag) => tag.includes('tabindex="-1"'))).toHaveLength(contributionDays.length - 1);
     expect(cellTags.every((tag) => tag.includes('role="img"') && tag.includes('aria-label="'))).toBe(true);
     expect(regionTag).not.toContain('tabindex=');
-    expect(markup).not.toContain(' title="');
+    expect(regionTag).toContain('304 contributions in the last year, shown across 53 weeks.');
     expect(markup).toContain(
       'Fig. 3. 304 contributions in the last year. Source: github.com/Leiruz, committed build-time snapshot.',
     );
   });
 
-  it('moves the roving tab stop with arrow keys and focuses the named tooltip cell', () => {
+  it('moves the roving tab stop with arrow keys and keeps boundary focus in place', () => {
     interface TestEvent {
       key?: string;
       preventDefault?: () => void;
@@ -73,15 +73,6 @@ describe('contribution heatmap finishers', () => {
       getAttribute(name: string): string | null;
       setAttribute(name: string, value: string): void;
     }
-    type EnhanceContributionHeatmap = (root: {
-      addEventListener(type: string, listener: (event: TestEvent) => void): void;
-      querySelector(selector: string): FakeCell | null;
-    }) => void;
-
-    const enhanceContributionHeatmap = Reflect.get(
-      contributionHeatmapModule,
-      'enhanceContributionHeatmap',
-    ) as EnhanceContributionHeatmap | undefined;
     const listeners = new Map<string, (event: TestEvent) => void>();
     const cells = new Map<string, FakeCell>();
     let focusedCell: FakeCell | undefined;
@@ -94,14 +85,14 @@ describe('contribution heatmap finishers', () => {
     ): FakeCell {
       const attributes = new Map<string, string>([
         ['aria-label', tooltip],
-        ['data-heatmap-day', String(day)],
-        ['data-heatmap-week', String(week)],
-        ['data-tooltip', tooltip],
+        ['data-contribution-day', String(day)],
+        ['data-contribution-week', String(week)],
+        ['data-contribution-cell', 'true'],
         ['tabindex', tabIndex],
       ]);
       const cell: FakeCell = {
         attributes,
-        closest: (selector) => selector.includes('[data-heatmap-week]') ? cell : null,
+        closest: (selector) => selector.includes('[data-contribution-cell]') ? cell : null,
         focus: vi.fn(() => {
           focusedCell = cell;
           listeners.get('focusin')?.({ target: cell });
@@ -128,8 +119,8 @@ describe('contribution heatmap finishers', () => {
         if (selector.includes('[tabindex="0"]')) {
           return [...cells.values()].find((cell) => cell.getAttribute('tabindex') === '0') ?? null;
         }
-        const week = selector.match(/data-heatmap-week="(\d+)"/)?.[1];
-        const day = selector.match(/data-heatmap-day="(\d+)"/)?.[1];
+        const week = selector.match(/data-contribution-week="(\d+)"/)?.[1];
+        const day = selector.match(/data-contribution-day="(\d+)"/)?.[1];
         return week !== undefined && day !== undefined
           ? cells.get(`${week}:${day}`) ?? null
           : null;
@@ -137,8 +128,7 @@ describe('contribution heatmap finishers', () => {
     };
     const preventDefault = vi.fn();
 
-    expect(enhanceContributionHeatmap).toBeTypeOf('function');
-    enhanceContributionHeatmap?.(root);
+    enhanceContributionGraph(root);
     listeners.get('keydown')?.({
       key: 'ArrowRight',
       preventDefault,
@@ -149,8 +139,16 @@ describe('contribution heatmap finishers', () => {
     expect(focusedCell).toBe(destination);
     expect(first.getAttribute('tabindex')).toBe('-1');
     expect(destination.getAttribute('tabindex')).toBe('0');
-    expect(focusedCell?.getAttribute('data-tooltip')).toBe('2026-08-23: 3 contributions');
-    expect(focusedCell?.getAttribute('aria-label')).toBe(focusedCell?.getAttribute('data-tooltip'));
+    expect(focusedCell?.getAttribute('aria-label')).toBe('2026-08-23: 3 contributions');
+
+    const boundaryPreventDefault = vi.fn();
+    listeners.get('keydown')?.({
+      key: 'ArrowUp',
+      preventDefault: boundaryPreventDefault,
+      target: destination,
+    });
+    expect(boundaryPreventDefault).toHaveBeenCalledOnce();
+    expect(focusedCell).toBe(destination);
   });
 });
 

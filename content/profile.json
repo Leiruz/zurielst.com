@@ -33,6 +33,10 @@
       "timezone": "UTC+8"
     },
     "email": "zurielst@u.nus.edu",
+    "status": {
+      "label": "Open to opportunities",
+      "href": "mailto:zurielst@u.nus.edu"
+    },
     "socials": [
       {
         "platform": "GitHub",

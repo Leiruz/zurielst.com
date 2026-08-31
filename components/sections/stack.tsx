@@ -1,4 +1,4 @@
-import { Reveal } from '@/components/dossier/reveal';
+import { ScrollFadeEffect } from '@/components/registry/scroll-fade-effect';
 import { SectionAnchor } from '@/components/dossier/section-anchor';
 import type { Profile } from '@/content/schema';
 
@@ -10,17 +10,17 @@ export function Stack({ profile }: StackProps) {
   return (
     <section id="stack" className="dossier-section bg-canvas-raised" aria-labelledby="stack-title">
       <div className="dossier-shell min-w-0">
-        <Reveal>
+        <ScrollFadeEffect entrance>
           <p className="fig-label">Fig. 6. Stack</p>
           <h2 id="stack-title" className="dossier-title mt-4 text-text-1">
             Stack <SectionAnchor href="#stack" label="stack" />
           </h2>
-        </Reveal>
+        </ScrollFadeEffect>
 
         <ol className="mt-10 divide-y divide-line border-y border-line">
           {profile.stack.categories.map((category, index) => (
             <li key={category.name} data-stack-category="true" className="py-7 sm:py-8">
-              <Reveal delayIndex={index}>
+              <ScrollFadeEffect entrance delayIndex={index}>
                 <div className="grid min-w-0 gap-6 md:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] md:items-start">
                   <div className="flex min-w-0 items-baseline gap-4">
                     <span className="shrink-0 font-mono text-4xl font-semibold leading-none text-text-1 opacity-[0.12]" aria-hidden="true">
@@ -40,7 +40,7 @@ export function Stack({ profile }: StackProps) {
                     ))}
                   </ul>
                 </div>
-              </Reveal>
+              </ScrollFadeEffect>
             </li>
           ))}
         </ol>

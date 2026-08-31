@@ -4,13 +4,30 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { CountUpMetric } from '@/components/dossier/count-up-metric';
 import { LiveClock } from '@/components/dossier/live-clock';
-import { Reveal } from '@/components/dossier/reveal';
+import { ScrollFadeEffect } from '@/components/registry/scroll-fade-effect';
+// @ts-expect-error The Vitest config exposes the stylesheet source as a virtual text module.
+import styles from 'virtual:globals-css-source';
 
-describe('Reveal', () => {
-  it('server-renders non-reduced content in its hidden start state', () => {
-    const markup = renderToStaticMarkup(createElement(Reveal, null, 'Evidence'));
+describe('ScrollFadeEffect', () => {
+  it('server-renders the progressive section entrance marker', () => {
+    const markup = renderToStaticMarkup(
+      createElement(ScrollFadeEffect, { entrance: true, delayIndex: 2 }, 'Evidence'),
+    );
 
-    expect(markup).toContain('data-reveal-state="hidden"');
+    expect(markup).toContain('data-scroll-fade-effect="entrance"');
+    expect(markup).toContain('--scroll-fade-range-start:3%');
+    expect(markup).toContain('--scroll-fade-range-end:31%');
+    expect(markup).toContain('Evidence');
+  });
+
+  it('stagger offsets the scroll range without a time delay that can snap', () => {
+    const entranceRule = styles.match(/\.scroll-fade-entrance\s*\{([\s\S]*?)^\}/m)?.[1];
+
+    expect(entranceRule).toBeDefined();
+    expect(entranceRule).not.toContain('animation-delay');
+    expect(styles).toMatch(/animation: scroll-fade-entrance 1s both/);
+    expect(styles).toMatch(/animation-range-start: entry var\(--scroll-fade-range-start/);
+    expect(styles).toMatch(/animation-range-end: cover var\(--scroll-fade-range-end/);
   });
 });
 

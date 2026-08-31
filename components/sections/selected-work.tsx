@@ -1,5 +1,5 @@
 import { CopyDisclosure } from '@/components/dossier/copy-disclosure';
-import { Reveal } from '@/components/dossier/reveal';
+import { ScrollFadeEffect } from '@/components/registry/scroll-fade-effect';
 import { SectionAnchor } from '@/components/dossier/section-anchor';
 import type { MediaRef, Profile, WorkCase } from '@/content/schema';
 import { splitDisclosureCopy } from '@/lib/dossier';
@@ -13,18 +13,18 @@ export function SelectedWork({ profile }: SelectedWorkProps) {
   return (
     <section id="work" className="dossier-section bg-canvas-raised" aria-labelledby="work-title">
       <div className="dossier-shell min-w-0">
-        <Reveal>
+        <ScrollFadeEffect entrance>
           <p className="fig-label">Fig. 7. Selected work</p>
           <h2 id="work-title" className="dossier-title mt-4 text-text-1">
             Selected work <SectionAnchor href="#work" label="selected work" />
           </h2>
-        </Reveal>
+        </ScrollFadeEffect>
 
         <div className="mt-10 grid min-w-0 grid-cols-1 gap-5 md:grid-cols-2">
           {profile.work_cases.map((workCase, index) => (
-            <Reveal key={workCase.id} delayIndex={index} className="h-full">
+            <ScrollFadeEffect entrance key={workCase.id} delayIndex={index} className="h-full">
               <WorkCard workCase={workCase} />
-            </Reveal>
+            </ScrollFadeEffect>
           ))}
         </div>
       </div>

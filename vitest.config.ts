@@ -29,6 +29,7 @@ export default defineWorkersConfig({
       'components/registry/**/*.test.tsx',
       'content/**/*.test.ts',
       'lib/**/*.test.ts',
+      'lib/**/*.test.tsx',
     ],
     poolOptions: {
       workers: {

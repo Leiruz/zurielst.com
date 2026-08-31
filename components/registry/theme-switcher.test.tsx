@@ -9,6 +9,7 @@ import { ThemeIconSprite } from '@/components/theme-icon-sprite';
 import styles from 'virtual:globals-css-source';
 
 import * as themeSwitcherModule from './theme-switcher';
+import { iconSwapTransition } from './icon-swap';
 
 type ThemeChoice = 'light' | 'dark';
 
@@ -22,6 +23,8 @@ interface ThemeSelectionDependencies {
   playSound(theme: ThemeChoice): void;
   prefersReducedMotion(): boolean;
   setTheme(theme: ThemeChoice): void;
+  startViewTransition?(update: () => void): unknown;
+  commitTheme?(update: () => void): void;
 }
 
 interface AutomationEvent {
@@ -91,8 +94,11 @@ describe('ThemeSwitcherControl', () => {
 
     expect(buttons).toHaveLength(1);
     expect(buttons[0]).toContain('theme-switcher-button');
+    expect(buttons[0]).toContain('data-haptic="true"');
+    expect(buttons[0]).toContain('data-slot="icon-swap"');
     expect(styles).toMatch(/\.theme-switcher-button\s*\{[\s\S]*width: 2\.75rem;[\s\S]*height: 2\.75rem;/);
     expect(darkMarkup).toContain('aria-label="Switch to light theme"');
+    expect(darkMarkup).toContain('data-icon-key="dark"');
     expect(darkMarkup).toContain('<use href="#theme-dark"');
     expect(darkMarkup).toContain('aria-live="polite"');
   });
@@ -110,6 +116,8 @@ describe('ThemeSwitcherControl', () => {
 
     expect(buttons).toHaveLength(1);
     expect(lightMarkup).toContain('aria-label="Switch to dark theme"');
+    expect(lightMarkup).toContain('data-slot="icon-swap"');
+    expect(lightMarkup).toContain('data-icon-key="light"');
     expect(lightMarkup).toContain('<use href="#theme-light"');
     expect(lightMarkup).toContain('aria-live="polite"');
   });
@@ -138,6 +146,57 @@ describe('ThemeSwitcherControl', () => {
 });
 
 describe('selectThemeChoice', () => {
+  it('changes theme inside a view transition when motion is allowed', () => {
+    const selectThemeChoice = requiredExport<(
+      theme: ThemeChoice,
+      dependencies: ThemeSelectionDependencies,
+    ) => void>('selectThemeChoice');
+    if (!selectThemeChoice) return;
+    const setTheme = vi.fn();
+    const order: string[] = [];
+    const startViewTransition = vi.fn((update: () => void) => {
+      order.push('transition');
+      update();
+    });
+
+    selectThemeChoice('dark', {
+      currentTheme: 'light',
+      playSound: vi.fn(),
+      prefersReducedMotion: () => false,
+      setTheme,
+      startViewTransition,
+      commitTheme(update) {
+        order.push('commit');
+        update();
+      },
+    });
+
+    expect(startViewTransition).toHaveBeenCalledOnce();
+    expect(setTheme).toHaveBeenCalledWith('dark');
+    expect(order).toEqual(['transition', 'commit']);
+  });
+
+  it('changes theme immediately when reduced motion is requested', () => {
+    const selectThemeChoice = requiredExport<(
+      theme: ThemeChoice,
+      dependencies: ThemeSelectionDependencies,
+    ) => void>('selectThemeChoice');
+    if (!selectThemeChoice) return;
+    const setTheme = vi.fn();
+    const startViewTransition = vi.fn();
+
+    selectThemeChoice('light', {
+      currentTheme: 'dark',
+      playSound: vi.fn(),
+      prefersReducedMotion: () => true,
+      setTheme,
+      startViewTransition,
+    });
+
+    expect(startViewTransition).not.toHaveBeenCalled();
+    expect(setTheme).toHaveBeenCalledWith('light');
+  });
+
   it('persists an explicit choice even when reduced-motion detection or audio fails', () => {
     const selectThemeChoice = requiredExport<(
       theme: ThemeChoice,
@@ -190,6 +249,28 @@ describe('selectThemeChoice', () => {
 
     expect(playSound).not.toHaveBeenCalled();
     expect(setTheme).not.toHaveBeenCalled();
+  });
+});
+
+describe('circle blur top-left transition styles', () => {
+  it('keeps the vendored blurred top-left mask and 350vmax end size', () => {
+    expect(styles).toContain('::view-transition-old(root)');
+    expect(styles).toContain('::view-transition-new(root)');
+    expect(styles).toContain('<feGaussianBlur stdDeviation="2"/>');
+    expect(styles).toContain("top left / 0 no-repeat");
+    expect(styles).toMatch(/transform-origin:\s*top left/);
+    expect(styles).toMatch(/mask-size:\s*350vmax/);
+  });
+});
+
+describe('IconSwap motion preference', () => {
+  it('uses the Motion reduced-motion signal to disable its spring', () => {
+    expect(iconSwapTransition(true)).toEqual({ duration: 0 });
+    expect(iconSwapTransition(false)).toMatchObject({
+      type: 'spring',
+      duration: 0.3,
+      bounce: 0,
+    });
   });
 });
 

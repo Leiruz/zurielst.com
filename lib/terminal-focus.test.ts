@@ -240,6 +240,8 @@ describe('Footer terminal opener', () => {
 
     button.props.onClick({ currentTarget: opener });
 
+    expect(button.props['data-haptic']).toBe(true);
+
     expect(dispatchEvent).toHaveBeenCalledOnce();
     const event = dispatchEvent.mock.calls[0]?.[0] as TestEvent;
     expect(event.type).toBe(TERMINAL_OPEN_EVENT);
@@ -259,6 +261,7 @@ describe('SiteNav terminal opener', () => {
     expect(markup).not.toContain('md:flex');
     expect(markup).toContain('data-terminal-trigger="true"');
     expect(markup).toContain('data-command-palette-trigger="true"');
+    expect(markup.match(/data-haptic="true"/g) ?? []).toHaveLength(2);
     expect(markup).toMatch(/<kbd[^>]*>Ctrl<\/kbd>/);
     expect(markup).toMatch(/<kbd[^>]*>K<\/kbd>/);
     expect(markup).toContain('data-mobile-nav-link="true"');

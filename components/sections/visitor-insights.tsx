@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { SectionAnchor } from '@/components/dossier/section-anchor';
+import { ScrollFadeEffect } from '@/components/registry/scroll-fade-effect';
 import {
   buildAnalyticsChart,
   formatAnalyticsDate,
@@ -21,7 +22,7 @@ export function VisitorInsights({ data }: VisitorInsightsProps) {
 
   return (
     <section id="insights" className="dossier-section bg-canvas-raised" aria-labelledby="insights-title">
-      <div className="dossier-shell min-w-0">
+      <ScrollFadeEffect entrance className="dossier-shell min-w-0">
         <p className="fig-label">Fig. 4. Insights</p>
         <h2 id="insights-title" className="dossier-title mt-4 text-text-1">
           Visitor insights <SectionAnchor href="#insights" label="visitor insights" />
@@ -189,7 +190,7 @@ export function VisitorInsights({ data }: VisitorInsightsProps) {
             </table>
           </div>
         </details>
-      </div>
+      </ScrollFadeEffect>
     </section>
   );
 }

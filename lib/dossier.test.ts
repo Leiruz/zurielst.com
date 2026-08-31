@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as dossier from './dossier';
-import { contributionHeatBucket, parseMetric } from './dossier';
+import { parseMetric } from './dossier';
 
 describe('formatLocationClock', () => {
   it('derives matching visible and machine-readable time from location data', () => {
@@ -58,22 +58,6 @@ describe('parseMetric', () => {
 
   it('returns null for a metric without a number', () => {
     expect(parseMetric('No metric')).toBeNull();
-  });
-});
-
-describe('contributionHeatBucket', () => {
-  it.each([
-    [0, 0],
-    [1, 1],
-    [2, 1],
-    [3, 2],
-    [5, 2],
-    [6, 3],
-    [9, 3],
-    [10, 4],
-    [24, 4],
-  ])('maps %i contributions to heat bucket %i', (count, expectedBucket) => {
-    expect(contributionHeatBucket(count)).toBe(expectedBucket);
   });
 });
 

@@ -15,6 +15,7 @@ export function FooterTerminalTrigger() {
     <button
       type="button"
       onClick={openTerminal}
+      data-haptic
       className="rounded-sm underline decoration-line-strong underline-offset-4 transition-colors duration-150 hover:text-text-1"
     >
       zurielst.com

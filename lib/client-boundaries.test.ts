@@ -91,6 +91,7 @@ describe('page client boundaries', () => {
 
     expect(markup.match(/aria-label="Return to top"/g) ?? []).toHaveLength(1);
     expect(markup).toContain('data-return-to-top="true"');
+    expect(markup).toMatch(/data-return-to-top="true"[^>]*data-haptic="true"/);
     expect(markup).toContain('data-visible="false"');
     expect(markup).toContain('aria-hidden="true"');
     expect(markup).toContain('tabindex="-1"');

@@ -65,6 +65,20 @@ describe('identity header', () => {
     expect(markup).not.toContain('data-zst-line-art');
     expect(markup).not.toContain('xl:grid-cols-[minmax(0,1.05fr)_minmax(18rem,0.75fr)_minmax(12rem,0.4fr)]');
   });
+
+  it('uses registry identity treatments without animating the identity section', () => {
+    const markup = renderToStaticMarkup(
+      createElement(IdentityHeader, { profile }),
+    );
+
+    expect(markup).toContain('data-slot="status-button"');
+    expect(markup).toContain(`href="${profile.identity.status.href}"`);
+    expect(markup).toContain(`>${profile.identity.status.label}<`);
+    expect(markup).toContain('data-slot="shimmering-text"');
+    expect(markup).toContain('data-slot="text-flip"');
+    expect(markup).toContain('aria-live="off"');
+    expect(markup).not.toContain('data-scroll-fade-effect="entrance"');
+  });
 });
 
 describe('footer', () => {
@@ -78,5 +92,15 @@ describe('footer', () => {
     );
 
     expect(markup).toContain('href="/media/resume.pdf"');
+  });
+
+  it('keeps a server-visible Zuriel fallback for the deferred footer effect', () => {
+    const markup = renderToStaticMarkup(
+      createElement(Footer, { name: profile.identity.name }),
+    );
+
+    const effectStart = markup.indexOf('data-footer-identity-effect="true"');
+    expect(effectStart).toBeGreaterThanOrEqual(0);
+    expect(markup.slice(effectStart, markup.indexOf('</div>', effectStart))).toContain('Zuriel');
   });
 });

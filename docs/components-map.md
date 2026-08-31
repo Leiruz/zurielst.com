@@ -1,6 +1,6 @@
 ﻿# Components map
 
-Vendored from ncdai's registry (chanhdai.com/r, MIT license; TRADEMARK.md restricts only chanhdai branding, none of which is vendored here). Each item below was fetched 2026-08-30 and saved byte-exact before extraction; the SHA256 lets any future registry state be diffed against what we shipped. Owner-excluded items (checklist 2026-08-30) are not vendored: not-found-01, login-01, slide-to-unlock, wheel-picker, elastic-slider, brand-assets-menu, code-block-command, blog-01, blog-02.
+Vendored from ncdai's registry (chanhdai.com/r, MIT license; TRADEMARK.md restricts only chanhdai branding, none of which is vendored here). Each original manifest item was fetched 2026-08-30 and saved byte-exact before extraction; the SHA256 lets any future registry state be diffed against what we shipped. Owner-excluded items (checklist 2026-08-30) are not vendored: not-found-01, login-01, wheel-picker, elastic-slider, brand-assets-menu, code-block-command, blog-01, blog-02.
 # Registry stage manifest: chanhdai.com KEEP set
 
 Fetched 2026-08-30 from https://chanhdai.com/r/registry.json (registry name "ncdai", 64 published items).
@@ -69,17 +69,70 @@ registryDependencies legend: plain name = shadcn base component (ui.shadcn.com);
 | chevrons-up-down-icon (transitive) | registry:component | 1 | 2385 | motion | - | - | `857a7651130d771f9ec0617fb4502fb1ed82d468352d558899ab067e9264b7e0` |
 | testimonial (transitive) | registry:component | 1 | 3574 | - | - | - | `e2d6707b2d9ab472de8529c3e506520ec270698dd5ffa2beb25579ca579ddb8d` |
 
+## Task 2 supplemental fetches
+
+Fetched byte-exact on 2026-08-31 from `https://chanhdai.com/r/{name}.json` before extraction.
+
+| Item | Type | Files | SHA256 (saved JSON) |
+|---|---|---|---|
+| haptic | registry:lib | 1 | `a423c7b9c12dba5db376f3cb14dd48669cac5e635814514474b135e1fd6f991f` |
+| slide-to-unlock | registry:component | 1 | `25d67d9ead49d8eb675df6cc4fe0e34ffa2873184611fdcccfd46169f0c7248b` |
+| theme-toggle-effect-circle-blur-top-left | registry:style | 0 | `6431089c5f69489cce88728bfeb0d674974de4e38e0bca7b7d66d6ca6c7601ff` |
+
+## Task 3 supplemental fetch
+
+Fetched byte-exact on 2026-08-31 before extraction.
+
+| Item | Type | Files | SHA256 (saved JSON) | Source |
+|---|---|---|---|---|
+| github-contributions | registry:component | 2 | `ec6b72c078edfc3c19aa3be56d8fa078145195d0c7fe7acaf6b1eb4d1a4ecbbb` | `https://chanhdai.com/r/github-contributions.json` |
+
+## Task 4 registry extraction and brand sources
+
+The staged `line-nav`, `logos-carousel`, `testimonial`, and `testimonials-marquee` manifests were extracted with the repository extractor on 2026-08-31. The `testimonials-marquee` manifest is metadata-only and writes no file. Its local adapter composes the extracted testimonial primitives and replaces the uninstalled `@kibo-ui/marquee` dependency with site-owned CSS.
+
+Eight brand glyphs use the single SVG path from Simple Icons commit `8a040dd8e1f7d99d27827efd4089a5434fdb7b5c`, with viewBox `0 0 24 24` and `currentColor` fill:
+
+- `https://raw.githubusercontent.com/simple-icons/simple-icons/8a040dd8e1f7d99d27827efd4089a5434fdb7b5c/icons/paloaltonetworks.svg`
+- `https://raw.githubusercontent.com/simple-icons/simple-icons/8a040dd8e1f7d99d27827efd4089a5434fdb7b5c/icons/fortinet.svg`
+- `https://raw.githubusercontent.com/simple-icons/simple-icons/8a040dd8e1f7d99d27827efd4089a5434fdb7b5c/icons/cisco.svg`
+- `https://raw.githubusercontent.com/simple-icons/simple-icons/8a040dd8e1f7d99d27827efd4089a5434fdb7b5c/icons/akamai.svg`
+- `https://raw.githubusercontent.com/simple-icons/simple-icons/8a040dd8e1f7d99d27827efd4089a5434fdb7b5c/icons/cloudflare.svg`
+- `https://raw.githubusercontent.com/simple-icons/simple-icons/8a040dd8e1f7d99d27827efd4089a5434fdb7b5c/icons/vmware.svg`
+- `https://raw.githubusercontent.com/simple-icons/simple-icons/8a040dd8e1f7d99d27827efd4089a5434fdb7b5c/icons/owasp.svg`
+- `https://raw.githubusercontent.com/simple-icons/simple-icons/8a040dd8e1f7d99d27827efd4089a5434fdb7b5c/icons/kalilinux.svg`
+
+Microsoft uses the historical last-containing Simple Icons revision at `https://raw.githubusercontent.com/simple-icons/simple-icons/ce334b5bda8d8d054cfde7ce35caf40651078a28/icons/microsoft.svg`. Simple Icons deliberately removed Microsoft brands in commit `73c31c01aad169e2ef0b04ced3c9d9f6225f0a8d`, so the historical pin is required.
+
+CyberArk uses the CyberArk-owned documentation mark at `https://raw.githubusercontent.com/cyberark/ark-sdk-python/761b4a46971be6a6104860e1a5a6caeedea00ebc/docs/media/logo.svg`. The local SVG keeps viewBox `0 0 64 64`, changes black to `currentColor`, and retains `translate(0 64) scale(.1 -.1)` because its path uses a 640-unit coordinate space and needs the inverted Y transform.
+
 ## Adaptation flags (Next.js coupling)
 
+- spotlight-logo: newly vendored for the nav terminal control; replaces registry artwork and sound dependencies with the decorative ZST wordmark and a dossier-token CSS hover spotlight.
+- status-button: newly vendored for identity availability; replaces transient button states with a semantic mailto anchor so navigation works without JavaScript.
+- scroll-fade-effect: newly vendored site-wide; preserves horizontal and vertical overflow masks and adds the `entrance` and `delayIndex` progressive CSS scroll-driven adapter without client observers. Staggering shifts bounded view-progress ranges instead of mixing time delays with a scroll timeline.
+- shimmering-text: newly vendored for the identity tagline; preserves the one-second default pace through progressive CSS and stops under reduced motion.
+- text-flip: newly vendored for identity roles; defaults to a span, uses a three-second CSS interval, keeps `aria-live="off"`, and leaves the first role fixed under reduced motion.
+- fluid-gradient-text: newly vendored for the footer bookend; keeps the registry pointer-driven spring gradient, uses unique SVG gradient IDs, dossier typography, and an accessible label, and fixes the gradient at center under reduced motion. Its footer wrapper is loaded through `next/dynamic` with a plain Zuriel fallback.
+- icon-swap: newly integrated in the single theme action; adds stable slot markers and disables its Motion spring through `useReducedMotion`.
+- haptic: keeps the vendored Vibration API and iOS checkbox fallback, with one delegated document click bridge for exact `data-haptic` controls.
+- slide-to-unlock: replaces the intro skip control, adapts the handle to a real button, adds Enter, Space, and ArrowRight-hold keyboard completion, and guards duplicate unlocks. Reduced-motion sessions use a plain instant Enter button.
+- theme-toggle-effect-circle-blur-top-left: integrates the registry CSS payload exactly with the blurred SVG mask anchored at top left and a `350vmax` final mask size. Theme state is committed synchronously inside the view-transition update callback.
+- work-experience: preserves the registry organization and nested-position structure while accepting the profile's prose periods directly. It removes date-fns, React Markdown, Collapsible, Separator, and icon dependencies, and composes the existing CopyDisclosure for all eight summaries.
+- contribution-graph: replaces date-fns with native UTC date grouping, uses the five dossier heat tokens, renders the committed 365 days in 53 SVG week groups, and adds labelled roving-tab-stop cells with boundary-safe arrow navigation.
+- github-contributions: accepts a direct Activity array from the committed snapshot adapter. The extracted cache helper, Promise path, tooltip, spinner, and all network access are removed for pure static export.
+- line-nav: keeps the registry's exact 24px normal and 40px active, hover, and focus geometry, visible labels, two between-item marks, and `aria-current="location"` semantics. It deliberately replaces the registry Motion spring with native hash anchors and a 160ms CSS width transition so the fixed desktop navigation does not pull Motion into the initial landing-route boundary. The global reduced-motion kill switch makes that transition instant, `scrollActiveIntoView` selects instant scrolling for the same preference, and one IntersectionObserver adapter tracks the active section.
+- logos-carousel: keeps four distributed columns, a monotonic 2400ms cycle, and a 125ms left-to-right wave. Every logo stays in static markup exactly once; inactive items remain in their column instead of being removed by AnimatePresence. A small `next/dynamic` enhancement cycles only while near the viewport and the document is visible. An interrupted wave normalizes every column to the shared step before playback can resume, and reduced-motion users receive all ten items as a static grid with no interval.
+- testimonial: trims unused avatar presentation and applies dossier borders, typography, and colors to the quote and attribution primitives.
+- testimonials-marquee: the registry manifest has no component file, so the local provenance-marked adapter composes testimonial primitives. It provides one semantic primary copy, an `aria-hidden` animation copy, pause on hover or focus, and a static reduced-motion grid without adding `@kibo-ui/marquee`.
 - consent-manager: imports @c15t/nextjs.
 - consent-manager: local component overrides registry copy with site-specific measurement-only privacy wording.
-- consent-manager: uses c15t's headless provider and state with a site-owned automatic banner, and loads the split c15t dialog only after Customize opens it.
+- consent-manager: uses c15t's headless provider and state with a site-owned automatic banner, and loads the split c15t dialog only after Customize opens it. The provider waits for both intro completion and the visitor's first pointer, keyboard, wheel, or touch interaction, preventing its banner from overlapping the intro dialog and keeping consent code outside an unengaged landing route; measurement remains disabled until consent.
 - theme-switcher: imports next-themes.
 - apple-hello-effect: replaces the Motion runtime with a native SVG and CSS stroke animation while retaining duration scaling and completion signaling.
 - apple-hello-effect: joins its two static class names directly so the automatic intro does not load a class-merging runtime.
-- theme-switcher: replaces the Motion runtime with CSS reveal and an action-labelled 44px toggle that shows the active-theme icon, removes the explicit system option while preserving system defaults in the provider, and waits for a resolved active theme before rendering the control.
+- theme-switcher: keeps a CSS outer reveal and an action-labelled 44px toggle with a keyed IconSwap for the active-theme icon, removes the explicit system option while preserving system defaults in the provider, and waits for a resolved active theme before rendering the control.
 - theme-switcher: uses hand-drawn inline sun and moon SVG geometry so the landing route does not load an icon-library runtime, and adds a lazy WebAudio direction cue that safely falls back to silence.
-- line-nav: imports next/link.
 - npm-level: @c15t/nextjs declared by consent-manager.
 - npm-level: next-themes declared by theme-switcher.
 - shadcn base sonner: its stock wrapper declares next-themes as an npm dependency.

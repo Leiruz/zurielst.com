@@ -1,4 +1,4 @@
-import { Reveal } from '@/components/dossier/reveal';
+import { ScrollFadeEffect } from '@/components/registry/scroll-fade-effect';
 import { SectionAnchor } from '@/components/dossier/section-anchor';
 import type {
   Award,
@@ -19,42 +19,42 @@ export function ProofWall({ profile }: ProofWallProps) {
   return (
     <section id="proof" className="dossier-section bg-canvas-raised" aria-labelledby="proof-title">
       <div className="dossier-shell min-w-0">
-        <Reveal>
+        <ScrollFadeEffect entrance>
           <p className="fig-label">Fig. 10. Accolades</p>
           <h2 id="proof-title" className="dossier-title mt-4 text-text-1">
             Accolades <SectionAnchor href="#proof" label="accolades" />
           </h2>
-        </Reveal>
+        </ScrollFadeEffect>
 
         <ProofGroup title="Certifications">
           {proof.certifications.map((item, index) => (
-            <Reveal key={item.id} delayIndex={index} className="h-full">
+            <ScrollFadeEffect entrance key={item.id} delayIndex={index} className="h-full">
               <CertificationTile item={item} />
-            </Reveal>
+            </ScrollFadeEffect>
           ))}
         </ProofGroup>
 
         <ProofGroup title="Awards">
           {proof.awards.map((item, index) => (
-            <Reveal key={item.id} delayIndex={index} className="h-full">
+            <ScrollFadeEffect entrance key={item.id} delayIndex={index} className="h-full">
               <AwardTile item={item} />
-            </Reveal>
+            </ScrollFadeEffect>
           ))}
         </ProofGroup>
 
         <ProofGroup title="CTF results">
           {proof.ctf_results.map((item, index) => (
-            <Reveal key={item.id} delayIndex={index} className="h-full">
+            <ScrollFadeEffect entrance key={item.id} delayIndex={index} className="h-full">
               <CtfTile item={item} />
-            </Reveal>
+            </ScrollFadeEffect>
           ))}
         </ProofGroup>
 
         <ProofGroup title="Publications">
           {proof.publications.map((item, index) => (
-            <Reveal key={item.id} delayIndex={index} className="h-full">
+            <ScrollFadeEffect entrance key={item.id} delayIndex={index} className="h-full">
               <PublicationTile item={item} />
-            </Reveal>
+            </ScrollFadeEffect>
           ))}
         </ProofGroup>
 
@@ -99,6 +99,7 @@ function CredentialLink({ src, title }: { src: string | undefined; title: string
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`View credential for ${title}`}
+      data-haptic
       className="mt-auto pt-6 font-mono text-xs text-text-2 underline decoration-line-strong underline-offset-4 transition-colors duration-150 hover:text-text-1"
     >
       View credential ↗
