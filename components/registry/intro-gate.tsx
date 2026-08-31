@@ -46,6 +46,35 @@ export function getIntroLeavingDelay(reducedMotion: boolean) {
   return reducedMotion ? 0 : 500;
 }
 
+const INTRO_ANIMATION_FALLBACK_DELAY = 4_500;
+
+interface IntroAnimationFallbackRuntime {
+  clearTimeout(timer: number): void;
+  setTimeout(callback: () => void, delay: number): number;
+}
+
+interface IntroAnimationFallbackState {
+  animationComplete: boolean;
+  reducedMotion: boolean;
+  show: boolean;
+}
+
+export function installIntroAnimationFallback(
+  state: IntroAnimationFallbackState,
+  onAnimationComplete: () => void,
+  runtime: IntroAnimationFallbackRuntime,
+) {
+  if (!state.show || state.reducedMotion || state.animationComplete) {
+    return () => {};
+  }
+
+  const timer = runtime.setTimeout(
+    onAnimationComplete,
+    INTRO_ANIMATION_FALLBACK_DELAY,
+  );
+  return () => runtime.clearTimeout(timer);
+}
+
 function markSeen() {
   try {
     window.sessionStorage.setItem(INTRO_SEEN_KEY, '1');
@@ -59,6 +88,7 @@ export function IntroGate() {
   const [show, setShow] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(true);
+  const [animationComplete, setAnimationComplete] = useState(false);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const introWasVisibleRef = useRef(false);
   const dismissingRef = useRef(false);
@@ -99,6 +129,15 @@ export function IntroGate() {
     [],
   );
 
+  useEffect(() => installIntroAnimationFallback(
+    { animationComplete, reducedMotion, show },
+    () => setAnimationComplete(true),
+    {
+      clearTimeout: (timer) => window.clearTimeout(timer),
+      setTimeout: (callback, delay) => window.setTimeout(callback, delay),
+    },
+  ), [animationComplete, reducedMotion, show]);
+
   useEffect(() => {
     if (show) {
       introWasVisibleRef.current = true;
@@ -138,7 +177,9 @@ export function IntroGate() {
 
   return (
     <IntroOverlay
+      animationComplete={animationComplete}
       leaving={leaving}
+      onAnimationComplete={() => setAnimationComplete(true)}
       onDismiss={dismiss}
       reducedMotion={reducedMotion}
     />
@@ -146,25 +187,37 @@ export function IntroGate() {
 }
 
 export function IntroOverlay({
+  animationComplete,
   leaving,
+  onAnimationComplete,
   onDismiss,
   reducedMotion,
 }: {
+  animationComplete: boolean;
   leaving: boolean;
+  onAnimationComplete: () => void;
   onDismiss: () => void;
   reducedMotion: boolean;
 }) {
+  const entryReady = reducedMotion || animationComplete;
+
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Intro animation"
+      autoFocus={!entryReady}
+      tabIndex={entryReady ? undefined : -1}
       onKeyDown={(event) => {
         if (leaving || event.key !== 'Tab') return;
         event.preventDefault();
-        event.currentTarget
-          .querySelector<HTMLButtonElement>('button')
-          ?.focus();
+        if (entryReady) {
+          event.currentTarget
+            .querySelector<HTMLButtonElement>('button')
+            ?.focus();
+        } else {
+          event.currentTarget.focus();
+        }
       }}
       className={
         'fixed inset-0 z-[101] flex items-center justify-center transition-opacity duration-500 ' +
@@ -176,7 +229,7 @@ export function IntroOverlay({
         className={`${INTRO_HELLO_SIZE_CLASS} text-white`}
         onAnimationComplete={reducedMotion
           ? undefined
-          : () => window.setTimeout(onDismiss, 350)}
+          : onAnimationComplete}
       />
       {reducedMotion ? (
         <button
@@ -188,9 +241,9 @@ export function IntroOverlay({
         >
           Enter
         </button>
-      ) : (
+      ) : entryReady ? (
         <SlideToUnlock
-          className="absolute bottom-8 left-1/2 w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 border border-white/25 bg-black/60 text-white"
+          className="intro-entry-control absolute bottom-8 left-1/2 w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 border border-white/25 bg-black/60 text-white"
           onUnlock={onDismiss}
         >
           <SlideToUnlockTrack>
@@ -200,7 +253,7 @@ export function IntroOverlay({
             <SlideToUnlockHandle autoFocus disabled={leaving} />
           </SlideToUnlockTrack>
         </SlideToUnlock>
-      )}
+      ) : null}
     </div>
   );
 }
