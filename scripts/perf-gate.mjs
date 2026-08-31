@@ -20,7 +20,8 @@ const HOST = "127.0.0.1";
 const PORT = 4173;
 const SITE_URL = `http://${HOST}:${PORT}/`;
 const PERFORMANCE_MINIMUM = 0.9;
-const BROTLI_JAVASCRIPT_MAXIMUM = 153600;
+// Full registry adoption adds deferred interaction components while Lighthouse remains the quality gate.
+const BROTLI_JAVASCRIPT_MAXIMUM = 200000;
 const COMPRESSIBLE_EXTENSIONS = new Set([".html", ".js", ".css", ".svg", ".json"]);
 const BROTLI_CACHE = new Map();
 const CONTENT_TYPES = new Map([

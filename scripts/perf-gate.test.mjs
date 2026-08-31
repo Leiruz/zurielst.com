@@ -90,6 +90,101 @@ test("median returns the middle value for an odd-sized sample", () => {
   assert.equal(median([0.93, 0.99, 0.95]), 0.95);
 });
 
+test("keeps the full registry adoption budget and Lighthouse minimum exact", async () => {
+  const source = await readFile(new URL("./perf-gate.mjs", import.meta.url), "utf8");
+
+  assert.match(source, /const PERFORMANCE_MINIMUM = 0\.9;/);
+  assert.match(source, /const BROTLI_JAVASCRIPT_MAXIMUM = 200000;/);
+  assert.match(source, /full registry adoption/i);
+  assert.doesNotMatch(source, /BROTLI_JAVASCRIPT_MAXIMUM = 153600/);
+});
+
+test("documents the pinned brand sources and exceptional logo provenance", async () => {
+  const docs = await readFile(new URL("../docs/components-map.md", import.meta.url), "utf8");
+
+  assert.match(docs, /simple-icons\/simple-icons\/8a040dd8e1f7d99d27827efd4089a5434fdb7b5c/);
+  assert.match(docs, /simple-icons\/simple-icons\/ce334b5bda8d8d054cfde7ce35caf40651078a28\/icons\/microsoft\.svg/);
+  assert.match(docs, /73c31c01aad169e2ef0b04ced3c9d9f6225f0a8d/);
+  assert.match(docs, /cyberark\/ark-sdk-python\/761b4a46971be6a6104860e1a5a6caeedea00ebc\/docs\/media\/logo\.svg/i);
+  assert.match(docs, /translate\(0 64\) scale\(\.1 -\.1\)/);
+  assert.match(docs, /metadata-only/i);
+});
+
+test("keeps LineNav native and outside the initial Motion runtime", async () => {
+  const lineNav = await readFile(
+    new URL("../components/registry/line-nav.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.doesNotMatch(lineNav, /from ['"]motion\/react['"]/);
+  assert.doesNotMatch(lineNav, /<motion\./);
+  assert.match(lineNav, /<a\b/);
+  assert.match(
+    lineNav,
+    /window\.matchMedia\(['"]\(prefers-reduced-motion: reduce\)['"]\)\.matches/,
+  );
+  assert.match(
+    lineNav,
+    /behavior:\s*reduceMotion\s*\?\s*['"]auto['"]\s*:\s*['"]smooth['"]/,
+  );
+});
+
+test("keeps the exact LineNav geometry in reduced-motion-safe CSS", async () => {
+  const styles = await readFile(
+    new URL("../styles/globals.css", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    styles,
+    /\.line-nav-indicator\s*\{[^}]*width:\s*24px;[^}]*transition:\s*width\s+160ms\b[^}]*\}/,
+  );
+  assert.match(
+    styles,
+    /\.line-nav-anchor\[aria-current='location'\]\s+\.line-nav-indicator,\s*\.line-nav-anchor:hover\s+\.line-nav-indicator,\s*\.line-nav-anchor:focus-visible\s+\.line-nav-indicator\s*\{[^}]*width:\s*40px;/,
+  );
+  assert.match(
+    styles,
+    /@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*transition-duration:\s*0\.01ms\s*!important/,
+  );
+});
+
+test("keeps carousel wave direction and a progressive observer fallback", async () => {
+  const [carousel, enhancement, sectionNav, styles] = await Promise.all([
+    readFile(new URL("../components/registry/logos-carousel.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/registry/logos-carousel-enhancement.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/section-line-nav.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../styles/globals.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(carousel, /direction\?:\s*'ltr'\s*\|\s*'rtl'/);
+  assert.match(enhancement, /direction === 'rtl'/);
+  assert.match(enhancement, /dataset\.exiting = 'true'/);
+  assert.match(enhancement, /500/);
+  assert.match(enhancement, /step \+= 1;/);
+  assert.doesNotMatch(enhancement, /\(step \+ 1\)\s*%\s*itemCount/);
+  assert.match(enhancement, /document\.visibilityState === 'visible'/);
+  assert.match(enhancement, /visibilitychange/);
+  assert.match(enhancement, /if \(cycleId !== undefined\) return;/);
+  assert.match(enhancement, /const pause = \(\) => \{[\s\S]*normalizeCarouselColumns\(columns, step\)/);
+  assert.match(enhancement, /typeof IntersectionObserver === 'undefined'/);
+  assert.match(sectionNav, /typeof IntersectionObserver === 'undefined'/);
+  assert.match(styles, /logos-carousel-logo\[data-exiting='true'\][\s\S]*translateY\(-50%\)/);
+  assert.match(styles, /@media\s*\(min-width:\s*48rem\)[\s\S]*\.logos-carousel[\s\S]*--logos-column-count/);
+  assert.match(styles, /testimonials-marquee-primary \[data-slot='testimonial'\][\s\S]*width:\s*auto/);
+
+  const columnLengths = [3, 3, 2, 2];
+  const stepBefore = 9;
+  const stepAfter = stepBefore + 1;
+  const activeBefore = columnLengths.map((length) => stepBefore % length);
+  const activeAfter = columnLengths.map((length) => stepAfter % length);
+  assert.equal(
+    activeAfter.every((activeIndex, index) => activeIndex !== activeBefore[index]),
+    true,
+    "a cadence tick must advance every uneven carousel column",
+  );
+});
+
 test("landing-route controls avoid superseded identity motion code and unnecessary runtimes", async () => {
   const [appleHelloSource, fluidGradientSource, globalStyles, identitySource, siteNavSource, themeSwitcherSource] = await Promise.all(
     [

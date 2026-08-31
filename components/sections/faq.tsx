@@ -11,7 +11,7 @@ export function Faq({ profile }: FaqProps) {
     <section id="faq" className="dossier-section bg-canvas-raised" aria-labelledby="faq-title">
       <div className="dossier-shell min-w-0">
         <ScrollFadeEffect entrance>
-          <p className="fig-label">Fig. 13. FAQ</p>
+          <p className="fig-label">Fig. 14. FAQ</p>
           <h2 id="faq-title" className="dossier-title mt-4 text-text-1">
             FAQ <SectionAnchor href="#faq" label="FAQ" />
           </h2>

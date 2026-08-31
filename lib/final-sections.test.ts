@@ -12,13 +12,13 @@ const profile = profileJson as Profile;
 
 const expectedSectionIds = [
   'identity', 'intro', 'contributions', 'insights', 'capabilities', 'stack', 'work',
-  'timeline', 'education', 'proof', 'products', 'brands', 'faq', 'contact',
+  'timeline', 'education', 'proof', 'products', 'brands', 'testimonials', 'faq', 'contact',
 ];
 
 const expectedFigureLabels = [
   'Identity', 'Introduction', 'Contributions', 'Insights', 'Capabilities', 'Stack',
   'Selected work', 'Timeline', 'Education', 'Accolades', 'Products',
-  'Worked with', 'FAQ', 'Contact',
+  'Worked with', 'Testimonials', 'FAQ', 'Contact',
 ];
 
 function expectRenderedText(markup: string, value: string) {
@@ -40,8 +40,9 @@ describe('final dossier sections', () => {
       ['proof', 'Fig. 10. Accolades'],
       ['products', 'Fig. 11. Products'],
       ['brands', 'Fig. 12. Worked with'],
-      ['faq', 'Fig. 13. FAQ'],
-      ['contact', 'Fig. 14. Contact'],
+      ['testimonials', 'Fig. 13. Testimonials'],
+      ['faq', 'Fig. 14. FAQ'],
+      ['contact', 'Fig. 15. Contact'],
     ] as const) {
       expect(markup).toContain(`id="${id}"`);
       expect(markup).toContain(label);

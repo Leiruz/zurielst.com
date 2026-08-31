@@ -87,6 +87,25 @@ Fetched byte-exact on 2026-08-31 before extraction.
 |---|---|---|---|---|
 | github-contributions | registry:component | 2 | `ec6b72c078edfc3c19aa3be56d8fa078145195d0c7fe7acaf6b1eb4d1a4ecbbb` | `https://chanhdai.com/r/github-contributions.json` |
 
+## Task 4 registry extraction and brand sources
+
+The staged `line-nav`, `logos-carousel`, `testimonial`, and `testimonials-marquee` manifests were extracted with the repository extractor on 2026-08-31. The `testimonials-marquee` manifest is metadata-only and writes no file. Its local adapter composes the extracted testimonial primitives and replaces the uninstalled `@kibo-ui/marquee` dependency with site-owned CSS.
+
+Eight brand glyphs use the single SVG path from Simple Icons commit `8a040dd8e1f7d99d27827efd4089a5434fdb7b5c`, with viewBox `0 0 24 24` and `currentColor` fill:
+
+- `https://raw.githubusercontent.com/simple-icons/simple-icons/8a040dd8e1f7d99d27827efd4089a5434fdb7b5c/icons/paloaltonetworks.svg`
+- `https://raw.githubusercontent.com/simple-icons/simple-icons/8a040dd8e1f7d99d27827efd4089a5434fdb7b5c/icons/fortinet.svg`
+- `https://raw.githubusercontent.com/simple-icons/simple-icons/8a040dd8e1f7d99d27827efd4089a5434fdb7b5c/icons/cisco.svg`
+- `https://raw.githubusercontent.com/simple-icons/simple-icons/8a040dd8e1f7d99d27827efd4089a5434fdb7b5c/icons/akamai.svg`
+- `https://raw.githubusercontent.com/simple-icons/simple-icons/8a040dd8e1f7d99d27827efd4089a5434fdb7b5c/icons/cloudflare.svg`
+- `https://raw.githubusercontent.com/simple-icons/simple-icons/8a040dd8e1f7d99d27827efd4089a5434fdb7b5c/icons/vmware.svg`
+- `https://raw.githubusercontent.com/simple-icons/simple-icons/8a040dd8e1f7d99d27827efd4089a5434fdb7b5c/icons/owasp.svg`
+- `https://raw.githubusercontent.com/simple-icons/simple-icons/8a040dd8e1f7d99d27827efd4089a5434fdb7b5c/icons/kalilinux.svg`
+
+Microsoft uses the historical last-containing Simple Icons revision at `https://raw.githubusercontent.com/simple-icons/simple-icons/ce334b5bda8d8d054cfde7ce35caf40651078a28/icons/microsoft.svg`. Simple Icons deliberately removed Microsoft brands in commit `73c31c01aad169e2ef0b04ced3c9d9f6225f0a8d`, so the historical pin is required.
+
+CyberArk uses the CyberArk-owned documentation mark at `https://raw.githubusercontent.com/cyberark/ark-sdk-python/761b4a46971be6a6104860e1a5a6caeedea00ebc/docs/media/logo.svg`. The local SVG keeps viewBox `0 0 64 64`, changes black to `currentColor`, and retains `translate(0 64) scale(.1 -.1)` because its path uses a 640-unit coordinate space and needs the inverted Y transform.
+
 ## Adaptation flags (Next.js coupling)
 
 - spotlight-logo: newly vendored for the nav terminal control; replaces registry artwork and sound dependencies with the decorative ZST wordmark and a dossier-token CSS hover spotlight.
@@ -102,6 +121,10 @@ Fetched byte-exact on 2026-08-31 before extraction.
 - work-experience: preserves the registry organization and nested-position structure while accepting the profile's prose periods directly. It removes date-fns, React Markdown, Collapsible, Separator, and icon dependencies, and composes the existing CopyDisclosure for all eight summaries.
 - contribution-graph: replaces date-fns with native UTC date grouping, uses the five dossier heat tokens, renders the committed 365 days in 53 SVG week groups, and adds labelled roving-tab-stop cells with boundary-safe arrow navigation.
 - github-contributions: accepts a direct Activity array from the committed snapshot adapter. The extracted cache helper, Promise path, tooltip, spinner, and all network access are removed for pure static export.
+- line-nav: keeps the registry's exact 24px normal and 40px active, hover, and focus geometry, visible labels, two between-item marks, and `aria-current="location"` semantics. It deliberately replaces the registry Motion spring with native hash anchors and a 160ms CSS width transition so the fixed desktop navigation does not pull Motion into the initial landing-route boundary. The global reduced-motion kill switch makes that transition instant, `scrollActiveIntoView` selects instant scrolling for the same preference, and one IntersectionObserver adapter tracks the active section.
+- logos-carousel: keeps four distributed columns, a monotonic 2400ms cycle, and a 125ms left-to-right wave. Every logo stays in static markup exactly once; inactive items remain in their column instead of being removed by AnimatePresence. A small `next/dynamic` enhancement cycles only while near the viewport and the document is visible. An interrupted wave normalizes every column to the shared step before playback can resume, and reduced-motion users receive all ten items as a static grid with no interval.
+- testimonial: trims unused avatar presentation and applies dossier borders, typography, and colors to the quote and attribution primitives.
+- testimonials-marquee: the registry manifest has no component file, so the local provenance-marked adapter composes testimonial primitives. It provides one semantic primary copy, an `aria-hidden` animation copy, pause on hover or focus, and a static reduced-motion grid without adding `@kibo-ui/marquee`.
 - consent-manager: imports @c15t/nextjs.
 - consent-manager: local component overrides registry copy with site-specific measurement-only privacy wording.
 - consent-manager: uses c15t's headless provider and state with a site-owned automatic banner, and loads the split c15t dialog only after Customize opens it.
@@ -110,7 +133,6 @@ Fetched byte-exact on 2026-08-31 before extraction.
 - apple-hello-effect: joins its two static class names directly so the automatic intro does not load a class-merging runtime.
 - theme-switcher: keeps a CSS outer reveal and an action-labelled 44px toggle with a keyed IconSwap for the active-theme icon, removes the explicit system option while preserving system defaults in the provider, and waits for a resolved active theme before rendering the control.
 - theme-switcher: uses hand-drawn inline sun and moon SVG geometry so the landing route does not load an icon-library runtime, and adds a lazy WebAudio direction cue that safely falls back to silence.
-- line-nav: imports next/link.
 - npm-level: @c15t/nextjs declared by consent-manager.
 - npm-level: next-themes declared by theme-switcher.
 - shadcn base sonner: its stock wrapper declares next-themes as an npm dependency.

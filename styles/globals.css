@@ -650,6 +650,95 @@ canvas {
   place-items: center;
 }
 
+.line-nav-indicator {
+  width: 24px;
+  transition: width 160ms cubic-bezier(.32, .72, 0, 1);
+}
+
+.line-nav-anchor[aria-current='location'] .line-nav-indicator,
+.line-nav-anchor:hover .line-nav-indicator,
+.line-nav-anchor:focus-visible .line-nav-indicator {
+  width: 40px;
+}
+
+.logos-carousel {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--line);
+}
+
+.logos-carousel-column {
+  min-height: 17rem;
+  overflow: hidden;
+  background: var(--canvas);
+}
+
+.logos-carousel-logo {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(45%);
+  filter: blur(2px);
+  transition:
+    opacity 500ms cubic-bezier(.25, .46, .45, .94),
+    transform 500ms cubic-bezier(.25, .46, .45, .94),
+    filter 500ms cubic-bezier(.25, .46, .45, .94);
+}
+
+.logos-carousel-logo[data-active='true'] {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+.logos-carousel-logo[data-exiting='true'] {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+  filter: blur(3px);
+}
+
+@media (min-width: 48rem) {
+  .logos-carousel {
+    grid-template-columns: repeat(var(--logos-column-count), minmax(0, 1fr));
+  }
+}
+
+.brand-carousel-card {
+  border: 0;
+}
+
+@keyframes testimonials-marquee-scroll {
+  to { transform: translateX(-50%); }
+}
+
+.testimonials-marquee {
+  overflow: hidden;
+  outline-offset: 0.25rem;
+}
+
+.testimonials-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: testimonials-marquee-scroll 36s linear infinite;
+}
+
+.testimonials-marquee-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 36rem));
+  gap: 1rem;
+  padding-right: 1rem;
+}
+
+.testimonials-marquee:hover .testimonials-marquee-track,
+.testimonials-marquee:focus-within .testimonials-marquee-track {
+  animation-play-state: paused;
+}
+
 /* Floating dossier assistant */
 .chat-launcher,
 .chat-panel-frame,
@@ -1105,6 +1194,45 @@ body[data-chat] .return-to-top {
     display: none;
   }
 
+  .logos-carousel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    animation: none !important;
+  }
+
+  .logos-carousel-column {
+    display: contents;
+  }
+
+  .logos-carousel-logo,
+  .logos-carousel-logo[data-active='true'] {
+    position: static;
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+    filter: none;
+    transition: none !important;
+  }
+
+  .testimonials-marquee-track {
+    display: block;
+    width: auto;
+    animation: none !important;
+    transform: none;
+  }
+
+  .testimonials-marquee-primary {
+    grid-template-columns: minmax(0, 1fr);
+    padding-right: 0;
+  }
+
+  .testimonials-marquee-primary [data-slot='testimonial'] {
+    width: auto;
+  }
+
+  .testimonials-marquee-duplicate {
+    display: none;
+  }
+
   .chat-character-counter,
   .chat-control,
   .chat-launcher,
@@ -1119,6 +1247,12 @@ body[data-chat] .return-to-top {
 
   .return-to-top {
     transition: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) and (min-width: 48rem) {
+  .testimonials-marquee-primary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

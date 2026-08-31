@@ -15,13 +15,13 @@ const profile = profileJson as Profile;
 
 const expectedSectionIds = [
   'identity', 'intro', 'contributions', 'insights', 'capabilities', 'stack', 'work',
-  'timeline', 'education', 'proof', 'products', 'brands', 'faq', 'contact',
+  'timeline', 'education', 'proof', 'products', 'brands', 'testimonials', 'faq', 'contact',
 ];
 
 const expectedFigureLabels = [
   'Identity', 'Introduction', 'Contributions', 'Insights', 'Capabilities', 'Stack',
   'Selected work', 'Timeline', 'Education', 'Accolades', 'Products',
-  'Worked with', 'FAQ', 'Contact',
+  'Worked with', 'Testimonials', 'FAQ', 'Contact',
 ];
 
 function expectRenderedText(markup: string, value: string) {
@@ -75,11 +75,12 @@ describe('core dossier sections', () => {
     const workStart = markup.indexOf('id="work"');
     const productsStart = markup.indexOf('id="products"');
     const brandsStart = markup.indexOf('id="brands"');
+    const testimonialsStart = markup.indexOf('id="testimonials"');
     const faqStart = markup.indexOf('id="faq"');
     const navMarkup = markup.slice(markup.indexOf('<nav'), markup.indexOf('</nav>') + '</nav>'.length);
     const introMarkup = markup.slice(introStart, contributionsStart);
     const stackMarkup = markup.slice(stackStart, workStart);
-    const brandsMarkup = markup.slice(brandsStart, faqStart);
+    const brandsMarkup = markup.slice(brandsStart, testimonialsStart);
     const stackItems = profile.stack.categories.flatMap((category) => category.items);
 
     expect(identityStart).toBeGreaterThanOrEqual(0);
@@ -91,7 +92,8 @@ describe('core dossier sections', () => {
     expect(workStart).toBeGreaterThan(stackStart);
     expect(productsStart).toBeGreaterThan(workStart);
     expect(brandsStart).toBeGreaterThan(productsStart);
-    expect(faqStart).toBeGreaterThan(brandsStart);
+    expect(testimonialsStart).toBeGreaterThan(brandsStart);
+    expect(faqStart).toBeGreaterThan(testimonialsStart);
 
     expect(introMarkup).toContain('data-local-greeting="true">Hello</');
     expect(introMarkup.match(/data-intro-bullet="true"/g)).toHaveLength(profile.intro.bullets.length);
@@ -106,14 +108,15 @@ describe('core dossier sections', () => {
     }
     expect(stackMarkup).not.toMatch(/<(?:img|svg)\b/);
 
-    expect(brandsMarkup.match(/data-brand-tile="true"/g)).toHaveLength(profile.stack_brands.brands.length);
+    expect(brandsMarkup.match(/data-brand-item="true"/g)).toHaveLength(profile.stack_brands.brands.length);
+    expect(brandsMarkup.match(/data-brand-icon="true"/g)).toHaveLength(profile.stack_brands.brands.length);
     for (const brand of profile.stack_brands.brands) {
       expectRenderedText(brandsMarkup, brand.name);
       expectRenderedText(brandsMarkup, brand.context);
     }
     expectRenderedText(brandsMarkup, profile.stack_brands.disclaimer);
     expect(brandsMarkup).not.toMatch(/<img\b/);
-    expect(brandsMarkup).not.toMatch(/<svg\b/);
+    expect(brandsMarkup.match(/<svg\b/g)).toHaveLength(profile.stack_brands.brands.length);
     expect(brandsMarkup).not.toContain('M5 12h14');
     expect(brandsMarkup).not.toContain('M12 5v14');
 

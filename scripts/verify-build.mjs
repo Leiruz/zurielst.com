@@ -17,6 +17,7 @@ const LANDING_SECTION_IDS = [
   "proof",
   "products",
   "brands",
+  "testimonials",
   "faq",
   "contact",
 ];
@@ -33,6 +34,7 @@ const LANDING_SECTION_CAPTIONS = [
   "Accolades",
   "Products",
   "Worked with",
+  "Testimonials",
   "FAQ",
   "Contact",
 ];
