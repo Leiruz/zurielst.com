@@ -4,7 +4,6 @@
 
 import { motion, useSpring } from "motion/react";
 import { memo, useEffect, useMemo, useState } from "react";
-// @ts-expect-error This project intentionally omits the react-dom declaration package.
 import { createPortal } from "react-dom";
 import {
   resolveTooltipBoxMotion,

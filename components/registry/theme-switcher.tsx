@@ -4,7 +4,6 @@
 
 import { useRef, useSyncExternalStore } from "react"
 import { useTheme } from "next-themes"
-// @ts-expect-error The installed react-dom runtime has no declaration package in this project.
 import { flushSync } from "react-dom"
 
 import { IconSwap, IconSwapItem } from "@/components/registry/icon-swap"

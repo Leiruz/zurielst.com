@@ -7,7 +7,6 @@ import {
   type ReactNode,
 } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-// @ts-expect-error The installed react-dom runtime has no declaration package in this project.
 import { renderToStaticMarkup } from 'react-dom/server';
 // @ts-expect-error The Vitest config exposes the stylesheet source as a virtual text module.
 import styles from 'virtual:globals-css-source';
