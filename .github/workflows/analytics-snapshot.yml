@@ -5,6 +5,7 @@ on:
     - cron: '17 3 * * 1'
   workflow_dispatch:
 
+# Owner prerequisite: repo Settings -> Actions -> General -> Workflow permissions must enable "Allow GitHub Actions to create and approve pull requests".
 permissions:
   contents: write
   pull-requests: write
@@ -62,11 +63,14 @@ jobs:
 
           pr_number="$(gh pr list --base main --head analytics/refresh --state open --json number --jq '.[0].number // empty')"
           if [[ -z "$pr_number" ]]; then
-            gh pr create \
+            if ! gh pr create \
               --base main \
               --head analytics/refresh \
               --title "chore: refresh analytics snapshot" \
-              --body "Refreshes the committed Cloudflare Web Analytics snapshot for issue #19."
+              --body "Refreshes the committed Cloudflare Web Analytics snapshot for issue #19."; then
+              echo '::error::GitHub rejected pull request creation. Enable "Allow GitHub Actions to create and approve pull requests" in Settings > Actions > General > Workflow permissions.'
+              exit 1
+            fi
           else
             echo "Updated existing analytics refresh pull request #$pr_number"
           fi

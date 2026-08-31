@@ -6,6 +6,8 @@ const prerequisiteComment =
   "# Prerequisite: repo Settings -> Environments -> deploy must exist with a required reviewer and the CLOUDFLARE_* secrets; this workflow cannot create it.";
 const environmentEndpoint =
   'repos/${{ github.repository }}/environments/deploy';
+const actionsPullRequestSetting =
+  "Allow GitHub Actions to create and approve pull requests";
 
 async function readWorkflow(fileName) {
   return readFile(new URL(`../.github/workflows/${fileName}`, import.meta.url), "utf8");
@@ -130,6 +132,48 @@ test("analytics snapshot refresh uses pinned actions and a direct gh pull reques
   assert.ok(workflow.includes("gh pr list"));
   assert.ok(workflow.includes("gh pr create"));
   assert.ok(!workflow.includes("peter-evans/create-pull-request"));
+
+  assert.ok(
+    workflow.includes(`# Owner prerequisite: repo Settings -> Actions -> General -> Workflow permissions must enable "${actionsPullRequestSetting}".`),
+    "the workflow records the repository-level pull request prerequisite",
+  );
+  const guardedCreateIndex = workflow.indexOf("if ! gh pr create");
+  const createErrorIndex = workflow.indexOf("::error::", guardedCreateIndex);
+  const settingIndex = workflow.indexOf(actionsPullRequestSetting, createErrorIndex);
+  const createExitIndex = workflow.indexOf("exit 1", settingIndex);
+  const createGuardEndIndex = workflow.indexOf("\n            fi", createExitIndex);
+  assert.notEqual(guardedCreateIndex, -1, "pull request creation failures are caught");
+  assert.ok(createErrorIndex > guardedCreateIndex, "a rejected pull request emits an annotation");
+  assert.ok(settingIndex > createErrorIndex, "the annotation names the required setting");
+  assert.ok(createExitIndex > settingIndex, "the rejected pull request still fails the job");
+  assert.ok(createGuardEndIndex > createExitIndex, "the failure handling stays in the create guard");
+});
+
+test("runbook documents analytics refresh prerequisites and token rotation", async () => {
+  const runbook = await readFile(new URL("../docs/runbook.md", import.meta.url), "utf8");
+
+  assert.ok(runbook.includes(actionsPullRequestSetting));
+  assert.match(runbook, /CF_ANALYTICS_TOKEN.*repository Actions secret/is);
+  assert.ok(runbook.includes("`Account > Account Analytics > Read` as its only permission"));
+  assert.match(runbook, /It needs no\s+zone or edit permissions/);
+  assert.ok(runbook.includes("https://api.cloudflare.com/client/v4/graphql"));
+  assert.ok(runbook.includes("rumPageloadEventsAdaptiveGroups"));
+  assert.ok(runbook.includes("set -o pipefail"));
+  assert.ok(runbook.includes(".errors == null and (.data.viewer.accounts | length == 1)"));
+  assert.ok(runbook.includes("gh secret set CF_ANALYTICS_TOKEN --repo Leiruz/zurielst.com"));
+
+  const replacementIndex = runbook.indexOf("replacement token");
+  const verificationIndex = runbook.indexOf("run the verification query", replacementIndex);
+  const updateIndex = runbook.indexOf("update the repository secret", verificationIndex);
+  const dispatchIndex = runbook.indexOf("manually dispatch `analytics-snapshot.yml`", updateIndex);
+  const confirmationIndex = runbook.indexOf("confirm success", dispatchIndex);
+  const revocationIndex = runbook.indexOf("revoke the old token", confirmationIndex);
+  assert.ok(replacementIndex > -1, "rotation starts with a replacement token");
+  assert.ok(verificationIndex > replacementIndex, "the replacement is verified first");
+  assert.ok(updateIndex > verificationIndex, "only a verified token replaces the secret");
+  assert.ok(dispatchIndex > updateIndex, "the workflow is dispatched with the replacement");
+  assert.ok(confirmationIndex > dispatchIndex, "the replacement workflow must succeed");
+  assert.ok(revocationIndex > confirmationIndex, "the old token is revoked last");
 });
 
 test("runbook records the pending consent-gated Web Analytics setup", async () => {

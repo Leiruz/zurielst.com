@@ -62,6 +62,13 @@ PR previews: pr-ci.yml builds and uploads the artifact secretlessly;
 preview-deploy.yml (same `deploy` environment, one approval per preview)
 uploads a preview version of the site worker and comments the URL.
 
+The weekly `.github/workflows/analytics-snapshot.yml` workflow has a
+mandatory owner prerequisite. In repository Settings > Actions > General >
+Workflow permissions, enable
+`Allow GitHub Actions to create and approve pull requests`. Its
+workflow-level `pull-requests: write` permission does not replace this
+repository setting.
+
 ### 2. Manual route deploy (overlay configs, wrangler OAuth)
 
 Route changes only ever happen through the overlay configs, deployed
@@ -112,6 +119,32 @@ Pending owner step: disable Web Analytics automatic setup and ship the manual sn
 - CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN live only in the GitHub
   environment `deploy`. The token has deploy permissions but no route
   (zone) permissions, by design.
+- CF_ANALYTICS_TOKEN is a repository Actions secret used only by the weekly
+  analytics snapshot workflow. Create a dedicated Cloudflare API token
+  restricted to account `bfa514fe29643bf52b4999fa21e7b393` with
+  `Account > Account Analytics > Read` as its only permission. It needs no
+  zone or edit permissions. Set it from bash:
+
+      printf %s "$VALUE" | gh secret set CF_ANALYTICS_TOKEN --repo Leiruz/zurielst.com
+
+  Before storing or rotating the token, verify its read access with this
+  GraphQL query. A successful check prints `true`:
+
+      set -o pipefail
+      analytics_day="$(date -u -d yesterday +%F)"
+      curl --fail-with-body --silent --show-error \
+        --request POST \
+        --url https://api.cloudflare.com/client/v4/graphql \
+        --header "Authorization: Bearer $VALUE" \
+        --header "Content-Type: application/json" \
+        --data "{\"query\":\"query VerifyAnalyticsToken(\$accountTag: string, \$siteTag: string, \$date: Date) { viewer { accounts(filter: { accountTag: \$accountTag }) { rumPageloadEventsAdaptiveGroups(filter: { siteTag: \$siteTag, date_geq: \$date, date_leq: \$date }, limit: 1) { count } } } }\",\"variables\":{\"accountTag\":\"bfa514fe29643bf52b4999fa21e7b393\",\"siteTag\":\"132089a6cdb94c13b46d32c7f2061e18\",\"date\":\"$analytics_day\"}}" \
+        | jq -e '.errors == null and (.data.viewer.accounts | length == 1)'
+
+  To rotate it, create a replacement token with the same account and
+  read-only scope, run the verification query, update the repository secret,
+  manually dispatch `analytics-snapshot.yml`, confirm success, and then
+  revoke the old token. If exposure is suspected, revoke the old token
+  immediately before replacing it.
 - Setting them from PowerShell via a pipeline appends CRLF and wrangler
   rejects the value. Set from bash:
 
