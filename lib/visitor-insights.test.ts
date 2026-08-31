@@ -6,13 +6,28 @@ import { describe, expect, it, vi } from 'vitest';
 import Home from '@/app/page';
 import { VisitorInsights } from '@/components/sections/visitor-insights';
 import snapshotJson from '@/content/analytics-snapshot.json';
-import type { AnalyticsSnapshot } from '@/lib/analytics-snapshot';
+import {
+  buildAnalyticsChart,
+  type AnalyticsSnapshot,
+} from '@/lib/analytics-snapshot';
 // @ts-expect-error The Vitest config exposes the stylesheet source as a virtual text module.
 import styles from 'virtual:globals-css-source';
 
 vi.mock('server-only', () => ({}));
 
 describe('visitor insights section', () => {
+  it('builds the Bklit series once with only date, visits, and views', () => {
+    const chart = buildAnalyticsChart([
+      { date: '2026-08-29', sampled: true, views: 9, visits: 4 },
+      { date: '2026-08-30', sampled: false, views: 12, visits: 7 },
+    ]);
+
+    expect(chart.series).toEqual([
+      { date: '2026-08-29', views: 9, visits: 4 },
+      { date: '2026-08-30', views: 12, visits: 7 },
+    ]);
+  });
+
   it('renders the committed snapshot in the metrics-01 Insights structure', () => {
     const markup = renderToStaticMarkup(createElement(Home));
     const visits = snapshotJson.days.reduce((total, day) => total + day.visits, 0);
@@ -107,8 +122,23 @@ describe('visitor insights section', () => {
     expect(markup).not.toContain('Sampled estimate:');
   });
 
-  it('keeps the deferred Bklit chart sized without the retired SVG renderer', () => {
-    expect(styles).toMatch(/\.bklit-chart-boundary\s*\{[\s\S]*min-height:/);
+  it('reserves the same responsive aspect ratio before and after the Bklit chart mounts', () => {
+    expect(styles).toMatch(
+      /\.bklit-chart-boundary\s*\{[^}]*aspect-ratio:\s*2\s*\/\s*1/,
+    );
+    expect(styles).toMatch(
+      /\.bklit-analytics-chart\s*\{[^}]*aspect-ratio:\s*2\s*\/\s*1/,
+    );
+    const desktopStyles = styles.slice(styles.indexOf('@media (min-width: 48rem)'));
+    expect(desktopStyles).toMatch(
+      /\.bklit-chart-boundary\s*\{[^}]*aspect-ratio:\s*3\s*\/\s*1/,
+    );
+    expect(desktopStyles).toMatch(
+      /\.bklit-analytics-chart\s*\{[^}]*aspect-ratio:\s*3\s*\/\s*1/,
+    );
+    expect(styles).toMatch(
+      /\.bklit-chart-boundary\s*>\s*\.bklit-analytics-chart\s*\{[^}]*height:\s*100%[^}]*width:\s*100%/,
+    );
     expect(styles).not.toContain('.analytics-chart-label');
   });
 });

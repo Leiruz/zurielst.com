@@ -1,6 +1,7 @@
 import { SectionAnchor } from '@/components/dossier/section-anchor';
 import { AnalyticsLineChartLoader } from '@/components/registry/bklit/analytics-line-chart-loader';
 import {
+  buildAnalyticsChart,
   formatAnalyticsDate,
   summarizeAnalytics,
   type AnalyticsSnapshot,
@@ -14,6 +15,7 @@ const numberFormatter = new Intl.NumberFormat('en-US');
 
 export function Metrics01({ data }: Metrics01Props) {
   const summary = summarizeAnalytics(data);
+  const chart = buildAnalyticsChart(data.days);
   const summarySentence = `Over the trailing 30 days, Cloudflare Web Analytics recorded ${numberFormatter.format(summary.visits)} visits and ${numberFormatter.format(summary.views)} views. The busiest day was ${formatAnalyticsDate(summary.busiestDay.date, true)} with ${numberFormatter.format(summary.busiestDay.visits)} visits.`;
 
   return (
@@ -71,7 +73,7 @@ export function Metrics01({ data }: Metrics01Props) {
             </span>
           </div>
           <p data-analytics-summary="true" className="sr-only">{summarySentence}</p>
-          <AnalyticsLineChartLoader data={data.days} />
+          <AnalyticsLineChartLoader data={chart.series} />
           <figcaption className="mt-4 font-mono text-xs leading-5 text-text-3">
             Fig. 13. Daily visits and views, trailing 30 days. Source: Cloudflare Web Analytics, committed snapshot.
           </figcaption>

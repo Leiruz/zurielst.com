@@ -21,8 +21,15 @@ export interface AnalyticsSummary {
   visits: number;
 }
 
+export type AnalyticsChartSeriesPoint = {
+  date: string;
+  views: number;
+  visits: number;
+};
+
 export interface AnalyticsChart {
   bottom: number;
+  series: AnalyticsChartSeriesPoint[];
   ticks: Array<{ date: string; index: number; x: number }>;
   visitsArea: string;
   visitsLine: string;
@@ -87,6 +94,7 @@ export function buildAnalyticsChart(days: AnalyticsDay[]): AnalyticsChart {
 
   return {
     bottom: CHART_BOTTOM,
+    series: days.map(({ date, views, visits }) => ({ date, views, visits })),
     ticks: tickIndexes.map((index) => ({
       date: days[index]?.date ?? '',
       index,

@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
 
-import type { AnalyticsLineChartPoint } from './analytics-line-chart';
+import type { AnalyticsChartSeriesPoint } from '@/lib/analytics-snapshot';
 
 const AnalyticsLineChart = dynamic(
   () => import('./analytics-line-chart').then((module) => module.AnalyticsLineChart),
@@ -11,7 +11,7 @@ const AnalyticsLineChart = dynamic(
 );
 
 interface AnalyticsLineChartLoaderProps {
-  data: AnalyticsLineChartPoint[];
+  data: AnalyticsChartSeriesPoint[];
 }
 
 export function AnalyticsLineChartLoader({ data }: AnalyticsLineChartLoaderProps) {

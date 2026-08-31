@@ -4,28 +4,18 @@ import Grid from './charts/grid';
 import LineChart, { Line } from './charts/line-chart';
 import { ChartTooltip } from './charts/tooltip';
 
-export interface AnalyticsLineChartPoint {
-  date: string;
-  views: number;
-  visits: number;
-}
+import type { AnalyticsChartSeriesPoint } from '@/lib/analytics-snapshot';
 
 interface AnalyticsLineChartProps {
-  data: AnalyticsLineChartPoint[];
+  data: AnalyticsChartSeriesPoint[];
 }
 
 export function AnalyticsLineChart({ data }: AnalyticsLineChartProps) {
-  const series: Record<string, unknown>[] = data.map(({ date, views, visits }) => ({
-    date,
-    views,
-    visits,
-  }));
-
   return (
     <LineChart
       aspectRatio=""
       className="bklit-analytics-chart"
-      data={series}
+      data={data}
       margin={{ top: 16, right: 32, bottom: 24, left: 32 }}
     >
       <Grid

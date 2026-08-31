@@ -277,6 +277,19 @@ test("retains the Bklit MIT notice and the imported line-chart closure", async (
   );
 });
 
+test("routes metrics-01 chart data through the shared analytics builder", async () => {
+  const [analyticsSource, metricsSource, adapterSource] = await Promise.all([
+    readFile(new URL("../lib/analytics-snapshot.ts", import.meta.url), "utf8"),
+    readFile(new URL("../components/registry/metrics-01.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/registry/bklit/analytics-line-chart.tsx", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(analyticsSource, /series:\s*AnalyticsChartSeriesPoint\[\]/);
+  assert.match(metricsSource, /const chart = buildAnalyticsChart\(data\.days\)/);
+  assert.match(metricsSource, /<AnalyticsLineChartLoader data=\{chart\.series\}/);
+  assert.doesNotMatch(adapterSource, /\.map\(/);
+});
+
 test("declares the manifest-pinned p5 runtime and type packages", async () => {
   const packageJson = JSON.parse(await readFile(
     new URL("../package.json", import.meta.url),

@@ -590,7 +590,7 @@ canvas {
   --chart-line-secondary: var(--text-2);
   --chart-tooltip-background: var(--surface);
   --chart-tooltip-foreground: var(--text-1);
-  min-height: clamp(12rem, 40vw, 20rem);
+  aspect-ratio: 2 / 1;
   width: 100%;
 }
 
@@ -598,7 +598,16 @@ canvas {
   aspect-ratio: 2 / 1;
 }
 
+.bklit-chart-boundary > .bklit-analytics-chart {
+  height: 100%;
+  width: 100%;
+}
+
 @media (min-width: 48rem) {
+  .bklit-chart-boundary {
+    aspect-ratio: 3 / 1;
+  }
+
   .bklit-analytics-chart {
     aspect-ratio: 3 / 1;
   }
