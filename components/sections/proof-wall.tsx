@@ -115,7 +115,7 @@ function CertificationTile({ item }: { item: Certification }) {
         <p className="mt-3 font-mono text-xs leading-5 text-text-3">{[item.issuer, item.year].filter(Boolean).join(' · ')}</p>
         {item.validity && <p className="mt-2 font-mono text-xs leading-5 text-text-3">{item.validity}</p>}
         {item.caption && <p className="mt-4 text-sm leading-6 text-text-2">{item.caption}</p>}
-        <CredentialLink src={item.image} title={item.title} />
+        <CredentialLink src={item.credential ?? item.image} title={item.title} />
       </div>
     </ProofTile>
   );

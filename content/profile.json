@@ -315,6 +315,7 @@
         "id": "cisco-cyber-threat-management",
         "title": "Cisco Cyber Threat Management Certificate",
         "issuer": "Cisco",
+        "credential": "/media/certs/cisco-cyber-threat-management.pdf",
         "caption": "Recognized vendor certification in cyber threat management."
       },
       {
@@ -371,6 +372,7 @@
         "title": "First Place, Singtel BIG Fearless Find 2026 (Round 1)",
         "issuer": "Singtel",
         "year": "2026",
+        "image": "/media/certs/big-fearless-find-2026.jpg",
         "caption": "The newest headline on the wall: first place in Round 1 of Singtel BIG Fearless Find 2026."
       },
       {

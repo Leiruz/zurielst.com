@@ -568,10 +568,57 @@ canvas {
 
 /* Floating dossier assistant */
 .chat-launcher,
-.chat-panel-frame {
+.chat-panel-frame,
+.return-to-top {
   --chat-edge: 1.5rem;
   --chat-fab-size: 3.25rem;
   --chat-gap: 0.75rem;
+}
+
+.return-to-top {
+  position: fixed;
+  right: calc(var(--chat-edge) + env(safe-area-inset-right, 0px));
+  bottom: calc(var(--chat-edge) + env(safe-area-inset-bottom, 0px) + var(--chat-fab-size) + 0.5rem);
+  z-index: 45;
+  display: flex;
+  width: var(--chat-fab-size);
+  height: var(--chat-fab-size);
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--canvas-raised);
+  box-shadow: 0 12px 30px color-mix(in oklab, var(--text-1) 14%, transparent);
+  color: var(--text-1);
+  cursor: pointer;
+  opacity: 1;
+  touch-action: manipulation;
+  transition: opacity 150ms cubic-bezier(.32, .72, 0, 1);
+}
+
+.return-to-top svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.return-to-top[data-visible='false'] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+body[data-chat] .return-to-top {
+  display: none;
+}
+
+@media (hover: hover) {
+  .return-to-top:hover {
+    background: var(--surface-hover);
+  }
 }
 
 .chat-control {
@@ -978,6 +1025,10 @@ canvas {
   .chat-stream-caret,
   .chat-thinking-dot {
     animation: none !important;
+    transition: none !important;
+  }
+
+  .return-to-top {
     transition: none !important;
   }
 }
