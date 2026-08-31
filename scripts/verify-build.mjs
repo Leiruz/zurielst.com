@@ -783,7 +783,7 @@ function topLevelSectionIds(html) {
   return topLevelSections(html).map((section) => section.id);
 }
 
-export function validateLandingPageContract(html) {
+export function validateLandingPageContract(html, snapshot = committedAnalyticsSnapshot) {
   const sections = topLevelSections(html);
   const sectionIds = sections.map((section) => section.id);
   if (JSON.stringify(sectionIds) !== JSON.stringify(LANDING_SECTION_IDS)) {
@@ -832,7 +832,7 @@ export function validateLandingPageContract(html) {
   }
 
   validateTimelineContract(html);
-  validateInsightsContract(html);
+  validateInsightsContract(html, snapshot);
 }
 
 export function validateTimelineContract(html) {
@@ -1124,7 +1124,7 @@ async function validateCapstoneExports(outputDirectory) {
   validateNotFoundPage(notFound);
 }
 
-export async function verifyBuildOutput(outputDirectory = path.resolve("out")) {
+export async function verifyBuildOutput(outputDirectory = path.resolve("out"), snapshot = committedAnalyticsSnapshot) {
   const resolvedOutputDirectory = path.resolve(outputDirectory);
   const headersPath = path.join(resolvedOutputDirectory, "_headers");
   let headersStatus;
@@ -1177,7 +1177,7 @@ export async function verifyBuildOutput(outputDirectory = path.resolve("out")) {
   }
 
   const landingPage = await readFile(indexPath, "utf8");
-  validateLandingPageContract(landingPage);
+  validateLandingPageContract(landingPage, snapshot);
   validateLandingRouteIsolation(landingPage);
   validateStructuredData(landingPage);
 

@@ -200,6 +200,10 @@ function requireSubjectFunction(name) {
   if (name === "validateLandingPageContract" || name === "validateInsightsContract") {
     return (html, snapshot = fixtureAnalyticsSnapshot) => fn(html, snapshot);
   }
+  if (name === "verifyBuildOutput") {
+    return (outputDirectory, snapshot = fixtureAnalyticsSnapshot) =>
+      fn(outputDirectory, snapshot);
+  }
   return fn;
 }
 
