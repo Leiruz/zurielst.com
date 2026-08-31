@@ -196,7 +196,7 @@ export default function Home() {
           id="copy-disclosure-state"
           dangerouslySetInnerHTML={{ __html: COPY_DISCLOSURE_STATE_SCRIPT }}
         />
-        <Footer name={profile.identity.name} />
+        <Footer socials={profile.identity.socials} />
         <Terminal
           commands={profile.easter_eggs.terminal.commands}
           source={profile.easter_eggs.terminal.source}

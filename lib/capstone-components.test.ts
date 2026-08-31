@@ -9,6 +9,7 @@ import { enhanceContributionGraph } from '@/components/registry/contribution-gra
 import type { ContributionSnapshot } from '@/components/registry/github-contributions';
 import { GitHubContributionsFigure } from '@/components/sections/github-contributions';
 import contributionJson from '@/content/github-contributions.json';
+import packageJson from '@/package.json';
 
 const notFoundModule = await import('@/app/not-found').catch(() => ({}));
 const footerTriggerModule = await import('@/components/footer-terminal-trigger').catch(() => ({}));
@@ -154,31 +155,64 @@ describe('registry contribution graph finishers', () => {
 });
 
 describe('footer document control', () => {
-  it('renders build provenance as a server dossier table', () => {
+  it('renders the factual seven-cell colophon with build provenance', () => {
     const sha = '1234567890abcdef1234567890abcdef12345678';
     const markup = renderToStaticMarkup(createElement(Footer as ComponentType<{
       buildDate: string;
       buildSha: string;
-      name: string;
+      socials: Array<{ platform: 'GitHub' | 'LinkedIn'; url: string }>;
     }>, {
       buildDate: '2026-08-31T04:05:06.000Z',
       buildSha: sha,
-      name: 'Test Person',
+      socials: [
+        { platform: 'GitHub', url: 'https://github.com/Leiruz' },
+        { platform: 'LinkedIn', url: 'https://www.linkedin.com/in/zuriel-shanley/' },
+      ],
     }));
     const text = markup.replace(/<[^>]+>/g, '').replaceAll('&#x27;', "'");
 
-    expect(markup).toContain('DOCUMENT CONTROL');
-    for (const label of ['BUILD', 'DATE', 'DEPLOYED ON', 'SOURCE', 'LICENSE', 'TYPEFACES']) {
-      expect(markup).toContain(`<dt`);
+    expect(text).toContain('zurielst.com');
+    expect(text).toContain('An engineered dossier for AI and automation in security.');
+    const labels = ['CRAFTED BY', 'BUILD', 'DATE', 'SOURCE CODE', 'STACK', 'TYPEFACE', 'ANALYTICS'];
+    expect(markup.match(/data-colophon-cell="true"/g)).toHaveLength(labels.length);
+    expect(markup.match(/data-colophon-label="true"/g)).toHaveLength(labels.length);
+    for (const label of labels) {
       expect(text).toContain(label);
     }
+    expect(markup).toContain('href="https://github.com/Leiruz"');
+    expect(text).toContain('@Leiruz');
     expect(markup).toContain(`href="https://github.com/Leiruz/zurielst.com/commit/${sha}"`);
     expect(markup).toContain('>1234567</a>');
     expect(markup).toContain('dateTime="2026-08-31"');
-    expect(text).toContain('Cloudflare Workers');
-    expect(text).toContain('MIT');
-    expect(text).toContain('Geist and Geist Mono');
-    expect(text).toContain("Built with components from ncdai's registry (MIT)");
+    expect(markup).toContain('href="https://github.com/Leiruz/zurielst.com"');
+    for (const [name, version] of [
+      ['next', packageJson.dependencies.next],
+      ['react', packageJson.dependencies.react],
+      ['tailwindcss', packageJson.devDependencies.tailwindcss],
+    ]) {
+      expect(text).toContain(`${name}@${version.replace(/^[^\d]*/, '')}`);
+    }
+    expect(text).toContain('Geist');
+    expect(text).toContain('Cloudflare Web Analytics');
+    expect(markup).toContain('data-footer-mark="true"');
+    expect(text).toContain('ZST');
+    expect(markup.match(/data-footer-social="true"/g)).toHaveLength(2);
+    expect(markup).toContain('aria-label="GitHub"');
+    expect(markup).toContain('aria-label="LinkedIn"');
+    expect(markup.match(/data-footer-social="true"[\s\S]*?<svg/g)).toBeTruthy();
+    expect(markup).toContain('focus-visible:ring-2');
+    expect(markup).toContain('grid-cols-1');
+    expect(markup).toContain('sm:grid-cols-2');
+
+    for (const prohibited of [
+      'Cloudflare Workers',
+      "Built with components from ncdai's registry (MIT)",
+      'chanhdai',
+      'DMCA',
+      'INSPIRED BY',
+    ]) {
+      expect(text).not.toContain(prohibited);
+    }
   });
 
   it('extracts the terminal opener into a dedicated client island', () => {
@@ -189,15 +223,15 @@ describe('footer document control', () => {
     const markup = renderToStaticMarkup(createElement(Footer as ComponentType<{
       buildDate: string;
       buildSha: string;
-      name: string;
+      socials: Array<{ platform: 'GitHub' | 'LinkedIn'; url: string }>;
     }>, {
       buildDate: '2026-08-31T04:05:06.000Z',
-      buildSha: 'unknown',
-      name: 'Test Person',
+      buildSha: 'dev',
+      socials: [],
     }));
 
-    expect(markup).toContain('>unknown</dd>');
-    expect(markup).not.toContain('/commit/unknown');
-    expect(markup).not.toContain('>unknown</a>');
+    expect(markup).toContain('>dev</dd>');
+    expect(markup).not.toContain('/commit/dev');
+    expect(markup).not.toContain('>dev</a>');
   });
 });

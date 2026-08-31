@@ -1,18 +1,9 @@
-import { execFileSync } from 'node:child_process';
-
-export function resolveBuildSha(execute = execFileSync, environment = process.env) {
+export function resolveBuildSha(_execute, environment = process.env) {
   const environmentSha = environment.BUILD_SHA?.trim()
     || environment.GITHUB_SHA?.trim()
     || environment.CF_PAGES_COMMIT_SHA?.trim();
   if (environmentSha) return environmentSha;
-
-  try {
-    return execute('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
-      || 'unknown';
-  } catch {
-    // A source archive or restricted build environment may not expose Git.
-    return 'unknown';
-  }
+  return 'dev';
 }
 
 const buildDate = process.env.BUILD_DATE ?? new Date().toISOString();

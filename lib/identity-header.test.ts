@@ -1,4 +1,4 @@
-import { createElement, Fragment } from 'react';
+import { createElement } from 'react';
 // @ts-expect-error The installed react-dom runtime has no declaration package in this project.
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -127,25 +127,24 @@ describe('identity header', () => {
 });
 
 describe('footer', () => {
-  it('links to the resume', () => {
+  it('renders the footer ZST mark and existing social destinations', () => {
     const markup = renderToStaticMarkup(
-      createElement(
-        Fragment,
-        null,
-        createElement(Footer, { name: profile.identity.name }),
-      ),
+      createElement(Footer, { socials: profile.identity.socials }),
     );
 
-    expect(markup).toContain('href="/media/resume.pdf"');
+    expect(markup).toContain('data-footer-mark="true"');
+    for (const social of profile.identity.socials) {
+      expect(markup).toContain(`aria-label="${social.platform}"`);
+      expect(markup).toContain(`${social.url}?utm_source=zurielst.com`);
+    }
   });
 
-  it('keeps a server-visible Zuriel fallback for the deferred footer effect', () => {
+  it('replaces the deferred identity effect with the responsive colophon grid', () => {
     const markup = renderToStaticMarkup(
-      createElement(Footer, { name: profile.identity.name }),
+      createElement(Footer, { socials: profile.identity.socials }),
     );
 
-    const effectStart = markup.indexOf('data-footer-identity-effect="true"');
-    expect(effectStart).toBeGreaterThanOrEqual(0);
-    expect(markup.slice(effectStart, markup.indexOf('</div>', effectStart))).toContain('Zuriel');
+    expect(markup).toContain('data-colophon="true"');
+    expect(markup).not.toContain('data-footer-identity-effect="true"');
   });
 });
