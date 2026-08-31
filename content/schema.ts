@@ -70,6 +70,7 @@ function findForbidden(value: unknown, path: PathSeg[], hits: ForbiddenHit[]): v
 
 const HttpUrl = z.string().url().startsWith("https://");
 const MediaPath = z.string().regex(/^\/media\//, "Media references live under /media/");
+const OgImagePath = z.literal("/og.png");
 
 const LinkSchema = z
   .object({
@@ -333,7 +334,7 @@ const MetaSchema = z
       .object({
         title: z.string().min(1),
         description: z.string().min(1),
-        image: MediaPath,
+        image: OgImagePath,
         url: HttpUrl,
         type: z.literal("profile"),
       })
