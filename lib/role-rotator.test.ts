@@ -4,6 +4,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import * as roleRotatorModule from '@/components/dossier/role-rotator';
+// @ts-expect-error The Vitest config exposes the stylesheet source as a virtual text module.
+import styles from 'virtual:globals-css-source';
 
 describe('RoleRotator', () => {
   it('keeps the three-second rotation cadence', () => {
@@ -33,5 +35,11 @@ describe('RoleRotator', () => {
     );
 
     expect(markup).toBe('');
+  });
+
+  it('runs an obvious 1.5 second left-to-right sweep before a readable rest', () => {
+    expect(styles).toMatch(/@keyframes role-light-up-sweep\s*\{[\s\S]*0%\s*\{ background-position: 100% 50%; \}[\s\S]*50%, 100%\s*\{ background-position: 0 50%; \}/);
+    expect(styles).toMatch(/\.role-light-up\s*\{[\s\S]*var\(--ring\)[\s\S]*animation: role-light-up-sweep 3s/);
+    expect(styles).toMatch(/@media \(prefers-reduced-motion: reduce\)[\s\S]*\.role-light-up[\s\S]*animation: none !important/);
   });
 });

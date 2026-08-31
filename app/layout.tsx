@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { ClientEnhancements } from '@/components/registry/client-enhancements';
+import { ThemeIconSprite } from '@/components/theme-icon-sprite';
 import {
   IntroCover,
   IntroFirstPaintHead,
@@ -78,6 +79,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <ThemeIconSprite />
         <IntroCover />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
