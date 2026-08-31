@@ -17,7 +17,6 @@ _registry-index.json is the registry index kept for reference; it and this manif
 - Four registryDependencies point at third-party namespaced registries, NOT shadcn base and NOT chanhdai; they are not staged here and need namespace entries in components.json (or manual vendoring from those registries) at M2 time:
   - @bklit/line-chart (needed by metrics-01)
   - @kibo-ui/marquee (needed by testimonials-marquee)
-  - @soundcn/metal-click (needed by spotlight-logo)
   - @soundcn/u-mini-map-open (needed by toc-minimap)
 - Types as published use registry:component for UI components (not registry:ui), plus registry:block, registry:style, registry:hook.
 - File count 0 is real for testimonials-marquee, typography, thin-scrollbar, style, theme-toggle-effect-circle: their payload is css/cssVars/metadata (and for testimonials-marquee, composition via registryDependencies) rather than component files.
@@ -156,7 +155,7 @@ Install: `npx shadcn@latest add button collapsible dropdown-menu hover-card sepa
 - @c15t/nextjs (for consent-manager)
 - @rexa-developer/tiks (for copy-button)
 - date-fns (for contribution-graph, metrics-01, work-experience)
-- motion (for apple-hello-effect, chevrons-up-down-icon, copy-button, fluid-gradient-text, icon-swap, line-nav, logos-carousel, shimmering-text, spotlight-logo, text-flip, theme-switcher)
+- motion (for apple-hello-effect, chevrons-up-down-icon, copy-button, fluid-gradient-text, icon-swap, line-nav, logos-carousel, shimmering-text, text-flip, theme-switcher)
 - next-themes (for theme-switcher)
 - radix-ui (for the base button component)
 - react-markdown (for work-experience)
