@@ -80,7 +80,6 @@ function expectedPublicProfile(source) {
     name: source.identity.name,
     roles: source.identity.roles.map((role) => role),
     tagline: source.identity.tagline,
-    one_liner: source.identity.bio_hook,
   };
 
   if (currentRole) identity.role = `${currentRole.title} @ ${currentRole.org}`;
@@ -309,9 +308,10 @@ test("renders the explicit public profile projection as clean Markdown", () => {
   expected.identity.roles.forEach((role, index) => {
     assertRenderedListItem(identitySection, role, `identity.roles[${index}]`);
   });
-  for (const key of ["tagline", "one_liner", "role", "founder", "location", "education", "award", "email", "portrait_alt"]) {
+  for (const key of ["tagline", "role", "founder", "location", "education", "award", "email", "portrait_alt"]) {
     assertRenderedField(identitySection, key, expected.identity[key], `identity.${key}`);
   }
+  assert.equal(identitySection.includes("one_liner:"), false);
   expected.identity.socials.forEach((social, index) => {
     assertRenderedField(identitySection, "label", social.label, `identity.socials[${index}].label`);
     assertRenderedField(identitySection, "url", social.url, `identity.socials[${index}].url`);

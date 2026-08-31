@@ -90,6 +90,16 @@ describe('identity header', () => {
     );
   });
 
+  it('renders the approved tagline without the retired coding-at-14 blurb slot', () => {
+    const markup = renderToStaticMarkup(
+      createElement(IdentityHeader, { profile }),
+    );
+
+    expect(markup).toContain('Using AI &amp; automation to solve security issues');
+    expect(markup).not.toContain('I started coding at 14.');
+    expect(markup).not.toContain('dossier-body mt-5 text-text-2');
+  });
+
   it('shimmers every rotating role without animating the identity section', () => {
     const markup = renderToStaticMarkup(
       createElement(IdentityHeader, { profile }),

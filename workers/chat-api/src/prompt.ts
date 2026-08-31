@@ -128,7 +128,7 @@ function renderIdentity(source: Profile): string {
   if (undergraduateRole === undefined) throw new Error('Missing identity undergraduate role');
   const linkedIn = requiredByPlatform(source.identity.socials, 'LinkedIn');
 
-  return `identity: ${source.identity.name}. ${currentRole.title} at ${currentRole.org} (${currentRole.period}). ${undergraduateRole.replace('Undergraduate', 'undergraduate')} at ${organizationInitials(education.org)} until ${endDate(education.period)}. ${source.identity.location.city} (${source.identity.location.timezone}). Email ${source.identity.email}. GitHub ${webLabel(source.identity.github.url)}. LinkedIn ${webLabel(linkedIn.url).replace(/^www\./, '')}. Tagline: ${source.identity.tagline} ${source.identity.bio_hook.replace(/^I started/, 'Started')}`;
+  return `identity: ${source.identity.name}. ${currentRole.title} at ${currentRole.org} (${currentRole.period}). ${undergraduateRole.replace('Undergraduate', 'undergraduate')} at ${organizationInitials(education.org)} until ${endDate(education.period)}. ${source.identity.location.city} (${source.identity.location.timezone}). Email ${source.identity.email}. GitHub ${webLabel(source.identity.github.url)}. LinkedIn ${webLabel(linkedIn.url).replace(/^www\./, '')}. Tagline: ${source.identity.tagline}`;
 }
 
 function renderMetrics(source: Profile): string {

@@ -112,7 +112,6 @@ const IdentitySchema = z
     roles: z.array(z.string().min(1)).min(2),
     employer: z.string().min(1),
     tagline: z.string().min(1),
-    bio_hook: z.string().min(1),
     metrics: z.array(MetricSchema).length(4),
     location: z
       .object({

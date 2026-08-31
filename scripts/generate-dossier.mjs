@@ -96,7 +96,6 @@ export function projectPublicProfile(profile) {
     name: profile.identity.name,
     roles: profile.identity.roles.map((role) => role),
     tagline: profile.identity.tagline,
-    one_liner: profile.identity.bio_hook,
   };
 
   if (currentRole) identity.role = `${currentRole.title} @ ${currentRole.org}`;

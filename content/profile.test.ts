@@ -29,7 +29,8 @@ describe('content/profile.json', () => {
   });
 
   it('uses the owner-approved AI and security identity framing', () => {
-    expect(profile.identity.tagline).toBe('Using AI to automate & solve security solutions.');
+    expect(profile.identity.tagline).toBe('Using AI & automation to solve security issues');
+    expect(profile.identity).not.toHaveProperty('bio_hook');
     expect(profile.identity.metrics).toEqual([
       { value: '40+', label: 'deep learning models trained for security and vision tasks' },
       { value: '200+', label: 'firewalls fed by one automated IOC pipeline' },
