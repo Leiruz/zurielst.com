@@ -163,6 +163,12 @@ html[data-intro='leaving'] .intro-cover {
   display: flex;
 }
 
+html[data-intro='pending'],
+html[data-intro='active'],
+html[data-intro='leaving'] {
+  overflow: hidden;
+}
+
 html[data-intro='leaving'] .intro-cover {
   opacity: 0;
   pointer-events: none;
@@ -179,6 +185,13 @@ html[data-intro='leaving'] .intro-cover {
 
 .intro-entry-control {
   animation: intro-entry-fade-in 300ms ease-out both;
+}
+
+.intro-entry-shimmer {
+  --text-1: #fff;
+  /* Base must hold >= 4.5:1 over the black cover for the 12px label; only
+     the moving highlight may exceed it. 0.65 white over #000 is ~8.6:1. */
+  --text-3: rgba(255, 255, 255, 0.65);
 }
 
 .intro-static-hello path:first-of-type {

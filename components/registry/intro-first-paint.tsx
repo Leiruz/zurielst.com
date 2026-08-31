@@ -35,7 +35,7 @@ export function stampInitialIntro(
       '(prefers-reduced-motion: reduce)',
     ).matches;
 
-    if (seen) {
+    if (seen || reduced) {
       root.dataset.intro = 'done';
       return;
     }

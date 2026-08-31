@@ -3,13 +3,14 @@
 /**
  * IntroGate (ours, not vendored): plays the apple-hello-effect once per
  * session as a fixed overlay. Plan rev 3 contract:
- * - session-gated (sessionStorage), explicitly entered for every motion mode
+ * - session-gated (sessionStorage), with reduced-motion sessions bypassed
  * - the identity content underneath is prerendered, so LCP never waits on it
  * - storage failures degrade to "show nothing"
  */
 
 import { useEffect, useRef, useState } from 'react';
 import { AppleHelloEffectEnglish } from '@/components/registry/apple-hello-effect-english';
+import { ShimmeringText } from '@/components/registry/shimmering-text';
 import {
   SlideToUnlock,
   SlideToUnlockHandle,
@@ -42,11 +43,24 @@ export function hasSeenIntro(
   }
 }
 
-export function getIntroLeavingDelay(reducedMotion: boolean) {
-  return reducedMotion ? 0 : 500;
+interface IntroEligibilityState {
+  coverAvailable: boolean;
+  reducedMotion: boolean;
+  seen: boolean;
+  stampedPending: boolean;
+}
+
+export function shouldShowIntro({
+  coverAvailable,
+  reducedMotion,
+  seen,
+  stampedPending,
+}: IntroEligibilityState) {
+  return coverAvailable && stampedPending && !seen && !reducedMotion;
 }
 
 const INTRO_ANIMATION_FALLBACK_DELAY = 4_500;
+const INTRO_LEAVING_DELAY = 500;
 
 interface IntroAnimationFallbackRuntime {
   clearTimeout(timer: number): void;
@@ -55,7 +69,6 @@ interface IntroAnimationFallbackRuntime {
 
 interface IntroAnimationFallbackState {
   animationComplete: boolean;
-  reducedMotion: boolean;
   show: boolean;
 }
 
@@ -64,7 +77,7 @@ export function installIntroAnimationFallback(
   onAnimationComplete: () => void,
   runtime: IntroAnimationFallbackRuntime,
 ) {
-  if (!state.show || state.reducedMotion || state.animationComplete) {
+  if (!state.show || state.animationComplete) {
     return () => {};
   }
 
@@ -87,7 +100,6 @@ export function IntroGate() {
   // Render nothing on the server and on first client paint: hydration-neutral.
   const [show, setShow] = useState(false);
   const [leaving, setLeaving] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(true);
   const [animationComplete, setAnimationComplete] = useState(false);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const introWasVisibleRef = useRef(false);
@@ -106,7 +118,12 @@ export function IntroGate() {
       // A missing media-query API fails closed just like unavailable storage.
     }
 
-    if (!stampedPending || seen || !cover) {
+    if (!shouldShowIntro({
+      coverAvailable: Boolean(cover),
+      reducedMotion: reduced,
+      seen,
+      stampedPending,
+    })) {
       root.dataset.intro = 'done';
       cover?.remove();
       return;
@@ -116,7 +133,6 @@ export function IntroGate() {
     previousFocusRef.current =
       activeElement instanceof HTMLElement ? activeElement : null;
     root.dataset.intro = 'active';
-    setReducedMotion(reduced);
     setShow(true);
   }, []);
 
@@ -130,13 +146,13 @@ export function IntroGate() {
   );
 
   useEffect(() => installIntroAnimationFallback(
-    { animationComplete, reducedMotion, show },
+    { animationComplete, show },
     () => setAnimationComplete(true),
     {
       clearTimeout: (timer) => window.clearTimeout(timer),
       setTimeout: (callback, delay) => window.setTimeout(callback, delay),
     },
-  ), [animationComplete, reducedMotion, show]);
+  ), [animationComplete, show]);
 
   useEffect(() => {
     if (show) {
@@ -155,14 +171,6 @@ export function IntroGate() {
     if (dismissingRef.current) return;
     dismissingRef.current = true;
     markSeen();
-    const delay = getIntroLeavingDelay(reducedMotion);
-    if (delay === 0) {
-      document.documentElement.dataset.intro = 'done';
-      document.getElementById(INTRO_COVER_ID)?.remove();
-      setShow(false);
-      return;
-    }
-
     document.documentElement.dataset.intro = 'leaving';
     setLeaving(true);
     dismissTimerRef.current = window.setTimeout(() => {
@@ -170,7 +178,7 @@ export function IntroGate() {
       document.getElementById(INTRO_COVER_ID)?.remove();
       dismissTimerRef.current = null;
       setShow(false);
-    }, delay);
+    }, INTRO_LEAVING_DELAY);
   };
 
   if (!show) return null;
@@ -181,7 +189,6 @@ export function IntroGate() {
       leaving={leaving}
       onAnimationComplete={() => setAnimationComplete(true)}
       onDismiss={dismiss}
-      reducedMotion={reducedMotion}
     />
   );
 }
@@ -191,15 +198,13 @@ export function IntroOverlay({
   leaving,
   onAnimationComplete,
   onDismiss,
-  reducedMotion,
 }: {
   animationComplete: boolean;
   leaving: boolean;
   onAnimationComplete: () => void;
   onDismiss: () => void;
-  reducedMotion: boolean;
 }) {
-  const entryReady = reducedMotion || animationComplete;
+  const entryReady = animationComplete;
 
   return (
     <div
@@ -229,28 +234,18 @@ export function IntroOverlay({
       <AppleHelloEffectEnglish
         aria-hidden="true"
         className={`${INTRO_HELLO_SIZE_CLASS} text-white`}
-        onAnimationComplete={reducedMotion
-          ? undefined
-          : onAnimationComplete}
+        onAnimationComplete={onAnimationComplete}
       />
-      {reducedMotion ? (
-        <button
-          type="button"
-          autoFocus
-          data-haptic
-          onClick={onDismiss}
-          className="absolute bottom-8 left-1/2 min-h-11 -translate-x-1/2 rounded-full border border-white/25 bg-black px-5 py-2 font-mono text-xs text-white"
-        >
-          Enter
-        </button>
-      ) : entryReady ? (
+      {entryReady ? (
         <SlideToUnlock
           className="intro-entry-control absolute bottom-8 left-1/2 w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 border border-white/25 bg-black/60 text-white"
           onUnlock={onDismiss}
         >
           <SlideToUnlockTrack>
             <SlideToUnlockText className="font-mono text-xs font-normal tracking-[0.12em] text-white">
-              <span>slide to enter</span>
+              <ShimmeringText className="intro-entry-shimmer">
+                Slide to unlock
+              </ShimmeringText>
             </SlideToUnlockText>
             <SlideToUnlockHandle autoFocus disabled={leaving} />
           </SlideToUnlockTrack>

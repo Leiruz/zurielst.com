@@ -238,6 +238,7 @@ export function SlideToUnlockHandle({
   className,
   children,
   disabled = false,
+  "aria-label": ariaLabel = "Slide to unlock",
   onDragStart: suppliedOnDragStart,
   onDragEnd: suppliedOnDragEnd,
   onKeyDown,
@@ -262,7 +263,7 @@ export function SlideToUnlockHandle({
       type="button"
       data-slot="handle"
       data-haptic
-      aria-label="Slide to enter"
+      aria-label={ariaLabel}
       disabled={disabled}
       className={cn(
         "absolute top-0 left-0 flex h-10 cursor-grab items-center justify-center rounded-lg border-0 bg-white p-0 text-zinc-400 shadow-sm active:cursor-grabbing disabled:cursor-default disabled:opacity-70",
