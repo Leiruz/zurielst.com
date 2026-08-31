@@ -39,6 +39,9 @@ describe('core dossier sections', () => {
     }
 
     expect(markup.match(/data-week-column="true"/g)).toHaveLength(53);
+    expect(markup.match(/data-contribution-cell="true"/g)).toHaveLength(365);
+    expect(markup).toContain('data-slot="github-contributions"');
+    expect(markup).toContain('data-slot="contribution-graph"');
     expect(markup).toContain('role="region"');
 
     expect(markup).toContain(`src="${profile.identity.portrait.image}"`);
@@ -142,6 +145,8 @@ describe('core dossier sections', () => {
     expect(longWorkCases).toHaveLength(3);
     expect(markup.match(/data-copy-disclosure="work"/g)).toHaveLength(longWorkCases.length);
     const nonEducationEntries = profile.timeline.filter((entry) => entry.type !== 'education');
+    expect(markup.match(/data-work-organization="true"/g)).toHaveLength(7);
+    expect(markup.match(/data-work-position="true"/g)).toHaveLength(8);
     expect(markup.match(/data-copy-disclosure="timeline"/g)).toHaveLength(nonEducationEntries.length);
     const disclosureBlocks = markup.match(/<details(?=[^>]*data-copy-disclosure)[\s\S]*?<\/details>/g) ?? [];
     expect(disclosureBlocks).toHaveLength(

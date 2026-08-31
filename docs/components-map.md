@@ -79,6 +79,14 @@ Fetched byte-exact on 2026-08-31 from `https://chanhdai.com/r/{name}.json` befor
 | slide-to-unlock | registry:component | 1 | `25d67d9ead49d8eb675df6cc4fe0e34ffa2873184611fdcccfd46169f0c7248b` |
 | theme-toggle-effect-circle-blur-top-left | registry:style | 0 | `6431089c5f69489cce88728bfeb0d674974de4e38e0bca7b7d66d6ca6c7601ff` |
 
+## Task 3 supplemental fetch
+
+Fetched byte-exact on 2026-08-31 before extraction.
+
+| Item | Type | Files | SHA256 (saved JSON) | Source |
+|---|---|---|---|---|
+| github-contributions | registry:component | 2 | `ec6b72c078edfc3c19aa3be56d8fa078145195d0c7fe7acaf6b1eb4d1a4ecbbb` | `https://chanhdai.com/r/github-contributions.json` |
+
 ## Adaptation flags (Next.js coupling)
 
 - spotlight-logo: newly vendored for the nav terminal control; replaces registry artwork and sound dependencies with the decorative ZST wordmark and a dossier-token CSS hover spotlight.
@@ -91,6 +99,9 @@ Fetched byte-exact on 2026-08-31 from `https://chanhdai.com/r/{name}.json` befor
 - haptic: keeps the vendored Vibration API and iOS checkbox fallback, with one delegated document click bridge for exact `data-haptic` controls.
 - slide-to-unlock: replaces the intro skip control, adapts the handle to a real button, adds Enter, Space, and ArrowRight-hold keyboard completion, and guards duplicate unlocks. Reduced-motion sessions use a plain instant Enter button.
 - theme-toggle-effect-circle-blur-top-left: integrates the registry CSS payload exactly with the blurred SVG mask anchored at top left and a `350vmax` final mask size. Theme state is committed synchronously inside the view-transition update callback.
+- work-experience: preserves the registry organization and nested-position structure while accepting the profile's prose periods directly. It removes date-fns, React Markdown, Collapsible, Separator, and icon dependencies, and composes the existing CopyDisclosure for all eight summaries.
+- contribution-graph: replaces date-fns with native UTC date grouping, uses the five dossier heat tokens, renders the committed 365 days in 53 SVG week groups, and adds labelled roving-tab-stop cells with boundary-safe arrow navigation.
+- github-contributions: accepts a direct Activity array from the committed snapshot adapter. The extracted cache helper, Promise path, tooltip, spinner, and all network access are removed for pure static export.
 - consent-manager: imports @c15t/nextjs.
 - consent-manager: local component overrides registry copy with site-specific measurement-only privacy wording.
 - consent-manager: uses c15t's headless provider and state with a site-owned automatic banner, and loads the split c15t dialog only after Customize opens it.

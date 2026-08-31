@@ -1,5 +1,3 @@
-export type ContributionHeatBucket = 0 | 1 | 2 | 3 | 4;
-
 export interface ParsedMetric {
   value: number;
   prefix: string;
@@ -142,12 +140,4 @@ export function splitDisclosureCopy(text: string, approximateLimit: number): Dis
     teaser: text.slice(0, splitAt).trimEnd(),
     remainder: text.slice(splitAt).trimStart(),
   };
-}
-
-export function contributionHeatBucket(count: number): ContributionHeatBucket {
-  if (count === 0) return 0;
-  if (count <= 2) return 1;
-  if (count <= 5) return 2;
-  if (count <= 9) return 3;
-  return 4;
 }

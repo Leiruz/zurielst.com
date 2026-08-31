@@ -12,7 +12,8 @@ import { Contact } from '@/components/sections/contact';
 import { IdentityHeader } from '@/components/sections/identity-header';
 import { Introduction } from '@/components/sections/introduction';
 import { CapabilityActs } from '@/components/sections/capability-acts';
-import { ContributionHeatmap, type ContributionSnapshot } from '@/components/sections/contribution-heatmap';
+import { GitHubContributionsSection } from '@/components/sections/github-contributions';
+import type { ContributionSnapshot } from '@/components/registry/github-contributions';
 import { VisitorInsights } from '@/components/sections/visitor-insights';
 import { Stack } from '@/components/sections/stack';
 import { BrandsWall } from '@/components/sections/brands-wall';
@@ -129,7 +130,7 @@ export default function Home() {
         <main>
           <IdentityHeader profile={profile} />
           <Introduction profile={profile} />
-          <ContributionHeatmap data={contributions} />
+          <GitHubContributionsSection snapshot={contributions} />
           <VisitorInsights data={analytics} />
           <CapabilityActs profile={profile} />
           <Stack profile={profile} />
