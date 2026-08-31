@@ -9,6 +9,8 @@ import graphSource from '../components/registry/contribution-graph.tsx?raw';
 // @ts-expect-error Vite exposes source files through its raw query during tests.
 import workSource from '../components/registry/work-experience.tsx?raw';
 // @ts-expect-error Vite exposes source files through its raw query during tests.
+import experienceSource from '../components/registry/experience-01.tsx?raw';
+// @ts-expect-error Vite exposes source files through its raw query during tests.
 import homeSource from '../app/page.tsx?raw';
 // @ts-expect-error Vite exposes source files through its raw query during tests.
 import dossierSource from './dossier.ts?raw';
@@ -235,5 +237,11 @@ describe('GitHub contribution registry adapters', () => {
     expect(workSource).not.toMatch(/date-fns|react-markdown/);
     expect(homeSource).not.toContain('contribution-heatmap');
     expect(dossierSource).not.toContain('contributionHeatBucket');
+  });
+
+  it('keeps experience-01 provenance neutral while retaining its MIT notice', () => {
+    expect(experienceSource).toContain('ncdai registry item "experience-01"');
+    expect(experienceSource).toContain('MIT');
+    expect(experienceSource).not.toContain('chanhdai.com/r');
   });
 });

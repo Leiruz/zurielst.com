@@ -1,4 +1,4 @@
-// Vendored from ncdai registry item "experience-01" (chanhdai.com/r, MIT).
+// Vendored from the ncdai registry item "experience-01" (MIT).
 // Adapted to compose the dossier Timeline heading and profile-driven experience data.
 import type { ReactNode } from 'react';
 import {
