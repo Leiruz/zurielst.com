@@ -36,6 +36,7 @@ jobs:
               --max-time 45 \
               --proto '=https' \
               --user-agent 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) zurielst-canary' \
+              --dump-header "$monitor_dir/$label.headers" \
               --output "$body" \
               --write-out '%{http_code}' \
               "$url")"; then
@@ -44,19 +45,36 @@ jobs:
             [[ "$HTTP_STATUS" =~ ^[0-9]{3}$ ]] || fail "$label returned an invalid status: $HTTP_STATUS"
           }
 
+          # Cloudflare bot scoring challenges datacenter probes (runner IP plus
+          # curl TLS fingerprint) regardless of headers; real browsers clear the
+          # challenge transparently. A 403 carrying Cf-Mitigated: challenge
+          # therefore proves the edge is alive and protecting, and only that
+          # exact combination is tolerated. Origin health stays enforced by the
+          # 5xx class here and by the unchallenged chat POST probe below.
           check_status() {
             local label="$1"
             local url="$2"
             local expected="$3"
 
             request "$label" "$url" "$monitor_dir/$label.body"
-            [ "$HTTP_STATUS" = "$expected" ] || fail "$label expected HTTP $expected, got $HTTP_STATUS"
+            if [ "$HTTP_STATUS" != "$expected" ]; then
+              if [ "$HTTP_STATUS" = "403" ] \
+                && grep -qi '^cf-mitigated: challenge' "$monitor_dir/$label.headers"; then
+                echo "$label: HTTP 403 bot challenge (edge alive; probe scored as bot)"
+                CHALLENGED=1
+                return 0
+              fi
+              fail "$label expected HTTP $expected, got $HTTP_STATUS"
+            fi
+            CHALLENGED=0
             echo "$label: HTTP $HTTP_STATUS"
           }
 
           check_status "apex" "https://zurielst.com/" 200
-          grep -Fq "Zuriel Shanley Tanyory" "$monitor_dir/apex.body" \
-            || fail "apex content fingerprint is missing"
+          if [ "$CHALLENGED" = "0" ]; then
+            grep -Fq "Zuriel Shanley Tanyory" "$monitor_dir/apex.body" \
+              || fail "apex content fingerprint is missing"
+          fi
 
           check_status "www" "https://www.zurielst.com/" 301
           check_status "staging" "https://staging.zurielst.com/" 200

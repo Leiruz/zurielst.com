@@ -176,6 +176,19 @@ test("monitor runs a secretless six-hour production canary", async () => {
     workflow.includes("--user-agent 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) zurielst-canary'"),
     "status checks probe with a browser-like user agent so heuristic bot challenges do not false-alarm the canary",
   );
+  assert.ok(
+    workflow.includes("^cf-mitigated: challenge"),
+    "a 403 is tolerated only when Cloudflare marks it as a bot challenge",
+  );
+  assert.match(
+    workflow,
+    /HTTP_STATUS" = "403"[\s\S]*?cf-mitigated: challenge/,
+    "the challenge tolerance is scoped to exactly 403 responses",
+  );
+  assert.ok(
+    workflow.includes('if [ "$CHALLENGED" = "0" ]; then'),
+    "the apex content fingerprint is skipped only for challenged probes",
+  );
   assert.ok(workflow.includes("Origin: https://zurielst.com"), "chat carries its production origin");
   assert.ok(workflow.includes("text/event-stream"), "a streamed answer is accepted");
   assert.ok(workflow.includes("application/json"), "a canned JSON answer is accepted");
