@@ -22,6 +22,11 @@ vi.mock('react', async (importOriginal) => {
 });
 
 const consentManagerMockState = vi.hoisted(() => ({
+  analyticsPersistence: undefined as undefined | (() => boolean),
+  consentInfo: {
+    time: 1_756_684_800,
+    type: 'custom' as const,
+  },
   consents: {
     experience: false,
     functionality: false,
@@ -43,17 +48,22 @@ const consentManagerMockState = vi.hoisted(() => ({
   }),
   setShowPopup: vi.fn(),
   showPopup: false,
+  storageConfig: {
+    storageKey: 'test-consent',
+  },
 }));
 
 vi.mock('@c15t/nextjs/headless', () => ({
   ConsentManagerProvider: ({ children }: { children: ReactNode }) => children,
   useConsentManager: () => ({
+    consentInfo: consentManagerMockState.consentInfo,
     consents: consentManagerMockState.consents,
     isPrivacyDialogOpen: consentManagerMockState.isPrivacyDialogOpen,
     saveConsents: consentManagerMockState.saveConsents,
     setIsPrivacyDialogOpen: consentManagerMockState.setIsPrivacyDialogOpen,
     setShowPopup: consentManagerMockState.setShowPopup,
     showPopup: consentManagerMockState.showPopup,
+    storageConfig: consentManagerMockState.storageConfig,
   }),
 }));
 
@@ -71,15 +81,36 @@ vi.mock('@/components/registry/consent-banner', () => ({
 vi.mock('@/components/registry/cloudflare-web-analytics', () => ({
   CloudflareWebAnalyticsLoader: ({
     measurementGranted,
+    persistDeniedConsent,
   }: {
     measurementGranted: boolean;
-  }) =>
-    measurementGranted
+    persistDeniedConsent?: () => boolean;
+  }) => {
+    consentManagerMockState.analyticsPersistence = persistDeniedConsent;
+    return measurementGranted
       ? 'cloudflare-measurement-granted'
-      : 'cloudflare-measurement-denied',
+      : 'cloudflare-measurement-denied';
+  },
 }));
 
-import { ConsentManager } from './consent-manager';
+import {
+  ConsentManager,
+  persistDeniedMeasurementConsent,
+} from './consent-manager';
+
+type ConsentState = Parameters<
+  typeof persistDeniedMeasurementConsent
+>[0]['consents'];
+
+function createDeniedConsents(): ConsentState {
+  return {
+    experience: false,
+    functionality: false,
+    marketing: false,
+    measurement: false,
+    necessary: true,
+  };
+}
 
 function renderConsentManager() {
   return renderToStaticMarkup(createElement(ConsentManager, null, null));
@@ -93,6 +124,7 @@ describe('ConsentManager analytics wiring', () => {
   });
 
   beforeEach(() => {
+    consentManagerMockState.analyticsPersistence = undefined;
     Object.assign(consentManagerMockState.consents, {
       experience: false,
       functionality: false,
@@ -121,9 +153,10 @@ describe('ConsentManager analytics wiring', () => {
 
     expect(markup).toContain('cloudflare-measurement-granted');
     expect(markup).not.toContain('cloudflare-measurement-denied');
+    expect(consentManagerMockState.analyticsPersistence).toBeTypeOf('function');
   });
 
-  it('accepts consent, reopens preferences from the footer path, and saves necessary-only consent', () => {
+  it('bridges the footer opener and separately covers banner accept and reject transitions', () => {
     const target = createPrivacyChoicesTarget();
     vi.stubGlobal('window', target);
     effectHarness.run = true;
@@ -145,13 +178,114 @@ describe('ConsentManager analytics wiring', () => {
     consentManagerMockState.banner = undefined;
     consentManagerMockState.showPopup = true;
     renderConsentManager();
-    rejectCapturedBanner();
+    rejectCapturedBannerForFastEventBridgeCoverage();
     expect(consentManagerMockState.saveConsents).toHaveBeenLastCalledWith('necessary');
     expect(renderConsentManager()).toContain('cloudflare-measurement-denied');
   });
+
+  it('saves current denied consents and confirms canonical denied readback', () => {
+    const consents = createDeniedConsents();
+    const consentInfo = consentManagerMockState.consentInfo;
+    const storageConfig = consentManagerMockState.storageConfig;
+    const events: string[] = [];
+    const saveConsent = vi.fn(
+      (
+        _data: unknown,
+        _cookieOptions?: unknown,
+        _config?: unknown,
+      ) => events.push('save'),
+    );
+    const readConsent = vi.fn((_config?: unknown) => {
+      events.push('read');
+      return { consents: { measurement: false } };
+    });
+
+    expect(
+      persistDeniedMeasurementConsent({
+        consentInfo,
+        consents,
+        readConsent,
+        saveConsent,
+        storageConfig,
+      }),
+    ).toBe(true);
+    expect(events).toEqual(['save', 'read']);
+    expect(saveConsent).toHaveBeenCalledWith(
+      { consentInfo, consents },
+      undefined,
+      storageConfig,
+    );
+    expect(readConsent).toHaveBeenCalledWith(storageConfig);
+  });
+
+  it('rejects persistence while current measurement consent is granted', () => {
+    const saveConsent = vi.fn();
+    const readConsent = vi.fn();
+
+    expect(
+      persistDeniedMeasurementConsent({
+        consentInfo: consentManagerMockState.consentInfo,
+        consents: { ...createDeniedConsents(), measurement: true },
+        readConsent,
+        saveConsent,
+        storageConfig: consentManagerMockState.storageConfig,
+      }),
+    ).toBe(false);
+    expect(saveConsent).not.toHaveBeenCalled();
+    expect(readConsent).not.toHaveBeenCalled();
+  });
+
+  it('rejects persistence when c15t has no consent metadata', () => {
+    const saveConsent = vi.fn();
+    const readConsent = vi.fn();
+
+    expect(
+      persistDeniedMeasurementConsent({
+        consentInfo: null,
+        consents: createDeniedConsents(),
+        readConsent,
+        saveConsent,
+        storageConfig: consentManagerMockState.storageConfig,
+      }),
+    ).toBe(false);
+    expect(saveConsent).not.toHaveBeenCalled();
+    expect(readConsent).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when c15t storage throws during the denied save', () => {
+    const readConsent = vi.fn();
+
+    expect(
+      persistDeniedMeasurementConsent({
+        consentInfo: consentManagerMockState.consentInfo,
+        consents: createDeniedConsents(),
+        readConsent,
+        saveConsent: () => {
+          throw new Error('storage unavailable');
+        },
+        storageConfig: consentManagerMockState.storageConfig,
+      }),
+    ).toBe(false);
+    expect(readConsent).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when canonical readback remains granted', () => {
+    const saveConsent = vi.fn();
+
+    expect(
+      persistDeniedMeasurementConsent({
+        consentInfo: consentManagerMockState.consentInfo,
+        consents: createDeniedConsents(),
+        readConsent: () => ({ consents: { measurement: true } }),
+        saveConsent,
+        storageConfig: consentManagerMockState.storageConfig,
+      }),
+    ).toBe(false);
+    expect(saveConsent).toHaveBeenCalledOnce();
+  });
 });
 
-function rejectCapturedBanner() {
+function rejectCapturedBannerForFastEventBridgeCoverage() {
   consentManagerMockState.banner?.onReject();
 }
 

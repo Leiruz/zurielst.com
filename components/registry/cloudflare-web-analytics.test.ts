@@ -113,15 +113,18 @@ describe('Cloudflare Web Analytics consent loader', () => {
 
   it('does not inject or reload for an initial denied state', () => {
     const { document, head } = createDocumentHarness();
+    const persistDeniedConsent = vi.fn(() => true);
     const reload = vi.fn();
 
     syncCloudflareWebAnalytics({
       document,
       measurementGranted: false,
+      persistDeniedConsent,
       reload,
     });
 
     expect(head.scripts).toHaveLength(0);
+    expect(persistDeniedConsent).not.toHaveBeenCalled();
     expect(reload).not.toHaveBeenCalled();
   });
 
@@ -141,36 +144,122 @@ describe('Cloudflare Web Analytics consent loader', () => {
     );
   });
 
-  it('reloads once when granted measurement consent is revoked', () => {
+  it('persists denied consent before reloading after revocation', () => {
     const { document } = createDocumentHarness();
+    const events: string[] = [];
+    const persistDeniedConsent = vi.fn(() => {
+      events.push('persist');
+      return true;
+    });
+    const reload = vi.fn(() => events.push('reload'));
+
+    syncCloudflareWebAnalytics({ document, measurementGranted: true });
+    syncCloudflareWebAnalytics({
+      document,
+      measurementGranted: false,
+      persistDeniedConsent,
+      reload,
+    });
+
+    expect(events).toEqual(['persist', 'reload']);
+    expect(persistDeniedConsent).toHaveBeenCalledOnce();
+    expect(reload).toHaveBeenCalledOnce();
+  });
+
+  it('fails closed when denied consent cannot be confirmed in storage', () => {
+    const { document, head } = createDocumentHarness();
+    const persistDeniedConsent = vi.fn(() => false);
     const reload = vi.fn();
 
     syncCloudflareWebAnalytics({ document, measurementGranted: true });
     syncCloudflareWebAnalytics({
       document,
       measurementGranted: false,
+      persistDeniedConsent,
       reload,
     });
+    syncCloudflareWebAnalytics({ document, measurementGranted: true });
 
-    expect(reload).toHaveBeenCalledOnce();
+    expect(persistDeniedConsent).toHaveBeenCalledOnce();
+    expect(reload).not.toHaveBeenCalled();
+    expect(head.scripts).toHaveLength(0);
+  });
+
+  it('fails closed and retains the revoked guard when persistence throws', () => {
+    const { document, head } = createDocumentHarness();
+    const reload = vi.fn();
+
+    syncCloudflareWebAnalytics({ document, measurementGranted: true });
+    expect(() =>
+      syncCloudflareWebAnalytics({
+        document,
+        measurementGranted: false,
+        persistDeniedConsent: () => {
+          throw new Error('persistence failed');
+        },
+        reload,
+      }),
+    ).not.toThrow();
+    syncCloudflareWebAnalytics({ document, measurementGranted: true });
+
+    expect(reload).not.toHaveBeenCalled();
+    expect(head.scripts).toHaveLength(0);
   });
 
   it('does not reload again when denied consent is repeated', () => {
     const { document } = createDocumentHarness();
+    const persistDeniedConsent = vi.fn(() => true);
     const reload = vi.fn();
 
     syncCloudflareWebAnalytics({ document, measurementGranted: true });
     syncCloudflareWebAnalytics({
       document,
       measurementGranted: false,
+      persistDeniedConsent,
       reload,
     });
     syncCloudflareWebAnalytics({
       document,
       measurementGranted: false,
+      persistDeniedConsent,
       reload,
     });
 
+    expect(persistDeniedConsent).toHaveBeenCalledOnce();
+    expect(reload).toHaveBeenCalledOnce();
+  });
+
+  it('persists and reloads once when a recovered owned beacon is revoked', () => {
+    const { document, head } = createDocumentHarness();
+    const recoveredBeacon = document.createElement(
+      'script',
+    ) as unknown as FakeScript;
+    recoveredBeacon.setAttribute('data-zst-cloudflare-analytics', 'true');
+    head.appendChild(recoveredBeacon);
+    const events: string[] = [];
+    const persistDeniedConsent = vi.fn(() => {
+      events.push('persist');
+      return true;
+    });
+    const reload = vi.fn(() => events.push('reload'));
+
+    syncCloudflareWebAnalytics({ document, measurementGranted: true });
+    syncCloudflareWebAnalytics({
+      document,
+      measurementGranted: false,
+      persistDeniedConsent,
+      reload,
+    });
+    syncCloudflareWebAnalytics({
+      document,
+      measurementGranted: false,
+      persistDeniedConsent,
+      reload,
+    });
+
+    expect(events).toEqual(['persist', 'reload']);
+    expect(head.scripts).toHaveLength(0);
+    expect(persistDeniedConsent).toHaveBeenCalledOnce();
     expect(reload).toHaveBeenCalledOnce();
   });
 });

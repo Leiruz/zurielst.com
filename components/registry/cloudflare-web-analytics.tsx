@@ -61,10 +61,12 @@ function removeOwnedBeaconBestEffort(script: HTMLScriptElement | null) {
 export function syncCloudflareWebAnalytics({
   document,
   measurementGranted,
+  persistDeniedConsent = () => false,
   reload = () => document.defaultView?.location.reload(),
 }: {
   document: Document;
   measurementGranted: boolean;
+  persistDeniedConsent?: () => boolean;
   reload?: () => void;
 }) {
   const state = beaconStates.get(document) ?? {
@@ -90,7 +92,11 @@ export function syncCloudflareWebAnalytics({
     if (action === 'reload') {
       state.revoked = true;
       removeOwnedBeaconBestEffort(state.script);
-      reload();
+      try {
+        if (persistDeniedConsent()) reload();
+      } catch {
+        // Stay revoked on this page rather than reload into stale granted consent.
+      }
     }
     return;
   }
@@ -121,12 +127,18 @@ export function syncCloudflareWebAnalytics({
 
 export function CloudflareWebAnalyticsLoader({
   measurementGranted,
+  persistDeniedConsent,
 }: {
   measurementGranted: boolean;
+  persistDeniedConsent: () => boolean;
 }) {
   useEffect(() => {
-    syncCloudflareWebAnalytics({ document, measurementGranted });
-  }, [measurementGranted]);
+    syncCloudflareWebAnalytics({
+      document,
+      measurementGranted,
+      persistDeniedConsent,
+    });
+  }, [measurementGranted, persistDeniedConsent]);
 
   return null;
 }

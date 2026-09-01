@@ -2,7 +2,13 @@
 // Do not edit without noting divergence in docs/components-map.md.
 "use client"
 
-import { lazy, Suspense, useEffect } from "react"
+import {
+  getConsentFromStorage,
+  saveConsentToStorage,
+  type ConsentState,
+  type StorageConfig,
+} from "@c15t/nextjs"
+import { lazy, Suspense, useCallback, useEffect } from "react"
 import {
   ConsentManagerProvider,
   useConsentManager,
@@ -15,6 +21,43 @@ import {
   listenForPrivacyChoicesOpen,
   type PrivacyChoicesOpenTarget,
 } from "@/lib/privacy-choices"
+
+type ConsentInfo = Parameters<
+  typeof saveConsentToStorage
+>[0]["consentInfo"]
+
+type PersistedConsent = {
+  consents?: { measurement?: boolean }
+}
+
+type ReadConsent = (storageConfig?: StorageConfig) => PersistedConsent | null
+
+function readPersistedConsent(storageConfig?: StorageConfig) {
+  return getConsentFromStorage<PersistedConsent>(storageConfig)
+}
+
+export function persistDeniedMeasurementConsent({
+  consentInfo,
+  consents,
+  readConsent = readPersistedConsent,
+  saveConsent = saveConsentToStorage,
+  storageConfig,
+}: {
+  consentInfo: ConsentInfo | null
+  consents: ConsentState
+  readConsent?: ReadConsent
+  saveConsent?: typeof saveConsentToStorage
+  storageConfig?: StorageConfig
+}) {
+  if (!consentInfo || consents.measurement) return false
+
+  try {
+    saveConsent({ consents, consentInfo }, undefined, storageConfig)
+    return readConsent(storageConfig)?.consents?.measurement === false
+  } catch {
+    return false
+  }
+}
 
 const DeferredConsentManagerDialog = lazy(() =>
   import("@/components/registry/consent-manager-dialog").then((module) => ({
@@ -81,9 +124,23 @@ function PrivacyChoicesListener() {
 }
 
 function CloudflareWebAnalyticsMount() {
-  const { consents } = useConsentManager()
+  const { consentInfo, consents, storageConfig } = useConsentManager()
+  const persistDeniedConsent = useCallback(
+    () =>
+      persistDeniedMeasurementConsent({
+        consentInfo,
+        consents,
+        storageConfig,
+      }),
+    [consentInfo, consents, storageConfig],
+  )
 
-  return <CloudflareWebAnalyticsLoader measurementGranted={consents.measurement} />
+  return (
+    <CloudflareWebAnalyticsLoader
+      measurementGranted={consents.measurement}
+      persistDeniedConsent={persistDeniedConsent}
+    />
+  )
 }
 
 export function ConsentManager({ children }: { children: React.ReactNode }) {

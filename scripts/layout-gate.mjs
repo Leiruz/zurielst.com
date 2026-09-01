@@ -128,6 +128,189 @@ function assertClose(actual, expected, message) {
   );
 }
 
+function delay(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function verifyAnalyticsConsentPersistence(browser, siteUrl) {
+  const page = await browser.newPage();
+  const browserDiagnostics = [];
+  let countConsentReloads = false;
+  let consentReloads = 0;
+  const countLoadedDocuments = () => {
+    if (countConsentReloads) consentReloads += 1;
+  };
+  page.on("load", countLoadedDocuments);
+  page.on("console", (message) => {
+    if (message.type() === "error") browserDiagnostics.push(message.text());
+  });
+  page.on("pageerror", (error) => browserDiagnostics.push(error.message));
+
+  try {
+    await page.setViewport({
+      width: 1280,
+      height: 900,
+      deviceScaleFactor: 1,
+    });
+    await page.emulateMediaFeatures([
+      { name: "prefers-reduced-motion", value: "reduce" },
+    ]);
+    await page.setRequestInterception(true);
+    page.on("request", async (request) => {
+      try {
+        if (request.url().includes("cloudflareinsights.com")) {
+          await request.abort("blockedbyclient");
+        } else {
+          await request.continue();
+        }
+      } catch {
+        // Navigation can settle an intercepted request before this handler does.
+      }
+    });
+
+    const devtoolsSession = await page.createCDPSession();
+    await devtoolsSession.send("Network.clearBrowserCookies");
+    await devtoolsSession.send("Storage.clearDataForOrigin", {
+      origin: new URL(siteUrl).origin,
+      storageTypes: "all",
+    });
+    await devtoolsSession.detach();
+
+    await page.goto(siteUrl, { waitUntil: "networkidle0" });
+    await page.evaluate(
+      () => new Promise((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      }),
+    );
+    await page.keyboard.press("Tab");
+    await page.waitForSelector('[data-testid="cookie-banner-accept-button"]');
+
+    await page.click('[data-testid="cookie-banner-accept-button"]');
+    await page.waitForSelector('[data-testid="cookie-banner-root"]', {
+      hidden: true,
+    });
+    await page.waitForSelector('[data-zst-cloudflare-analytics="true"]');
+    await page.waitForFunction(() => {
+      const stored = window.localStorage.getItem("c15t");
+      if (!stored) return false;
+      return JSON.parse(stored).consents?.measurement === true;
+    });
+
+    await page.click('[data-footer-privacy-choices="true"]');
+    try {
+      await page.waitForSelector('[data-testid="consent-manager-dialog-card"]', {
+        timeout: 5000,
+      });
+    } catch (error) {
+      const state = await page.evaluate(() => ({
+        consentTestIds: [...document.querySelectorAll('[data-testid*="consent"]')]
+          .map((element) => element.getAttribute("data-testid")),
+        pendingRequests: window.__dossierPendingOpenRequests ?? null,
+      }));
+      throw new Error(
+        `Real footer privacy control did not open the c15t dialog; state: ${JSON.stringify(state)}; browser errors: ${JSON.stringify(browserDiagnostics)}`,
+        { cause: error },
+      );
+    }
+    const measurementSwitch =
+      '[data-testid="consent-manager-widget-switch-measurement"]';
+    const switchWasGranted = await page.$eval(
+      measurementSwitch,
+      (element) =>
+        element.getAttribute("aria-checked") === "true" ||
+        element.getAttribute("data-state") === "checked",
+    );
+    assert.equal(
+      switchWasGranted,
+      true,
+      "Measurement switch was not granted before the revocation scenario",
+    );
+    await page.click(measurementSwitch);
+    const switchIsDenied = await page.$eval(
+      measurementSwitch,
+      (element) =>
+        element.getAttribute("aria-checked") === "false" ||
+        element.getAttribute("data-state") === "unchecked",
+    );
+    assert.equal(
+      switchIsDenied,
+      true,
+      "Measurement switch did not turn off in the real c15t dialog",
+    );
+    await page.evaluate(() => {
+      const nativeSetTimeout = window.setTimeout.bind(window);
+      window.setTimeout = (callback, delay = 0, ...arguments_) =>
+        nativeSetTimeout(callback, delay === 0 ? 250 : delay, ...arguments_);
+    });
+
+    countConsentReloads = true;
+    const reloadFinished = page.waitForNavigation({
+      waitUntil: "domcontentloaded",
+    });
+    await page.click(
+      '[data-testid="consent-manager-widget-footer-save-button"]',
+    );
+    await reloadFinished;
+    await delay(250);
+    assert.equal(
+      consentReloads,
+      1,
+      `Analytics revocation reloaded ${consentReloads} times instead of once`,
+    );
+
+    const effectiveStoredConsent = await page.evaluate(() => {
+      const cookieValue = document.cookie
+        .split(";")
+        .map((cookie) => cookie.trim())
+        .find((cookie) => cookie.startsWith("c15t="))
+        ?.slice("c15t=".length);
+      const localValue = window.localStorage.getItem("c15t");
+      const localConsent = localValue ? JSON.parse(localValue) : null;
+
+      if (cookieValue !== undefined) {
+        return {
+          measurement: cookieValue
+            .split(",")
+            .some((entry) => entry === "c.measurement:1"),
+          source: "cookie",
+        };
+      }
+
+      return {
+        measurement: localConsent?.consents?.measurement,
+        source: localConsent ? "localStorage" : "none",
+      };
+    });
+    assert.notEqual(
+      effectiveStoredConsent.source,
+      "none",
+      "Analytics revocation left no persisted c15t consent",
+    );
+    assert.equal(
+      effectiveStoredConsent.measurement,
+      false,
+      `Effective ${effectiveStoredConsent.source} consent remained granted after reload`,
+    );
+
+    await page.click('[data-footer-privacy-choices="true"]');
+    await page.waitForSelector('[data-testid="consent-manager-dialog-card"]');
+    await delay(250);
+    assert.equal(
+      await page.$('[data-zst-cloudflare-analytics="true"]'),
+      null,
+      "Denied measurement consent reinjected the analytics beacon",
+    );
+    assert.equal(
+      consentReloads,
+      1,
+      "Denied measurement consent triggered a second reload",
+    );
+  } finally {
+    page.off("load", countLoadedDocuments);
+    await page.close();
+  }
+}
+
 function validateDesktopMeasurement(measurement) {
   assert.equal(
     measurement.horizontalOverflow,
@@ -214,6 +397,8 @@ export async function runLayoutGate() {
       "375px intro bullet type changed",
     );
 
+    await verifyAnalyticsConsentPersistence(browser, siteUrl);
+
     console.log("Five-width Chromium layout gate:");
     for (const measurement of desktopMeasurements) {
       console.log(
@@ -224,6 +409,9 @@ export async function runLayoutGate() {
     console.log(
       `${MOBILE_VIEWPORT_WIDTH}px: horizontal overflow ` +
       `${mobileMeasurement.horizontalOverflow.toFixed(1)}px`,
+    );
+    console.log(
+      "Analytics consent gate: real dialog denial persisted before one reload",
     );
   } finally {
     try {
