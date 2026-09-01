@@ -253,7 +253,8 @@ describe('SiteNav terminal opener', () => {
     const markup = renderToStaticMarkup(createElement(SiteNav));
 
     expect(markup).toContain('aria-label="Zuriel Shanley"');
-    expect(markup).toMatch(/data-slot="shimmering-text"[^>]*>Zuriel Shanley<\/span>/);
+    expect(markup).toMatch(/data-nav-wordmark="true"[^>]*>Zuriel Shanley<\/span>/);
+    expect(markup).not.toContain('data-slot="shimmering-text"');
     expect(markup).toContain('whitespace-nowrap');
     expect(markup).not.toMatch(/>ZST<\/span>/);
     expect(markup).not.toContain('>zurielst.com<');

@@ -770,8 +770,8 @@ canvas {
 
 .theme-switcher-button {
   display: grid;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2.25rem;
+  height: 2.25rem;
   place-items: center;
   border: 1px solid transparent;
   border-radius: 9999px;
@@ -788,8 +788,8 @@ canvas {
 }
 
 .theme-switcher-button svg {
-  width: 1rem;
-  height: 1rem;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 [data-slot='icon-swap'],

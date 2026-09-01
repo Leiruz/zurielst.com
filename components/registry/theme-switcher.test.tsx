@@ -6,6 +6,10 @@ import { scheduleThemeToggleSound } from '@/lib/theme-toggle-sound';
 import { ThemeIconSprite } from '@/components/theme-icon-sprite';
 // @ts-expect-error The Vitest config exposes the stylesheet source as a virtual text module.
 import styles from 'virtual:globals-css-source';
+// @ts-expect-error Vite exposes local source files as text through the raw query.
+import clientEnhancementsSource from './client-enhancements.tsx?raw';
+// @ts-expect-error Vite exposes local source files as text through the raw query.
+import themeSwitcherSource from './theme-switcher.tsx?raw';
 
 import * as themeSwitcherModule from './theme-switcher';
 import { iconSwapTransition } from './icon-swap';
@@ -95,7 +99,8 @@ describe('ThemeSwitcherControl', () => {
     expect(buttons[0]).toContain('theme-switcher-button');
     expect(buttons[0]).toContain('data-haptic="true"');
     expect(buttons[0]).toContain('data-slot="icon-swap"');
-    expect(styles).toMatch(/\.theme-switcher-button\s*\{[\s\S]*width: 2\.75rem;[\s\S]*height: 2\.75rem;/);
+    expect(styles).toMatch(/\.theme-switcher-button\s*\{[\s\S]*width: 2\.25rem;[\s\S]*height: 2\.25rem;/);
+    expect(styles).toMatch(/\.theme-switcher-button svg\s*\{[\s\S]*width: 1\.5rem;[\s\S]*height: 1\.5rem;/);
     expect(darkMarkup).toContain('aria-label="Switch to light theme"');
     expect(darkMarkup).toContain('data-icon-key="dark"');
     expect(darkMarkup).toContain('<use href="#theme-dark"');
@@ -173,6 +178,13 @@ describe('selectThemeChoice', () => {
     expect(startViewTransition).toHaveBeenCalledOnce();
     expect(setTheme).toHaveBeenCalledWith('dark');
     expect(order).toEqual(['transition', 'commit']);
+  });
+
+  it('reserves the compact control footprint before the client module resolves', () => {
+    expect(themeSwitcherSource.match(/<div className="flex size-9" \/>/g)).toHaveLength(2);
+    expect(clientEnhancementsSource).toContain(
+      'loading: () => <div className="flex size-9" />',
+    );
   });
 
   it('changes theme immediately when reduced motion is requested', () => {
