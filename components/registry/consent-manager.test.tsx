@@ -3,7 +3,23 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { FooterPrivacyChoices } from '@/components/footer-privacy-choices';
-import { listenForPrivacyChoicesOpen } from '@/lib/privacy-choices';
+
+const effectHarness = vi.hoisted(() => ({
+  cleanups: [] as Array<() => void>,
+  run: false,
+}));
+
+vi.mock('react', async (importOriginal) => {
+  const react = await importOriginal<typeof import('react')>();
+  return {
+    ...react,
+    useEffect(effect: () => void | (() => void)) {
+      if (!effectHarness.run) return;
+      const cleanup = effect();
+      if (typeof cleanup === 'function') effectHarness.cleanups.push(cleanup);
+    },
+  };
+});
 
 const consentManagerMockState = vi.hoisted(() => ({
   consents: {
@@ -71,6 +87,8 @@ function renderConsentManager() {
 
 describe('ConsentManager analytics wiring', () => {
   afterEach(() => {
+    for (const cleanup of effectHarness.cleanups.splice(0)) cleanup();
+    effectHarness.run = false;
     vi.unstubAllGlobals();
   });
 
@@ -106,32 +124,36 @@ describe('ConsentManager analytics wiring', () => {
   });
 
   it('accepts consent, reopens preferences from the footer path, and saves necessary-only consent', () => {
+    const target = createPrivacyChoicesTarget();
+    vi.stubGlobal('window', target);
+    effectHarness.run = true;
     consentManagerMockState.showPopup = true;
     renderConsentManager();
     consentManagerMockState.banner?.onAccept();
 
     expect(renderConsentManager()).toContain('cloudflare-measurement-granted');
 
-    const target = createPrivacyChoicesTarget();
     const opener = { id: 'privacy-choices' };
     const footerButton = FooterPrivacyChoices() as ReactElement<{
       onClick: (event: { currentTarget: unknown }) => void;
     }>;
-    vi.stubGlobal('window', target);
     footerButton.props.onClick({ currentTarget: opener });
-    const cleanup = listenForPrivacyChoicesOpen(
-      target,
-      () => consentManagerMockState.setIsPrivacyDialogOpen(true),
-    );
 
     expect(consentManagerMockState.setIsPrivacyDialogOpen).toHaveBeenCalledWith(true);
     expect(consentManagerMockState.isPrivacyDialogOpen).toBe(true);
 
-    consentManagerMockState.saveConsents('necessary');
+    consentManagerMockState.banner = undefined;
+    consentManagerMockState.showPopup = true;
+    renderConsentManager();
+    rejectCapturedBanner();
+    expect(consentManagerMockState.saveConsents).toHaveBeenLastCalledWith('necessary');
     expect(renderConsentManager()).toContain('cloudflare-measurement-denied');
-    cleanup();
   });
 });
+
+function rejectCapturedBanner() {
+  consentManagerMockState.banner?.onReject();
+}
 
 function createPrivacyChoicesTarget() {
   const listeners = new Map<string, (event: { detail?: unknown; type: string }) => void>();

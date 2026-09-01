@@ -211,6 +211,8 @@ describe('footer document control', () => {
     expect(markup).toContain('grid-cols-1');
     expect(markup).toContain('sm:grid-cols-2');
     const bottomRow = markup.match(/<div[^>]*data-colophon-bottom-row="true"[\s\S]*?<\/div>\s*<\/div>/)?.[0] ?? '';
+    expect(bottomRow).toContain('grid-cols-1');
+    expect(bottomRow).toContain('sm:grid-cols-2');
     expect(bottomRow).toContain('data-footer-privacy-choices="true"');
     expect(bottomRow).toMatch(/<button[^>]*type="button"[^>]*>Privacy choices<\/button>/);
     expect(bottomRow).toContain('focus-visible:ring-2');

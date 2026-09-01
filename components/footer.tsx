@@ -108,7 +108,7 @@ export function Footer({
             <ColophonCell label="ANALYTICS">Cloudflare Web Analytics</ColophonCell>
           </dl>
 
-          <div data-colophon-bottom-row="true" className="grid grid-cols-2">
+          <div data-colophon-bottom-row="true" className="grid grid-cols-1 sm:grid-cols-2">
             <div className="flex min-h-16 items-center border-b border-r border-line px-5 sm:px-6">
               <FooterTerminalTrigger />
             </div>
