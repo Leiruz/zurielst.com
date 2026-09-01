@@ -262,6 +262,9 @@ describe('core dossier sections', () => {
     ];
 
     expect(markup).toContain('data-slot="experience-01"');
+    expect(markup).toMatch(
+      /class="[^"]*dossier-shell[^"]*timeline-shell[^"]*"[\s\S]*data-slot="experience-01"/,
+    );
     expect(markup).toMatch(/data-slot="experience-01"[^>]*class="[^"]*max-w-screen[^"]*overflow-x-clip/);
     expect(markup).toMatch(/class="[^"]*screen-line-top[^"]*screen-line-bottom[^"]*"/);
     expect(markup).toMatch(/class="[^"]*border-x[^"]*border-line[^"]*"/);

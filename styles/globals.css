@@ -275,6 +275,12 @@ canvas {
   padding-inline: var(--dossier-shell-padding);
 }
 
+.timeline-shell {
+  width: auto;
+  margin-inline: 0;
+  padding-inline: 0;
+}
+
 @media (min-width: 80rem) {
   .section-line-nav {
     width: var(--section-line-nav-width);
