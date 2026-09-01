@@ -2,7 +2,7 @@
 // Do not edit without noting divergence in docs/components-map.md.
 "use client"
 
-import { lazy, Suspense } from "react"
+import { lazy, Suspense, useEffect } from "react"
 import {
   ConsentManagerProvider,
   useConsentManager,
@@ -11,6 +11,10 @@ import {
 import { ConsentBanner } from "@/components/registry/consent-banner"
 import { CONSENT_TRANSLATIONS } from "@/components/registry/consent-copy"
 import { CloudflareWebAnalyticsLoader } from "@/components/registry/cloudflare-web-analytics"
+import {
+  listenForPrivacyChoicesOpen,
+  type PrivacyChoicesOpenTarget,
+} from "@/lib/privacy-choices"
 
 const DeferredConsentManagerDialog = lazy(() =>
   import("@/components/registry/consent-manager-dialog").then((module) => ({
@@ -62,6 +66,20 @@ function ConsentBannerMount() {
   )
 }
 
+function PrivacyChoicesListener() {
+  const { setIsPrivacyDialogOpen } = useConsentManager()
+
+  useEffect(
+    () => listenForPrivacyChoicesOpen(
+      window as unknown as PrivacyChoicesOpenTarget,
+      () => setIsPrivacyDialogOpen(true),
+    ),
+    [setIsPrivacyDialogOpen],
+  )
+
+  return null
+}
+
 function CloudflareWebAnalyticsMount() {
   const { consents } = useConsentManager()
 
@@ -78,6 +96,8 @@ export function ConsentManager({ children }: { children: React.ReactNode }) {
         // ignoreGeoLocation: process.env.NODE_ENV === "development", // Useful for development to always view the banner.
       }}
     >
+      <PrivacyChoicesListener />
+
       <ConsentBannerMount />
 
       <ConsentManagerDialogMount />

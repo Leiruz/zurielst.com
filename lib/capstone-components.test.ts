@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
 import { Footer } from '@/components/footer';
+import { FooterPrivacyChoices } from '@/components/footer-privacy-choices';
 import { enhanceContributionGraph } from '@/components/registry/contribution-graph';
 import type { ContributionSnapshot } from '@/components/registry/github-contributions';
 import { GitHubContributionsFigure } from '@/components/sections/github-contributions';
@@ -209,6 +210,10 @@ describe('footer document control', () => {
     expect(markup).toContain('focus-visible:ring-2');
     expect(markup).toContain('grid-cols-1');
     expect(markup).toContain('sm:grid-cols-2');
+    const bottomRow = markup.match(/<div[^>]*data-colophon-bottom-row="true"[\s\S]*?<\/div>\s*<\/div>/)?.[0] ?? '';
+    expect(bottomRow).toContain('data-footer-privacy-choices="true"');
+    expect(bottomRow).toMatch(/<button[^>]*type="button"[^>]*>Privacy choices<\/button>/);
+    expect(bottomRow).toContain('focus-visible:ring-2');
 
     for (const prohibited of [
       'Cloudflare Workers',
@@ -223,6 +228,10 @@ describe('footer document control', () => {
 
   it('extracts the terminal opener into a dedicated client island', () => {
     expect(Reflect.get(footerTriggerModule, 'FooterTerminalTrigger')).toBeTypeOf('function');
+  });
+
+  it('extracts the privacy choices opener into a dedicated client island', () => {
+    expect(FooterPrivacyChoices).toBeTypeOf('function');
   });
 
   it('renders a non-SHA build fallback as plain text', () => {
