@@ -35,6 +35,7 @@ jobs:
               --connect-timeout 10 \
               --max-time 45 \
               --proto '=https' \
+              --user-agent 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) zurielst-canary' \
               --output "$body" \
               --write-out '%{http_code}' \
               "$url")"; then
