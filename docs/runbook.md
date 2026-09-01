@@ -124,8 +124,9 @@ can read analytics data. It does not confirm that a consented browser has sent
 a pageview.
 
 Keep the yesterday-dated GraphQL query in Secrets solely for token read-access
-verification. After deploying the beacon, make a consented visit and use the
-separate procedure below to confirm the pageview appears in
+verification. After deploying the beacon, start the procedure below. Let it
+record the numeric baseline count, then make the consented visit only when it
+prompts. Its after-query confirms the pageview appears in
 `rumPageloadEventsAdaptiveGroups`.
 
 ### Beacon ingestion verification

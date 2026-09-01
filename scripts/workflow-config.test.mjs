@@ -301,13 +301,25 @@ test("runbook records implemented consent-gated Web Analytics operations", async
   assert.match(runbook, /working hypothesis for the site tag,\s*not a verified beacon token/);
 
   const readAccessIndex = runbookText.indexOf("only proves that the token can read analytics data");
-  const consentedVisitIndex = runbookText.indexOf("make a consented visit");
-  const pageviewIndex = runbookText.indexOf("confirm the pageview appears in `rumPageloadEventsAdaptiveGroups`");
+  const consentedVisitIndex = runbookText.toLowerCase().indexOf("make the consented visit");
+  const pageviewIndex = runbookText.indexOf("after-query confirms the pageview appears in `rumPageloadEventsAdaptiveGroups`");
   const replacementIndex = runbookText.indexOf("replace the one `CLOUDFLARE_ANALYTICS_TOKEN` constant and redeploy");
   assert.ok(readAccessIndex > -1, "the token query is limited to read-access verification");
   assert.ok(consentedVisitIndex > readAccessIndex, "a consented visit follows token read verification");
-  assert.ok(pageviewIndex > consentedVisitIndex, "the query confirms the consented pageview");
+  assert.ok(pageviewIndex > readAccessIndex, "the runbook states the pageview confirmation goal");
   assert.ok(replacementIndex > pageviewIndex, "a missing pageview triggers token replacement and redeploy");
+
+  const procedureInstructionIndex = runbookText.indexOf("start the procedure");
+  const baselineInstructionIndex = runbookText.toLowerCase().indexOf("let it record the numeric baseline count");
+  const promptedVisitIndex = runbook.indexOf("Make a consented visit now");
+  assert.ok(procedureInstructionIndex > -1, "the runbook starts the procedure before the visit");
+  assert.ok(baselineInstructionIndex > procedureInstructionIndex, "the procedure records its baseline next");
+  assert.ok(promptedVisitIndex > baselineInstructionIndex, "the prompted consented visit follows the baseline");
+  assert.doesNotMatch(
+    runbook,
+    /After deploying the beacon,\s*make a consented visit/i,
+    "the runbook never sends an operator to visit before starting the procedure",
+  );
 });
 
 test("runbook provides an executable consented beacon-ingestion verification loop", async () => {
