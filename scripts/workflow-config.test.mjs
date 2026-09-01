@@ -172,6 +172,10 @@ test("monitor runs a secretless six-hour production canary", async () => {
   assert.match(workflow, /check_status\s+"resume"[^\n]+200/);
   assert.ok(workflow.includes("--request POST"), "chat is exercised with POST");
   assert.ok(workflow.includes("User-Agent: Mozilla/5.0"), "chat uses a browser-like user agent");
+  assert.ok(
+    workflow.includes("--user-agent 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) zurielst-canary'"),
+    "status checks probe with a browser-like user agent so heuristic bot challenges do not false-alarm the canary",
+  );
   assert.ok(workflow.includes("Origin: https://zurielst.com"), "chat carries its production origin");
   assert.ok(workflow.includes("text/event-stream"), "a streamed answer is accepted");
   assert.ok(workflow.includes("application/json"), "a canned JSON answer is accepted");
