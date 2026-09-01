@@ -1,6 +1,6 @@
 # Operations runbook: zurielst.com
 
-Current as of 2026-08-31, after the 2026-08-30 cutover (full record and
+Current as of 2026-09-01, after the 2026-08-30 cutover (full record and
 retirement checklist: docs/cutover-2026-08-30.md).
 
 ## System overview
@@ -110,7 +110,23 @@ only by routes. Details are recorded in docs/cutover-2026-08-30.md.
 | TEMP configuration rule, SSL mode Full, apex plus www | ON PURPOSE, guards the GitHub Pages rollback origin | delete only at origin retirement |
 | Response-header CSP transform rule | stale, predates the rebuild | remove at retirement (owner) |
 
-Pending owner step: disable Web Analytics automatic setup and ship the manual snippet behind the consent measurement category, with the snippet token referenced from the dashboard.
+## Web Analytics
+
+Manual Cloudflare Web Analytics setup has been active since 2026-09-01. The
+client-only beacon is gated behind the c15t `measurement` consent category, so
+the default decline and an ignored banner make no analytics request. Task 1
+created the single beacon-token constant, `CLOUDFLARE_ANALYTICS_TOKEN`, in
+`components/registry/cloudflare-web-analytics.tsx`.
+
+`132089a6cdb94c13b46d32c7f2061e18` is a working hypothesis for the site tag,
+not a verified beacon token. The GraphQL check below only proves that the token
+can read analytics data. It does not confirm that a consented browser has sent
+a pageview.
+
+After deploying the beacon, make a consented visit, then reuse the GraphQL
+procedure below and confirm the pageview appears in
+`rumPageloadEventsAdaptiveGroups`. If the pageview does not appear, replace the
+one `CLOUDFLARE_ANALYTICS_TOKEN` constant and redeploy.
 
 ## Secrets
 

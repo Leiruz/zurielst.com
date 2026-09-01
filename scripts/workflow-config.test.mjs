@@ -286,10 +286,40 @@ test("runbook documents analytics refresh prerequisites and token rotation", asy
   assert.ok(revocationIndex > confirmationIndex, "the old token is revoked last");
 });
 
-test("runbook records the pending consent-gated Web Analytics setup", async () => {
+test("runbook records implemented consent-gated Web Analytics operations", async () => {
   const runbook = await readFile(new URL("../docs/runbook.md", import.meta.url), "utf8");
+  const runbookText = runbook.replace(/\s+/g, " ");
 
-  assert.ok(runbook.includes(
+  assert.ok(!runbook.includes(
     "disable Web Analytics automatic setup and ship the manual snippet behind the consent measurement category, with the snippet token referenced from the dashboard",
   ));
+  assert.ok(runbook.includes("Manual Cloudflare Web Analytics setup has been active since 2026-09-01."));
+  assert.ok(runbook.includes("c15t `measurement` consent category"));
+  assert.ok(runbook.includes("default decline and an ignored banner make no analytics request"));
+  assert.ok(runbook.includes("`components/registry/cloudflare-web-analytics.tsx`"));
+  assert.ok(runbook.includes("`CLOUDFLARE_ANALYTICS_TOKEN`"));
+  assert.match(runbook, /working hypothesis for the site tag,\s*not a verified beacon token/);
+
+  const readAccessIndex = runbookText.indexOf("only proves that the token can read analytics data");
+  const consentedVisitIndex = runbookText.indexOf("make a consented visit");
+  const pageviewIndex = runbookText.indexOf("confirm the pageview appears in `rumPageloadEventsAdaptiveGroups`");
+  const replacementIndex = runbookText.indexOf("replace the one `CLOUDFLARE_ANALYTICS_TOKEN` constant and redeploy");
+  assert.ok(readAccessIndex > -1, "the token query is limited to read-access verification");
+  assert.ok(consentedVisitIndex > readAccessIndex, "a consented visit follows token read verification");
+  assert.ok(pageviewIndex > consentedVisitIndex, "the query confirms the consented pageview");
+  assert.ok(replacementIndex > pageviewIndex, "a missing pageview triggers token replacement and redeploy");
+});
+
+test("retirement checklist records repository consolidation safeguards", async () => {
+  const cutover = await readFile(new URL("../docs/cutover-2026-08-30.md", import.meta.url), "utf8");
+
+  assert.ok(cutover.includes("### Repository consolidation"));
+  assert.match(cutover, /back up local clones of `Leiruz\/resume` and `Leiruz\/Zuriel`/i);
+  assert.match(cutover, /selectively import still-wanted files into `zurielst\.com`/i);
+  assert.match(cutover, /Never merge full history because the old resume history contains the\s+unsanitized resume PDF/);
+  assert.match(cutover, /Archive both repositories on GitHub only after GitHub Pages retirement/);
+  assert.match(cutover, /resume repository remains the rollback origin until then/i);
+  assert.match(cutover, /Delete the repositories later only after a stable period passes/);
+  assert.match(cutover, /open `resume#2` pull request on the old repository becomes moot when\s+it is archived/i);
+  assert.ok(!cutover.includes("Execute the old-repo history decision."));
 });
