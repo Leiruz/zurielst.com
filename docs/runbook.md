@@ -114,8 +114,8 @@ only by routes. Details are recorded in docs/cutover-2026-08-30.md.
 
 Manual Cloudflare Web Analytics setup has been active since 2026-09-01. The
 client-only beacon is gated behind the c15t `measurement` consent category, so
-the default decline and an ignored banner make no analytics request. Task 1
-created the single beacon-token constant, `CLOUDFLARE_ANALYTICS_TOKEN`, in
+the default decline and an ignored banner make no analytics request. The loader
+reads the single beacon-token constant, `CLOUDFLARE_ANALYTICS_TOKEN`, in
 `components/registry/cloudflare-web-analytics.tsx`.
 
 `132089a6cdb94c13b46d32c7f2061e18` is a working hypothesis for the site tag,
