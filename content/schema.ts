@@ -101,7 +101,7 @@ const MetricSchema = z
 
 const SocialSchema = z
   .object({
-    platform: z.enum(["GitHub", "LinkedIn"]),
+    platform: z.enum(["GitHub", "LinkedIn", "Instagram"]),
     url: HttpUrl,
   })
   .strict();
@@ -120,7 +120,7 @@ const IdentitySchema = z
       })
       .strict(),
     email: z.literal("zurielst@u.nus.edu"),
-    socials: z.array(SocialSchema).length(2),
+    socials: z.array(SocialSchema).length(3),
     portrait: z
       .object({
         image: MediaPath,

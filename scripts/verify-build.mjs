@@ -1029,6 +1029,7 @@ export function validateStructuredData(html) {
   const expectedSameAs = [
     "https://github.com/Leiruz",
     "https://www.linkedin.com/in/zuriel-shanley/",
+    "https://www.instagram.com/zureal.st",
   ];
 
   if (

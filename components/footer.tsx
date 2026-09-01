@@ -117,7 +117,7 @@ export function Footer({
                   key={social.platform}
                   href={withSiteUtm(social.url)}
                   target="_blank"
-                  rel="noopener noreferrer"
+                  rel="me noopener"
                   aria-label={social.platform}
                   data-footer-social="true"
                   className="inline-flex size-11 items-center justify-center rounded-sm text-text-2 transition-colors duration-150 hover:bg-surface-hover hover:text-text-1 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
@@ -153,6 +153,16 @@ function SocialIcon({ platform }: { platform: Social['platform'] }) {
       <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" className="size-5 fill-none stroke-current" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
         <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3.3-.4 6.8-1.6 6.8-7.4A5.8 5.8 0 0 0 19.3 3 5.4 5.4 0 0 0 19.1 1S17.9.6 15 2.5a14 14 0 0 0-7 0C5.1.6 3.9 1 3.9 1a5.4 5.4 0 0 0-.2 2A5.8 5.8 0 0 0 2.2 7.1c0 5.8 3.5 7 6.8 7.4A4.8 4.8 0 0 0 8 18v4" />
         <path d="M8 19c-3 .9-3-1.5-4.2-2" />
+      </svg>
+    );
+  }
+
+  if (platform === 'Instagram') {
+    return (
+      <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" className="size-5 fill-none stroke-current" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="5" />
+        <circle cx="12" cy="12" r="4" />
+        <path d="M17.5 6.5h.01" strokeWidth="2.5" />
       </svg>
     );
   }

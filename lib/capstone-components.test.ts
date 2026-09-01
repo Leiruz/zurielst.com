@@ -166,13 +166,14 @@ describe('footer document control', () => {
     const markup = renderToStaticMarkup(createElement(Footer as ComponentType<{
       buildDate: string;
       buildSha: string;
-      socials: Array<{ platform: 'GitHub' | 'LinkedIn'; url: string }>;
+      socials: Array<{ platform: 'GitHub' | 'Instagram' | 'LinkedIn'; url: string }>;
     }>, {
       buildDate: '2026-08-31T04:05:06.000Z',
       buildSha: sha,
       socials: [
         { platform: 'GitHub', url: 'https://github.com/Leiruz' },
         { platform: 'LinkedIn', url: 'https://www.linkedin.com/in/zuriel-shanley/' },
+        { platform: 'Instagram', url: 'https://www.instagram.com/zureal.st' },
       ],
     }));
     const text = markup.replace(/<[^>]+>/g, '').replaceAll('&#x27;', "'");
@@ -202,9 +203,22 @@ describe('footer document control', () => {
     expect(text).toContain('Cloudflare Web Analytics');
     expect(markup).toContain('data-footer-mark="true"');
     expect(text).toContain('ZST');
-    expect(markup.match(/data-footer-social="true"/g)).toHaveLength(2);
+    expect(markup.match(/data-footer-social="true"/g)).toHaveLength(3);
     expect(markup).toContain('aria-label="GitHub"');
     expect(markup).toContain('aria-label="LinkedIn"');
+    expect(markup).toContain('aria-label="Instagram"');
+    expect(markup.match(/rel="me noopener"/g)).toHaveLength(3);
+    const instagramLink = markup.match(
+      /<a(?=[^>]*aria-label="Instagram")[\s\S]*?<\/a>/,
+    )?.[0] ?? '';
+    expect(instagramLink).toContain(
+      'href="https://www.instagram.com/zureal.st?utm_source=zurielst.com"',
+    );
+    expect(instagramLink).toContain('target="_blank"');
+    expect(instagramLink).toContain('rel="me noopener"');
+    expect(instagramLink).toContain('fill-none stroke-current');
+    expect(instagramLink).toContain('<rect');
+    expect(instagramLink).toContain('<circle');
     expect(markup.match(/data-footer-social="true"[\s\S]*?<svg/g)).toBeTruthy();
     expect(markup).toContain('focus-visible:ring-2');
     expect(markup).toContain('grid-cols-1');
@@ -229,7 +243,7 @@ describe('footer document control', () => {
     const markup = renderToStaticMarkup(createElement(Footer as ComponentType<{
       buildDate: string;
       buildSha: string;
-      socials: Array<{ platform: 'GitHub' | 'LinkedIn'; url: string }>;
+      socials: Array<{ platform: 'GitHub' | 'Instagram' | 'LinkedIn'; url: string }>;
     }>, {
       buildDate: '2026-08-31T04:05:06.000Z',
       buildSha: 'dev',
