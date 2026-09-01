@@ -47,7 +47,7 @@ async function measureViewport(browser, siteUrl, viewportWidth) {
     await page.goto(siteUrl, { waitUntil: "networkidle0" });
     await page.evaluate(() => document.fonts.ready);
 
-    return await page.evaluate(() => {
+    return await page.evaluate(async () => {
       const shell = document.querySelector("#intro .dossier-shell");
       const lineNav = document.querySelector("[data-section-line-nav='true']");
       const introLayout = document.querySelector("[data-intro-layout='true']") ??
@@ -60,6 +60,17 @@ async function measureViewport(browser, siteUrl, viewportWidth) {
         document.querySelector("[data-intro-contributions-column='true']") ??
         introLayout?.children[1];
       const introBullet = document.querySelector("[data-intro-bullet='true']");
+      const timelineTargets = [
+        ["heading", document.querySelector("#timeline-title")],
+        [
+          "first organization",
+          document.querySelector("#timeline [data-work-organization='true']"),
+        ],
+        [
+          "first role card",
+          document.querySelector("#timeline [data-work-position='true']"),
+        ],
+      ];
       const targets = [
         shell,
         lineNav,
@@ -67,6 +78,7 @@ async function measureViewport(browser, siteUrl, viewportWidth) {
         introCopy,
         contributions,
         introBullet,
+        ...timelineTargets.map(([, target]) => target),
       ];
       if (!targets.every((target) => target instanceof HTMLElement)) {
         throw new Error("Layout gate could not find every measurement target");
@@ -93,6 +105,34 @@ async function measureViewport(browser, siteUrl, viewportWidth) {
       const navGutter = gutterProbe.getBoundingClientRect().width;
       gutterProbe.remove();
 
+      const timelineIntersections = [];
+      for (const [name, target] of timelineTargets) {
+        target.scrollIntoView({ block: "center" });
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(resolve));
+        });
+        const currentLineNavRect = lineNav.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        const overlapX = Math.max(
+          0,
+          Math.min(currentLineNavRect.right, targetRect.right) -
+            Math.max(currentLineNavRect.left, targetRect.left),
+        );
+        const overlapY = Math.max(
+          0,
+          Math.min(currentLineNavRect.bottom, targetRect.bottom) -
+            Math.max(currentLineNavRect.top, targetRect.top),
+        );
+        timelineIntersections.push({
+          name,
+          intersects: overlapX > 0 && overlapY > 0,
+          navRight: currentLineNavRect.right,
+          overlapX,
+          overlapY,
+          targetLeft: targetRect.left,
+        });
+      }
+
       return {
         viewportWidth: innerWidth,
         horizontalOverflow:
@@ -114,6 +154,7 @@ async function measureViewport(browser, siteUrl, viewportWidth) {
         contributionsCenter:
           contributionsRect.top + (contributionsRect.height / 2),
         introBulletFontSize: Number.parseFloat(introBulletStyle.fontSize),
+        timelineIntersections,
       };
     });
   } finally {
@@ -162,6 +203,15 @@ function validateDesktopMeasurement(measurement) {
       measurement.introCopyMaxWidth + GEOMETRY_TOLERANCE_PX,
     `${measurement.viewportWidth}px intro copy exceeds its maximum measure`,
   );
+  for (const intersection of measurement.timelineIntersections) {
+    assert.equal(
+      intersection.intersects,
+      false,
+      `${measurement.viewportWidth}px Timeline ${intersection.name} intersects ` +
+        `the line-nav rail by ${intersection.overlapX.toFixed(1)}px horizontally ` +
+        `and ${intersection.overlapY.toFixed(1)}px vertically`,
+    );
+  }
 }
 
 export async function runLayoutGate() {
@@ -213,12 +263,28 @@ export async function runLayoutGate() {
       16,
       "375px intro bullet type changed",
     );
+    const mobileTimelineHeading = mobileMeasurement.timelineIntersections.find(
+      ({ name }) => name === "heading",
+    );
+    assert.ok(
+      mobileTimelineHeading,
+      "375px Timeline heading measurement is missing",
+    );
+    assertClose(
+      mobileTimelineHeading.targetLeft,
+      17,
+      "375px Timeline inset changed",
+    );
 
     console.log("Five-width Chromium layout gate:");
     for (const measurement of desktopMeasurements) {
       console.log(
         `${measurement.viewportWidth}px: right gap ${measurement.shellRightGap.toFixed(1)}px, ` +
-        `shell width ${measurement.shellWidth.toFixed(1)}px`,
+        `shell width ${measurement.shellWidth.toFixed(1)}px, ` +
+        `Timeline overlap ${Math.max(
+          ...measurement.timelineIntersections.map(({ overlapX, intersects }) =>
+            intersects ? overlapX : 0),
+        ).toFixed(1)}px`,
       );
     }
     console.log(

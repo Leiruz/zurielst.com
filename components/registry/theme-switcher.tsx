@@ -142,12 +142,12 @@ function ThemeSwitcher() {
   )
 
   if (!isMounted) {
-    return <div className="flex h-11 w-11" />
+    return <div className="flex size-9" />
   }
 
   const activeTheme = resolveActiveTheme(theme, resolvedTheme)
   if (!activeTheme) {
-    return <div className="flex h-11 w-11" />
+    return <div className="flex size-9" />
   }
 
   function selectTheme(nextTheme: ThemeChoice) {

@@ -13,15 +13,30 @@ import { SiteNav } from '@/components/site-nav';
 const FluidGradientText = fluidGradientModule.FluidGradientText;
 
 describe('registry identity and motion adapters', () => {
-  it('renders the accessible shimmering Zuriel Shanley terminal wordmark', () => {
+  it('renders the accessible static Zuriel Shanley terminal wordmark', () => {
     const markup = renderToStaticMarkup(createElement(SiteNav));
+    const brandButton = markup.match(
+      /<button(?=[^>]*aria-label="Zuriel Shanley")[\s\S]*?<\/button>/,
+    )?.[0] ?? '';
 
     expect(markup).toContain('aria-label="Zuriel Shanley"');
-    expect(markup).toContain('data-slot="shimmering-text"');
-    expect(markup).toContain('>Zuriel Shanley</span>');
+    expect(brandButton).toContain('data-nav-wordmark="true"');
+    expect(brandButton).toContain('text-text-3');
+    expect(brandButton).toContain('>Zuriel Shanley</span>');
+    expect(brandButton).not.toContain('data-slot="shimmering-text"');
     expect(markup).not.toContain('data-slot="spotlight-logo"');
     expect(markup).not.toMatch(/>ZST</);
     expect(markup).not.toContain('chanhdai');
+  });
+
+  it('keeps the theme toggle focus ring inset so the reveal clip cannot cut it', () => {
+    const block = styles.match(
+      /\.theme-switcher-button:focus-visible\s*\{[^}]*\}/,
+    )?.[0] ?? '';
+
+    expect(block).toContain('outline: 2px solid var(--ring);');
+    expect(block).toContain('outline-offset: -3px;');
+    expect(styles).toMatch(/\.theme-switcher-reveal\s*\{[^}]*overflow: clip/);
   });
 
   it('retains no spotlight-logo implementation in source', () => {

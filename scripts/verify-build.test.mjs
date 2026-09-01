@@ -128,6 +128,7 @@ const validStructuredData = {
       sameAs: [
         "https://github.com/Leiruz",
         "https://www.linkedin.com/in/zuriel-shanley/",
+        "https://www.instagram.com/zureal.st",
       ],
     },
     {
@@ -845,6 +846,21 @@ test("requires one valid Person, WebSite, and ProfilePage JSON-LD graph", async 
   await assert.rejects(
     verifyBuildOutput(outputDirectory),
     /JSON-LD.*Person.*WebSite.*ProfilePage/i,
+  );
+});
+
+test("accepts all three approved public profiles in the JSON-LD graph", () => {
+  const validateStructuredData = requireSubjectFunction("validateStructuredData");
+
+  assert.doesNotThrow(() => validateStructuredData(validStructuredDataMarkup));
+  assert.throws(
+    () => validateStructuredData(
+      validStructuredDataMarkup.replace(
+        ',"https://www.instagram.com/zureal.st"',
+        "",
+      ),
+    ),
+    /JSON-LD.*public-profile values/i,
   );
 });
 
