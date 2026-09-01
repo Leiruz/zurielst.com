@@ -310,6 +310,34 @@ test("runbook records implemented consent-gated Web Analytics operations", async
   assert.ok(replacementIndex > pageviewIndex, "a missing pageview triggers token replacement and redeploy");
 });
 
+test("runbook provides an executable consented beacon-ingestion verification loop", async () => {
+  const runbook = await readFile(new URL("../docs/runbook.md", import.meta.url), "utf8");
+  const procedure = runbook.match(
+    /### Beacon ingestion verification[\s\S]*?```bash\n([\s\S]*?)\n```/,
+  )?.[1];
+
+  assert.ok(procedure, "the ingestion check is a separate Bash procedure");
+  assert.match(procedure, /set -euo pipefail/);
+  assert.match(procedure, /analytics_day="\$\(date -u \+%F\)"/);
+  assert.match(procedure, /rumPageloadEventsAdaptiveGroups/);
+  assert.ok(procedure.includes(String.raw`\$accountTag`), "GraphQL variables are protected from Bash expansion");
+  assert.ok(!procedure.includes(String.raw`\\$accountTag`), "GraphQL variables use one Bash escape");
+  assert.match(procedure, /curl --fail-with-body --silent --show-error/);
+  assert.match(procedure, /GraphQL errors/);
+  assert.match(procedure, /account envelope/);
+  assert.match(procedure, /count is not numeric/);
+  assert.match(procedure, /baseline_count="\$\(analytics_count\)"/);
+  assert.match(procedure, /Baseline count.*\$\{baseline_count\}/);
+  assert.match(procedure, /Make a consented visit/);
+  assert.match(procedure, /while true; do/);
+  assert.match(procedure, /read -r/);
+  assert.match(procedure, /after_count="\$\(analytics_count\)"/);
+  assert.match(procedure, /After count.*\$\{after_count\}/);
+  assert.match(procedure, /\(\( after_count > baseline_count \)\)/);
+  assert.match(procedure, /\[\[ "\$answer" == "stop" \]\]/);
+  assert.match(procedure, /replace the one CLOUDFLARE_ANALYTICS_TOKEN constant and redeploy/i);
+});
+
 test("retirement checklist records repository consolidation safeguards", async () => {
   const cutover = await readFile(new URL("../docs/cutover-2026-08-30.md", import.meta.url), "utf8");
 
