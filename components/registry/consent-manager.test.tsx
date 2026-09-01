@@ -1,17 +1,21 @@
 import { createElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const consentManagerMockState = vi.hoisted(() => ({
+  consents: {
+    experience: false,
+    functionality: false,
+    marketing: false,
+    measurement: false,
+    necessary: true,
+  },
+}));
 
 vi.mock('@c15t/nextjs/headless', () => ({
   ConsentManagerProvider: ({ children }: { children: ReactNode }) => children,
   useConsentManager: () => ({
-    consents: {
-      experience: false,
-      functionality: false,
-      marketing: false,
-      measurement: true,
-      necessary: true,
-    },
+    consents: consentManagerMockState.consents,
     isPrivacyDialogOpen: false,
     saveConsents: vi.fn(),
     setIsPrivacyDialogOpen: vi.fn(),
@@ -33,11 +37,31 @@ vi.mock('@/components/registry/cloudflare-web-analytics', () => ({
 
 import { ConsentManager } from './consent-manager';
 
+function renderConsentManager() {
+  return renderToStaticMarkup(createElement(ConsentManager, null, null));
+}
+
 describe('ConsentManager analytics wiring', () => {
+  beforeEach(() => {
+    Object.assign(consentManagerMockState.consents, {
+      experience: false,
+      functionality: false,
+      marketing: false,
+      measurement: false,
+      necessary: true,
+    });
+  });
+
+  it('denies analytics when only default necessary consent is granted', () => {
+    const markup = renderConsentManager();
+
+    expect(markup).toContain('cloudflare-measurement-denied');
+    expect(markup).not.toContain('cloudflare-measurement-granted');
+  });
+
   it('forwards the c15t measurement category to the analytics loader', () => {
-    const markup = renderToStaticMarkup(
-      createElement(ConsentManager, null, null),
-    );
+    consentManagerMockState.consents.measurement = true;
+    const markup = renderConsentManager();
 
     expect(markup).toContain('cloudflare-measurement-granted');
     expect(markup).not.toContain('cloudflare-measurement-denied');
