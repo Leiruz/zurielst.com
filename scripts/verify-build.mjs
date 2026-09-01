@@ -71,11 +71,14 @@ const requiredCspDirectives = new Map([
   ["object-src", ["'none'"]],
   ["frame-ancestors", ["'none'"]],
   ["form-action", ["'self'"]],
-  ["script-src", ["'self'", "'unsafe-inline'"]],
+  [
+    "script-src",
+    ["'self'", "'unsafe-inline'", "https://static.cloudflareinsights.com"],
+  ],
   ["style-src", ["'self'", "'unsafe-inline'"]],
   ["img-src", ["'self'", "data:"]],
   ["font-src", ["'self'"]],
-  ["connect-src", ["'self'"]],
+  ["connect-src", ["'self'", "https://cloudflareinsights.com"]],
 ]);
 
 function validateRule(rule, lineNumber) {
@@ -340,6 +343,25 @@ function extractTags(html) {
   }
 
   return tags;
+}
+
+export function findStaticBeaconViolations(html, relativeFile = "index.html") {
+  const violations = [];
+  for (const tag of extractTags(html)) {
+    if (tag.attributes.has("data-cf-beacon")) {
+      violations.push(
+        `${relativeFile}: Cloudflare Web Analytics beacon markup must not be present in static HTML`,
+      );
+    }
+    for (const value of tag.attributes.values()) {
+      if (value.startsWith("https://static.cloudflareinsights.com/beacon.min.js")) {
+        violations.push(
+          `${relativeFile}: Cloudflare Web Analytics beacon URL must not be present in static HTML`,
+        );
+      }
+    }
+  }
+  return violations;
 }
 
 function sourceListFor(policy, directiveName) {
@@ -1154,12 +1176,14 @@ export async function verifyBuildOutput(outputDirectory = path.resolve("out"), s
   const violations = [];
   for (const htmlFile of htmlFiles) {
     const relativeFile = path.relative(resolvedOutputDirectory, htmlFile);
+    const html = await readFile(htmlFile, "utf8");
     violations.push(
       ...findCspViolations(
-        await readFile(htmlFile, "utf8"),
+        html,
         policy,
         relativeFile,
       ),
+      ...findStaticBeaconViolations(html, relativeFile),
     );
   }
   for (const cssFile of cssFiles) {

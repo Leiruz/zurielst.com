@@ -110,11 +110,19 @@ const validHeaders = `/*
   Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
   X-Frame-Options: DENY
   Cross-Origin-Opener-Policy: same-origin
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://cloudflareinsights.com
 
 https://:version.:subdomain.workers.dev/*
   X-Robots-Tag: noindex
 `;
+
+const legacyHeaders = validHeaders.replace(
+  "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src",
+  "script-src 'self' 'unsafe-inline'; style-src",
+).replace(
+  "connect-src 'self' https://cloudflareinsights.com",
+  "connect-src 'self'",
+);
 
 const validStructuredData = {
   "@context": "https://schema.org",
@@ -980,4 +988,47 @@ test("the authored public headers pass the same production validator", async () 
   ).catch((error) => (error?.code === "ENOENT" ? "" : Promise.reject(error)));
 
   assert.doesNotThrow(() => validateHeadersFile(source));
+});
+
+test("requires the exact Cloudflare Web Analytics CSP sources", () => {
+  const validateHeadersFile = requireSubjectFunction("validateHeadersFile");
+
+  assert.doesNotThrow(() => validateHeadersFile(validHeaders));
+  assert.throws(
+    () => validateHeadersFile(legacyHeaders),
+    /script-src must be exactly.*static\.cloudflareinsights\.com/i,
+  );
+});
+
+test("identifies Cloudflare beacon URLs and data-cf-beacon markup", () => {
+  const findStaticBeaconViolations = requireSubjectFunction(
+    "findStaticBeaconViolations",
+  );
+
+  assert.deepEqual(
+    findStaticBeaconViolations(
+      '<script src="https://static.cloudflareinsights.com/beacon.min.js?token=fixture"></script><script data-cf-beacon="{&quot;token&quot;:&quot;fixture&quot;}"></script>',
+      "nested/page.html",
+    ),
+    [
+      "nested/page.html: Cloudflare Web Analytics beacon URL must not be present in static HTML",
+      "nested/page.html: Cloudflare Web Analytics beacon markup must not be present in static HTML",
+    ],
+  );
+});
+
+test("rejects Cloudflare beacon markup from nested exported HTML", async () => {
+  const verifyBuildOutput = requireSubjectFunction("verifyBuildOutput");
+  const outputDirectory = await createTemporaryDirectory();
+  await writeValidCapstoneExport(outputDirectory);
+  await mkdir(path.join(outputDirectory, "nested"));
+  await writeFile(
+    path.join(outputDirectory, "nested", "page.html"),
+    '<!doctype html><script data-cf-beacon="{&quot;token&quot;:&quot;fixture&quot;}"></script>',
+  );
+
+  await assert.rejects(
+    verifyBuildOutput(outputDirectory),
+    /nested[\\/]page\.html.*Cloudflare Web Analytics beacon/i,
+  );
 });
