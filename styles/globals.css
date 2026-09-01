@@ -785,6 +785,10 @@ canvas {
 
 .theme-switcher-button:focus-visible {
   border-color: var(--border);
+  /* The reveal wrapper clips overflow for the icon swap, which would cut
+     the global outside ring; an inset ring cannot be clipped by a parent. */
+  outline: 2px solid var(--ring);
+  outline-offset: -3px;
 }
 
 .theme-switcher-button svg {

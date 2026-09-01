@@ -29,6 +29,16 @@ describe('registry identity and motion adapters', () => {
     expect(markup).not.toContain('chanhdai');
   });
 
+  it('keeps the theme toggle focus ring inset so the reveal clip cannot cut it', () => {
+    const block = styles.match(
+      /\.theme-switcher-button:focus-visible\s*\{[^}]*\}/,
+    )?.[0] ?? '';
+
+    expect(block).toContain('outline: 2px solid var(--ring);');
+    expect(block).toContain('outline-offset: -3px;');
+    expect(styles).toMatch(/\.theme-switcher-reveal\s*\{[^}]*overflow: clip/);
+  });
+
   it('retains no spotlight-logo implementation in source', () => {
     const registryModules = Object.keys(
       import.meta.glob('/components/registry/*.tsx'),
