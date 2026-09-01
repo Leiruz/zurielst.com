@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 
 export const CLOUDFLARE_ANALYTICS_BEACON_SRC =
   'https://static.cloudflareinsights.com/beacon.min.js';
+// UNVERIFIED: site-tag hypothesis until consented ingestion is confirmed via the runbook loop
 export const CLOUDFLARE_ANALYTICS_TOKEN = '132089a6cdb94c13b46d32c7f2061e18';
 
 const OWNED_BEACON_SELECTOR = '[data-zst-cloudflare-analytics="true"]';

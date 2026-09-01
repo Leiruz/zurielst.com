@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
+// @ts-expect-error Vite exposes source files with the raw query as text.
+import cloudflareWebAnalyticsSource from './cloudflare-web-analytics.tsx?raw';
+
 import {
   CLOUDFLARE_ANALYTICS_BEACON_SRC,
   CLOUDFLARE_ANALYTICS_TOKEN,
@@ -69,6 +72,12 @@ function createDocumentHarness() {
 }
 
 describe('Cloudflare Web Analytics consent loader', () => {
+  it('pins the analytics token as an unverified site-tag hypothesis', () => {
+    expect(cloudflareWebAnalyticsSource).toMatch(
+      /\/\/ UNVERIFIED: site-tag hypothesis until consented ingestion is confirmed via the runbook loop\r?\nexport const CLOUDFLARE_ANALYTICS_TOKEN =/,
+    );
+  });
+
   it('decides to reload when an injected beacon is revoked', () => {
     expect(
       decideCloudflareWebAnalyticsRevocation({
