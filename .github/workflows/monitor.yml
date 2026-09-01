@@ -104,12 +104,17 @@ jobs:
           [[ "$CHAT_STATUS" =~ ^[0-9]{3}$ ]] || fail "chat returned an invalid status: $CHAT_STATUS"
           # The probe message triggers the pre-budget injection deflection, so a
           # healthy worker always answers 200 canned JSON without spending rate
-          # limit, budget, or model neurons. Anything but 200 is a failure.
+          # limit, budget, or model neurons. Anything but 200 is a failure,
+          # except the same Cf-Mitigated bot challenge tolerated above: bot
+          # scoring can intercept this POST before it reaches the worker.
           if [ "$CHAT_STATUS" != 200 ]; then
-            fail "chat returned HTTP $CHAT_STATUS"
-          fi
-
-          if grep -Eiq '^content-type:[[:space:]]*text/event-stream' "$monitor_dir/chat.headers" \
+            if [ "$CHAT_STATUS" = "403" ] \
+              && grep -qi '^cf-mitigated: challenge' "$monitor_dir/chat.headers"; then
+              echo "chat: HTTP 403 bot challenge (edge alive; probe scored as bot)"
+            else
+              fail "chat returned HTTP $CHAT_STATUS"
+            fi
+          elif grep -Eiq '^content-type:[[:space:]]*text/event-stream' "$monitor_dir/chat.headers" \
             && grep -q '^data:' "$monitor_dir/chat.body"; then
             echo "chat: HTTP 200 streamed response"
           elif grep -Eiq '^content-type:[[:space:]]*application/json' "$monitor_dir/chat.headers" \
