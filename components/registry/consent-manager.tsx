@@ -10,6 +10,7 @@ import {
 
 import { ConsentBanner } from "@/components/registry/consent-banner"
 import { CONSENT_TRANSLATIONS } from "@/components/registry/consent-copy"
+import { CloudflareWebAnalyticsLoader } from "@/components/registry/cloudflare-web-analytics"
 
 const DeferredConsentManagerDialog = lazy(() =>
   import("@/components/registry/consent-manager-dialog").then((module) => ({
@@ -61,6 +62,12 @@ function ConsentBannerMount() {
   )
 }
 
+function CloudflareWebAnalyticsMount() {
+  const { consents } = useConsentManager()
+
+  return <CloudflareWebAnalyticsLoader measurementGranted={consents.measurement} />
+}
+
 export function ConsentManager({ children }: { children: React.ReactNode }) {
   return (
     <ConsentManagerProvider
@@ -74,6 +81,8 @@ export function ConsentManager({ children }: { children: React.ReactNode }) {
       <ConsentBannerMount />
 
       <ConsentManagerDialogMount />
+
+      <CloudflareWebAnalyticsMount />
 
       {children}
     </ConsentManagerProvider>

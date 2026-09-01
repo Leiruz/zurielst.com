@@ -148,6 +148,7 @@ CyberArk uses the CyberArk-owned documentation mark at `https://raw.githubuserco
 - consent-manager: imports @c15t/nextjs.
 - consent-manager: local component overrides registry copy with site-specific measurement-only privacy wording.
 - consent-manager: uses c15t's headless provider and state with a site-owned automatic banner, and loads the split c15t dialog only after Customize opens it. The provider waits for both intro completion and the visitor's first pointer, keyboard, wheel, or touch interaction, preventing its banner from overlapping the intro dialog and keeping consent code outside an unengaged landing route; measurement remains disabled until consent.
+- consent-manager: mounts a site-owned Cloudflare Web Analytics loader that injects its deferred beacon only after c15t measurement consent. If measurement consent is later revoked, it removes the owned tag as a best effort and prevents reinjection for the remainder of the document.
 - theme-switcher: imports next-themes.
 - apple-hello-effect: replaces the Motion runtime with a native SVG and CSS stroke animation while retaining duration scaling and completion signaling.
 - apple-hello-effect: joins its two static class names directly so the automatic intro does not load a class-merging runtime.
