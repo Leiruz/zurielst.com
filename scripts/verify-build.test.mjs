@@ -116,10 +116,12 @@ https://:version.:subdomain.workers.dev/*
   X-Robots-Tag: noindex
 `;
 
-const legacyHeaders = validHeaders.replace(
+const headersWithoutAnalyticsScriptSource = validHeaders.replace(
   "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src",
   "script-src 'self' 'unsafe-inline'; style-src",
-).replace(
+);
+
+const headersWithoutAnalyticsConnectSource = validHeaders.replace(
   "connect-src 'self' https://cloudflareinsights.com",
   "connect-src 'self'",
 );
@@ -995,24 +997,51 @@ test("requires the exact Cloudflare Web Analytics CSP sources", () => {
 
   assert.doesNotThrow(() => validateHeadersFile(validHeaders));
   assert.throws(
-    () => validateHeadersFile(legacyHeaders),
+    () => validateHeadersFile(headersWithoutAnalyticsScriptSource),
     /script-src must be exactly.*static\.cloudflareinsights\.com/i,
+  );
+  assert.throws(
+    () => validateHeadersFile(headersWithoutAnalyticsConnectSource),
+    /connect-src must be exactly.*cloudflareinsights\.com/i,
   );
 });
 
-test("identifies Cloudflare beacon URLs and data-cf-beacon markup", () => {
+test("identifies normalized Cloudflare beacon URLs and data-cf-beacon markup", () => {
   const findStaticBeaconViolations = requireSubjectFunction(
     "findStaticBeaconViolations",
   );
 
   assert.deepEqual(
     findStaticBeaconViolations(
-      '<script src="https://static.cloudflareinsights.com/beacon.min.js?token=fixture"></script><script data-cf-beacon="{&quot;token&quot;:&quot;fixture&quot;}"></script>',
+      '<script src=" \n//STATIC.CLOUDFLAREINSIGHTS.COM/beacon.min.js?token=fixture"></script><script data-cf-beacon="{&quot;token&quot;:&quot;fixture&quot;}"></script>',
       "nested/page.html",
     ),
     [
       "nested/page.html: Cloudflare Web Analytics beacon URL must not be present in static HTML",
       "nested/page.html: Cloudflare Web Analytics beacon markup must not be present in static HTML",
+    ],
+  );
+});
+
+test("identifies analytics network hints across normalized analytics origins", () => {
+  const findStaticBeaconViolations = requireSubjectFunction(
+    "findStaticBeaconViolations",
+  );
+
+  assert.deepEqual(
+    findStaticBeaconViolations(
+      `
+        <link rel="preconnect" href="//CLOUDFLAREINSIGHTS.COM">
+        <link rel="dns-prefetch" href=" \nHTTPS://cloudflareinsights.com/beacon">
+        <link rel="preload" as="script" href="HTTPS://STATIC.CLOUDFLAREINSIGHTS.COM/other.js">
+        <link rel="modulepreload" href="//static.cloudflareinsights.com/other.js">`,
+      "nested/hints.html",
+    ),
+    [
+      "nested/hints.html: Cloudflare Web Analytics network hint must not be present in static HTML",
+      "nested/hints.html: Cloudflare Web Analytics network hint must not be present in static HTML",
+      "nested/hints.html: Cloudflare Web Analytics network hint must not be present in static HTML",
+      "nested/hints.html: Cloudflare Web Analytics network hint must not be present in static HTML",
     ],
   );
 });
@@ -1031,4 +1060,35 @@ test("rejects Cloudflare beacon markup from nested exported HTML", async () => {
     verifyBuildOutput(outputDirectory),
     /nested[\\/]page\.html.*Cloudflare Web Analytics beacon/i,
   );
+});
+
+test("rejects normalized beacon URLs and analytics network hints from nested exports", async () => {
+  const verifyBuildOutput = requireSubjectFunction("verifyBuildOutput");
+  const outputDirectory = await createTemporaryDirectory();
+  await writeValidCapstoneExport(outputDirectory);
+  await mkdir(path.join(outputDirectory, "nested"));
+  await writeFile(
+    path.join(outputDirectory, "nested", "beacon.html"),
+    '<!doctype html><script src="//STATIC.CLOUDFLAREINSIGHTS.COM/beacon.min.js"></script>',
+  );
+  await writeFile(
+    path.join(outputDirectory, "nested", "hints.html"),
+    `<!doctype html>
+      <link rel="preconnect" href="//cloudflareinsights.com">
+      <link rel="dns-prefetch" href=" \nHTTPS://CLOUDFLAREINSIGHTS.COM/beacon">
+      <link rel="preload" as="script" href="HTTPS://static.cloudflareinsights.com/other.js">
+      <link rel="modulepreload" href="//STATIC.CLOUDFLAREINSIGHTS.COM/other.js">`,
+  );
+
+  await assert.rejects(verifyBuildOutput(outputDirectory), (error) => {
+    assert.match(
+      error.message,
+      /nested[\\/]beacon\.html.*Cloudflare Web Analytics beacon URL/i,
+    );
+    assert.match(
+      error.message,
+      /nested[\\/]hints\.html.*Cloudflare Web Analytics network hint/i,
+    );
+    return true;
+  });
 });

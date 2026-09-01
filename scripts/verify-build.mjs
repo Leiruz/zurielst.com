@@ -5,6 +5,20 @@ import { fileURLToPath } from "node:url";
 
 const PRODUCTION_ORIGIN = new URL("https://zurielst.com");
 const PREVIEW_RULE = "https://:version.:subdomain.workers.dev/*";
+const CLOUDFLARE_BEACON_ORIGIN = "https://static.cloudflareinsights.com";
+const CLOUDFLARE_ANALYTICS_ORIGINS = new Set([
+  CLOUDFLARE_BEACON_ORIGIN,
+  "https://cloudflareinsights.com",
+]);
+const NETWORK_HINT_RELATIONS = new Set([
+  "dns-prefetch",
+  "expect",
+  "modulepreload",
+  "preconnect",
+  "prefetch",
+  "preload",
+  "prerender",
+]);
 const LANDING_SECTION_IDS = [
   "identity",
   "intro",
@@ -345,6 +359,14 @@ function extractTags(html) {
   return tags;
 }
 
+function normalizeAnalyticsUrl(value) {
+  try {
+    return new URL(value, PRODUCTION_ORIGIN);
+  } catch {
+    return null;
+  }
+}
+
 export function findStaticBeaconViolations(html, relativeFile = "index.html") {
   const violations = [];
   for (const tag of extractTags(html)) {
@@ -354,11 +376,33 @@ export function findStaticBeaconViolations(html, relativeFile = "index.html") {
       );
     }
     for (const value of tag.attributes.values()) {
-      if (value.startsWith("https://static.cloudflareinsights.com/beacon.min.js")) {
+      const url = normalizeAnalyticsUrl(value);
+      if (
+        url?.origin === CLOUDFLARE_BEACON_ORIGIN &&
+        url.pathname === "/beacon.min.js"
+      ) {
         violations.push(
           `${relativeFile}: Cloudflare Web Analytics beacon URL must not be present in static HTML`,
         );
       }
+    }
+    const href = tag.attributes.get("href");
+    const relations = new Set(
+      (tag.attributes.get("rel") ?? "").toLowerCase().split(/\s+/),
+    );
+    const isNetworkHint = [...relations].some((relation) =>
+      NETWORK_HINT_RELATIONS.has(relation),
+    );
+    const hintUrl = href ? normalizeAnalyticsUrl(href) : null;
+    if (
+      tag.name === "link" &&
+      isNetworkHint &&
+      hintUrl &&
+      CLOUDFLARE_ANALYTICS_ORIGINS.has(hintUrl.origin)
+    ) {
+      violations.push(
+        `${relativeFile}: Cloudflare Web Analytics network hint must not be present in static HTML`,
+      );
     }
   }
   return violations;
