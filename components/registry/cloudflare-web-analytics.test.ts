@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   CLOUDFLARE_ANALYTICS_BEACON_SRC,
   CLOUDFLARE_ANALYTICS_TOKEN,
+  decideCloudflareWebAnalyticsRevocation,
   syncCloudflareWebAnalytics,
 } from './cloudflare-web-analytics';
 
@@ -68,6 +69,53 @@ function createDocumentHarness() {
 }
 
 describe('Cloudflare Web Analytics consent loader', () => {
+  it('decides to reload when an injected beacon is revoked', () => {
+    expect(
+      decideCloudflareWebAnalyticsRevocation({
+        beaconInjected: true,
+        consentTransition: 'granted-to-denied',
+      }),
+    ).toBe('reload');
+  });
+
+  it('does not reload when a beacon was never injected', () => {
+    expect(
+      decideCloudflareWebAnalyticsRevocation({
+        beaconInjected: false,
+        consentTransition: 'granted-to-denied',
+      }),
+    ).toBe('none');
+  });
+
+  it('does not reload for non-revocation consent transitions', () => {
+    expect(
+      decideCloudflareWebAnalyticsRevocation({
+        beaconInjected: true,
+        consentTransition: 'initial',
+      }),
+    ).toBe('none');
+    expect(
+      decideCloudflareWebAnalyticsRevocation({
+        beaconInjected: false,
+        consentTransition: 'denied-to-granted',
+      }),
+    ).toBe('none');
+  });
+
+  it('does not inject or reload for an initial denied state', () => {
+    const { document, head } = createDocumentHarness();
+    const reload = vi.fn();
+
+    syncCloudflareWebAnalytics({
+      document,
+      measurementGranted: false,
+      reload,
+    });
+
+    expect(head.scripts).toHaveLength(0);
+    expect(reload).not.toHaveBeenCalled();
+  });
+
   it('injects the correctly configured beacon exactly once after measurement consent', () => {
     const { document, head } = createDocumentHarness();
 
@@ -84,21 +132,36 @@ describe('Cloudflare Web Analytics consent loader', () => {
     );
   });
 
-  it('does not inject a beacon before measurement consent', () => {
-    const { document, head } = createDocumentHarness();
+  it('reloads once when granted measurement consent is revoked', () => {
+    const { document } = createDocumentHarness();
+    const reload = vi.fn();
 
-    syncCloudflareWebAnalytics({ document, measurementGranted: false });
+    syncCloudflareWebAnalytics({ document, measurementGranted: true });
+    syncCloudflareWebAnalytics({
+      document,
+      measurementGranted: false,
+      reload,
+    });
 
-    expect(head.scripts).toHaveLength(0);
+    expect(reload).toHaveBeenCalledOnce();
   });
 
-  it('removes the owned beacon after revocation and never re-adds it', () => {
-    const { document, head } = createDocumentHarness();
+  it('does not reload again when denied consent is repeated', () => {
+    const { document } = createDocumentHarness();
+    const reload = vi.fn();
 
     syncCloudflareWebAnalytics({ document, measurementGranted: true });
-    syncCloudflareWebAnalytics({ document, measurementGranted: false });
-    syncCloudflareWebAnalytics({ document, measurementGranted: true });
+    syncCloudflareWebAnalytics({
+      document,
+      measurementGranted: false,
+      reload,
+    });
+    syncCloudflareWebAnalytics({
+      document,
+      measurementGranted: false,
+      reload,
+    });
 
-    expect(head.scripts).toHaveLength(0);
+    expect(reload).toHaveBeenCalledOnce();
   });
 });

@@ -10,13 +10,46 @@ const OWNED_BEACON_SELECTOR = '[data-zst-cloudflare-analytics="true"]';
 
 type BeaconState = {
   injected: boolean;
+  measurementGranted: boolean | undefined;
   revoked: boolean;
   script: HTMLScriptElement | null;
 };
 
 const beaconStates = new WeakMap<Document, BeaconState>();
 
-function removeOwnedBeacon(script: HTMLScriptElement | null) {
+export type CloudflareWebAnalyticsConsentTransition =
+  | 'initial'
+  | 'denied-to-granted'
+  | 'granted-to-denied'
+  | 'unchanged';
+
+export type CloudflareWebAnalyticsRevocationAction = 'none' | 'reload';
+
+export function decideCloudflareWebAnalyticsRevocation({
+  beaconInjected,
+  consentTransition,
+}: {
+  beaconInjected: boolean;
+  consentTransition: CloudflareWebAnalyticsConsentTransition;
+}): CloudflareWebAnalyticsRevocationAction {
+  return beaconInjected && consentTransition === 'granted-to-denied'
+    ? 'reload'
+    : 'none';
+}
+
+function getMeasurementConsentTransition({
+  previousMeasurementGranted,
+  measurementGranted,
+}: {
+  previousMeasurementGranted: boolean | undefined;
+  measurementGranted: boolean;
+}): CloudflareWebAnalyticsConsentTransition {
+  if (previousMeasurementGranted === undefined) return 'initial';
+  if (previousMeasurementGranted === measurementGranted) return 'unchanged';
+  return measurementGranted ? 'denied-to-granted' : 'granted-to-denied';
+}
+
+function removeOwnedBeaconBestEffort(script: HTMLScriptElement | null) {
   try {
     script?.parentNode?.removeChild(script);
   } catch {
@@ -27,31 +60,48 @@ function removeOwnedBeacon(script: HTMLScriptElement | null) {
 export function syncCloudflareWebAnalytics({
   document,
   measurementGranted,
+  reload = () => document.defaultView?.location.reload(),
 }: {
   document: Document;
   measurementGranted: boolean;
+  reload?: () => void;
 }) {
-  const state = beaconStates.get(document);
+  const state = beaconStates.get(document) ?? {
+    injected: false,
+    measurementGranted: undefined,
+    revoked: false,
+    script: null,
+  };
+  const consentTransition = getMeasurementConsentTransition({
+    previousMeasurementGranted: state.measurementGranted,
+    measurementGranted,
+  });
+
+  state.measurementGranted = measurementGranted;
+  beaconStates.set(document, state);
 
   if (!measurementGranted) {
-    if (state?.injected) {
+    const action = decideCloudflareWebAnalyticsRevocation({
+      beaconInjected: state.injected,
+      consentTransition,
+    });
+
+    if (action === 'reload') {
       state.revoked = true;
-      removeOwnedBeacon(state.script);
+      removeOwnedBeaconBestEffort(state.script);
+      reload();
     }
     return;
   }
 
-  if (state?.injected || state?.revoked) return;
+  if (state.injected || state.revoked) return;
 
   const ownedBeacon = document.querySelector<HTMLScriptElement>(
     OWNED_BEACON_SELECTOR,
   );
   if (ownedBeacon) {
-    beaconStates.set(document, {
-      injected: true,
-      revoked: false,
-      script: ownedBeacon,
-    });
+    state.injected = true;
+    state.script = ownedBeacon;
     return;
   }
 
@@ -64,7 +114,8 @@ export function syncCloudflareWebAnalytics({
   );
   script.setAttribute('data-zst-cloudflare-analytics', 'true');
   document.head.appendChild(script);
-  beaconStates.set(document, { injected: true, revoked: false, script });
+  state.injected = true;
+  state.script = script;
 }
 
 export function CloudflareWebAnalyticsLoader({
