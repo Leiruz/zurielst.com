@@ -10,6 +10,8 @@ import { createStaticServer } from "./perf-gate.mjs";
 
 const HOST = "127.0.0.1";
 const DESKTOP_VIEWPORT_WIDTHS = [1280, 1440, 1600, 1920, 2560];
+const GREETING_VIEWPORT_WIDTHS = [375, 768, 1280, 1920];
+const LONGEST_GREETING = "Good afternoon";
 const MOBILE_VIEWPORT_WIDTH = 375;
 const VIEWPORT_HEIGHT = 1200;
 const MAX_SHELL_WIDTH_PX = 80 * 16;
@@ -47,7 +49,7 @@ async function measureViewport(browser, siteUrl, viewportWidth) {
     await page.goto(siteUrl, { waitUntil: "networkidle0" });
     await page.evaluate(() => document.fonts.ready);
 
-    return await page.evaluate(async () => {
+    return await page.evaluate(async (longestGreeting) => {
       const shell = document.querySelector("#intro .dossier-shell");
       const lineNav = document.querySelector("[data-section-line-nav='true']");
       const introLayout = document.querySelector("[data-intro-layout='true']") ??
@@ -60,6 +62,9 @@ async function measureViewport(browser, siteUrl, viewportWidth) {
         document.querySelector("[data-intro-contributions-column='true']") ??
         introLayout?.children[1];
       const introBullet = document.querySelector("[data-intro-bullet='true']");
+      const introHeading = document.querySelector("#intro-title");
+      const introGreeting = document.querySelector("[data-local-greeting='true']");
+      const introAnchor = introHeading?.querySelector(".dossier-anchor");
       const timelineTargets = [
         ["heading", document.querySelector("#timeline-title")],
         [
@@ -78,11 +83,16 @@ async function measureViewport(browser, siteUrl, viewportWidth) {
         introCopy,
         contributions,
         introBullet,
+        introHeading,
+        introGreeting,
+        introAnchor,
         ...timelineTargets.map(([, target]) => target),
       ];
       if (!targets.every((target) => target instanceof HTMLElement)) {
         throw new Error("Layout gate could not find every measurement target");
       }
+
+      introGreeting.textContent = longestGreeting;
 
       const gutterProbe = document.createElement("div");
       gutterProbe.style.cssText = [
@@ -102,6 +112,10 @@ async function measureViewport(browser, siteUrl, viewportWidth) {
       const shellStyle = getComputedStyle(shell);
       const introCopyStyle = getComputedStyle(introCopy);
       const introBulletStyle = getComputedStyle(introBullet);
+      const introHeadingStyle = getComputedStyle(introHeading);
+      const introHeadingRect = introHeading.getBoundingClientRect();
+      const introGreetingRect = introGreeting.getBoundingClientRect();
+      const introAnchorRect = introAnchor.getBoundingClientRect();
       const navGutter = gutterProbe.getBoundingClientRect().width;
       gutterProbe.remove();
 
@@ -154,9 +168,24 @@ async function measureViewport(browser, siteUrl, viewportWidth) {
         contributionsCenter:
           contributionsRect.top + (contributionsRect.height / 2),
         introBulletFontSize: Number.parseFloat(introBulletStyle.fontSize),
+        introGreetingText: introGreeting.textContent,
+        introGreetingFontSize: Number.parseFloat(introHeadingStyle.fontSize),
+        introGreetingHeadingHeight: introHeadingRect.height,
+        introGreetingLineHeight: Number.parseFloat(introHeadingStyle.lineHeight),
+        introGreetingLineCount: introGreeting.getClientRects().length,
+        introGreetingContentWidth: introAnchorRect.right - introGreetingRect.left,
+        introGreetingAvailableWidth: introHeadingRect.width,
+        introGreetingLeft: introGreetingRect.left,
+        introGreetingHeadingLeft: introHeadingRect.left,
+        introGreetingAnchorRight: introAnchorRect.right,
+        introGreetingHeadingRight: introHeadingRect.right,
+        introGreetingTop: introGreetingRect.top,
+        introGreetingBottom: introGreetingRect.bottom,
+        introGreetingAnchorTop: introAnchorRect.top,
+        introGreetingAnchorBottom: introAnchorRect.bottom,
         timelineIntersections,
       };
-    });
+    }, LONGEST_GREETING);
   } finally {
     await page.close();
   }
@@ -166,6 +195,36 @@ function assertClose(actual, expected, message) {
   assert.ok(
     Math.abs(actual - expected) <= GEOMETRY_TOLERANCE_PX,
     `${message}: expected ${expected}px, received ${actual}px`,
+  );
+}
+
+function validateGreetingMeasurement(measurement) {
+  assert.equal(
+    measurement.introGreetingText,
+    LONGEST_GREETING,
+    `${measurement.viewportWidth}px greeting measurement did not use the longest variant`,
+  );
+  assert.equal(
+    measurement.introGreetingLineCount,
+    1,
+    `${measurement.viewportWidth}px greeting wraps across multiple lines`,
+  );
+  assertClose(
+    measurement.introGreetingHeadingHeight,
+    measurement.introGreetingLineHeight,
+    `${measurement.viewportWidth}px greeting heading is taller than one line`,
+  );
+  assert.ok(
+    measurement.introGreetingLeft + GEOMETRY_TOLERANCE_PX >=
+      measurement.introGreetingHeadingLeft &&
+      measurement.introGreetingAnchorRight <=
+        measurement.introGreetingHeadingRight + GEOMETRY_TOLERANCE_PX,
+    `${measurement.viewportWidth}px greeting and anchor do not fit inside their heading`,
+  );
+  assert.ok(
+    measurement.introGreetingAnchorTop < measurement.introGreetingBottom &&
+      measurement.introGreetingAnchorBottom > measurement.introGreetingTop,
+    `${measurement.viewportWidth}px introduction anchor is not on the greeting line`,
   );
 }
 
@@ -432,6 +491,21 @@ export async function runLayoutGate() {
       siteUrl,
       MOBILE_VIEWPORT_WIDTH,
     );
+    const tabletMeasurement = await measureViewport(browser, siteUrl, 768);
+    const greetingMeasurements = GREETING_VIEWPORT_WIDTHS.map((viewportWidth) => {
+      if (viewportWidth === MOBILE_VIEWPORT_WIDTH) return mobileMeasurement;
+      if (viewportWidth === 768) return tabletMeasurement;
+      return desktopMeasurements.find(
+        (measurement) => measurement.viewportWidth === viewportWidth,
+      );
+    });
+    assert.ok(
+      greetingMeasurements.every(Boolean),
+      "Missing a required greeting viewport measurement",
+    );
+    for (const measurement of greetingMeasurements) {
+      validateGreetingMeasurement(measurement);
+    }
     assert.equal(
       mobileMeasurement.horizontalOverflow,
       0,
@@ -476,6 +550,20 @@ export async function runLayoutGate() {
       `${MOBILE_VIEWPORT_WIDTH}px: horizontal overflow ` +
       `${mobileMeasurement.horizontalOverflow.toFixed(1)}px`,
     );
+    console.log(`Longest greeting forced to "${LONGEST_GREETING}":`);
+    for (const measurement of greetingMeasurements) {
+      console.log(
+        `${measurement.viewportWidth}px: heading ` +
+        `${measurement.introGreetingHeadingHeight.toFixed(1)}px / ` +
+        `${measurement.introGreetingLineHeight.toFixed(1)}px line, content ` +
+        `${measurement.introGreetingContentWidth.toFixed(1)}px / ` +
+        `${measurement.introGreetingAvailableWidth.toFixed(1)}px available, ` +
+        `greeting y ${measurement.introGreetingTop.toFixed(1)}` +
+        `-${measurement.introGreetingBottom.toFixed(1)}px, anchor y ` +
+        `${measurement.introGreetingAnchorTop.toFixed(1)}` +
+        `-${measurement.introGreetingAnchorBottom.toFixed(1)}px`,
+      );
+    }
     console.log(
       "Analytics consent gate: real dialog denial persisted before one reload",
     );
