@@ -230,6 +230,13 @@ describe('ClientEnhancements persisted consent runtime', () => {
   it('keeps the validated runtime open after a first-time visitor accepts the banner', async () => {
     await mountWithEveryUiGateOpen();
 
+    // The lazy banner wrapper mounts before its inner controls settle, so
+    // wait for the button itself rather than only the wrapper.
+    await flushUntil(() =>
+      (renderer?.root.findAllByProps({
+        'data-testid': 'cookie-banner-accept-button',
+      }).length ?? 0) === 1,
+    );
     const acceptButton = renderer?.root.findByProps({
       'data-testid': 'cookie-banner-accept-button',
     });
