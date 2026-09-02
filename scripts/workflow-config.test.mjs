@@ -301,7 +301,7 @@ test("runbook records implemented consent-gated Web Analytics operations", async
   assert.match(runbook, /a9179715ef1247b9a76ad1622a310854[\s\S]{0,200}verified the same day/);
   assert.match(runbook, /Enable with JS Snippet installation[\s\S]{0,80}silently drops/);
 
-  const readAccessIndex = normalizedRunbook.indexOf("only proves that the token can read analytics data");
+  const readAccessIndex = normalizedRunbook.indexOf("solely for token read-access verification");
   const consentedVisitIndex = normalizedRunbook.indexOf("make the consented visit");
   const pageviewIndex = normalizedRunbook.indexOf("after-query confirms the pageview appears in `rumpageloadeventsadaptivegroups`");
   const replacementIndex = normalizedRunbook.indexOf("replace the one `cloudflare_analytics_token` constant and redeploy");
