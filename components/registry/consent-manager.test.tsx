@@ -110,10 +110,15 @@ vi.mock('@/components/registry/cloudflare-web-analytics', () => ({
   },
 }));
 
+vi.mock('@/components/registry/consent-manager-dialog', () => ({
+  ConsentManagerDialog: () => null,
+}));
+
 import {
   ConsentManager,
   persistDeniedMeasurementConsent,
 } from './consent-manager';
+import { ConsentManagerUi } from './consent-manager-ui';
 
 type ConsentState = Parameters<
   typeof persistDeniedMeasurementConsent
@@ -131,6 +136,10 @@ function createDeniedConsents(): ConsentState {
 
 function renderConsentManager() {
   return renderToStaticMarkup(createElement(ConsentManager, null, null));
+}
+
+function renderConsentManagerUi() {
+  return renderToStaticMarkup(createElement(ConsentManagerUi));
 }
 
 describe('ConsentManager analytics wiring', () => {
@@ -189,7 +198,7 @@ describe('ConsentManager analytics wiring', () => {
     vi.stubGlobal('window', target);
     effectHarness.run = true;
     consentManagerMockState.showPopup = true;
-    renderConsentManager();
+    renderConsentManagerUi();
     consentManagerMockState.banner?.onAccept();
 
     expect(renderConsentManager()).toContain('cloudflare-measurement-granted');
@@ -205,7 +214,7 @@ describe('ConsentManager analytics wiring', () => {
 
     consentManagerMockState.banner = undefined;
     consentManagerMockState.showPopup = true;
-    renderConsentManager();
+    renderConsentManagerUi();
     rejectCapturedBannerForFastEventBridgeCoverage();
     expect(consentManagerMockState.saveConsents).toHaveBeenLastCalledWith('necessary');
     expect(renderConsentManager()).toContain('cloudflare-measurement-denied');

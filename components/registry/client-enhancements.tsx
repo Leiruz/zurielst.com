@@ -85,7 +85,6 @@ export function scheduleAfterPaint(
 }
 
 export function shouldMountConsent({
-  engaged,
   introComplete,
   ready,
 }: {
@@ -93,7 +92,7 @@ export function shouldMountConsent({
   introComplete: boolean;
   ready: boolean;
 }) {
-  return engaged && introComplete && ready;
+  return introComplete && ready;
 }
 
 export function listenForPageEngagement(
@@ -184,7 +183,7 @@ export function ClientEnhancements() {
   return (
     <>
       {shouldMountConsent({ engaged, introComplete, ready }) ? (
-        <DeferredConsentManager>{null}</DeferredConsentManager>
+        <DeferredConsentManager mountUi={engaged}>{null}</DeferredConsentManager>
       ) : null}
       <DeferredIntroGate />
       <HapticFeedback />

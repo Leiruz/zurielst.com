@@ -70,7 +70,7 @@ describe('scheduleAfterPaint', () => {
 });
 
 describe('consent enhancement gating', () => {
-  it('mounts consent only after paint, intro completion, and page engagement', () => {
+  it('mounts the consent runtime after paint and intro completion', () => {
     expect(
       shouldMountConsent({
         engaged: true,
@@ -79,10 +79,18 @@ describe('consent enhancement gating', () => {
       }),
     ).toBe(true);
 
-    for (const missing of ['engaged', 'introComplete', 'ready'] as const) {
+    expect(
+      shouldMountConsent({
+        engaged: false,
+        introComplete: true,
+        ready: true,
+      }),
+    ).toBe(true);
+
+    for (const missing of ['introComplete', 'ready'] as const) {
       expect(
         shouldMountConsent({
-          engaged: missing !== 'engaged',
+          engaged: true,
           introComplete: missing !== 'introComplete',
           ready: missing !== 'ready',
         }),

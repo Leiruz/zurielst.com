@@ -14,7 +14,6 @@ import {
   useConsentManager,
 } from "@c15t/nextjs/headless"
 
-import { ConsentBanner } from "@/components/registry/consent-banner"
 import { CONSENT_TRANSLATIONS } from "@/components/registry/consent-copy"
 import {
   restorePersistedConsent,
@@ -88,55 +87,11 @@ export function persistDeniedMeasurementConsent({
   }
 }
 
-const DeferredConsentManagerDialog = lazy(() =>
-  import("@/components/registry/consent-manager-dialog").then((module) => ({
-    default: module.ConsentManagerDialog,
+const DeferredConsentManagerUi = lazy(() =>
+  import("@/components/registry/consent-manager-ui").then((module) => ({
+    default: module.ConsentManagerUi,
   }))
 )
-
-export function ConsentManagerDialogLoader({ isOpen }: { isOpen: boolean }) {
-  if (!isOpen) return null
-
-  return (
-    <Suspense fallback={null}>
-      <DeferredConsentManagerDialog />
-    </Suspense>
-  )
-}
-
-function ConsentManagerDialogMount() {
-  const { isPrivacyDialogOpen } = useConsentManager()
-
-  return <ConsentManagerDialogLoader isOpen={isPrivacyDialogOpen} />
-}
-
-function ConsentBannerMount() {
-  const {
-    saveConsents,
-    setIsPrivacyDialogOpen,
-    setShowPopup,
-    showPopup,
-  } = useConsentManager()
-
-  if (!showPopup) return null
-
-  return (
-    <ConsentBanner
-      onReject={() => {
-        setShowPopup(false)
-        saveConsents("necessary")
-      }}
-      onCustomize={() => {
-        setIsPrivacyDialogOpen(true)
-        setShowPopup(false, true)
-      }}
-      onAccept={() => {
-        setShowPopup(false)
-        saveConsents("all")
-      }}
-    />
-  )
-}
 
 function PrivacyChoicesListener() {
   const { setIsPrivacyDialogOpen } = useConsentManager()
@@ -172,7 +127,13 @@ function CloudflareWebAnalyticsMount() {
   )
 }
 
-export function ConsentManager({ children }: { children: React.ReactNode }) {
+export function ConsentManager({
+  children,
+  mountUi = true,
+}: {
+  children: React.ReactNode
+  mountUi?: boolean
+}) {
   return (
     <ConsentManagerProvider
       options={{
@@ -184,11 +145,13 @@ export function ConsentManager({ children }: { children: React.ReactNode }) {
     >
       <PersistedConsentHydrator />
 
-      <PrivacyChoicesListener />
+      {mountUi ? <PrivacyChoicesListener /> : null}
 
-      <ConsentBannerMount />
-
-      <ConsentManagerDialogMount />
+      {mountUi ? (
+        <Suspense fallback={null}>
+          <DeferredConsentManagerUi />
+        </Suspense>
+      ) : null}
 
       <CloudflareWebAnalyticsMount />
 

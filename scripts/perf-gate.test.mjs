@@ -214,19 +214,31 @@ test("landing-route controls avoid superseded identity motion code and unnecessa
   assert.match(siteNavSource, /site-nav-enhancement/);
 });
 
-test("consent dialog code loads only when Customize opens the automatic banner", async () => {
+test("consent UI code loads only after engagement and keeps the dialog split", async () => {
   const managerSource = await readFile(
     new URL("../components/registry/consent-manager.tsx", import.meta.url),
     "utf8",
   );
+  const uiSource = await readFile(
+    new URL("../components/registry/consent-manager-ui.tsx", import.meta.url),
+    "utf8",
+  );
 
-  assert.match(managerSource, /<ConsentBanner/);
-  assert.match(managerSource, /isPrivacyDialogOpen/);
-  assert.match(managerSource, /isOpen=\{isPrivacyDialogOpen\}/);
   assert.match(managerSource, /from ["']@c15t\/nextjs\/headless["']/);
   assert.doesNotMatch(managerSource, /@c15t\/react\/cookie-banner/);
   assert.match(
     managerSource,
+    /import\(["']@\/components\/registry\/consent-manager-ui["']\)/,
+  );
+  assert.match(managerSource, /mountUi \? <PrivacyChoicesListener \/>/);
+  assert.doesNotMatch(managerSource, /<ConsentBanner/);
+  assert.doesNotMatch(managerSource, /consent-manager-dialog/);
+
+  assert.match(uiSource, /<ConsentBanner/);
+  assert.match(uiSource, /isPrivacyDialogOpen/);
+  assert.match(uiSource, /isOpen=\{isPrivacyDialogOpen\}/);
+  assert.match(
+    uiSource,
     /import\(["']@\/components\/registry\/consent-manager-dialog["']\)/,
   );
 
