@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import { FooterTerminalTrigger } from '@/components/footer-terminal-trigger';
 import { FooterPrivacyChoices } from '@/components/footer-privacy-choices';
+import { DeferredFooterIdentityEffect } from '@/components/registry/deferred-registry-effects';
 import type { Social } from '@/content/schema';
 import { BUILD_DATE, BUILD_SHA } from '@/lib/build-info';
 import { withSiteUtm } from '@/lib/outbound-links';
@@ -49,6 +50,7 @@ export function Footer({
   return (
     <footer className="border-t border-line bg-canvas py-10 sm:py-14">
       <div className="dossier-shell">
+        <DeferredFooterIdentityEffect />
         <div data-colophon="true" className="border-l border-t border-line font-mono text-xs text-text-3">
           <div data-colophon-title-row="true" className="grid grid-cols-1 sm:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)]">
             <div className="min-w-0 border-b border-r border-line p-5 sm:p-6">

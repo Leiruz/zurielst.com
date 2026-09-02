@@ -138,12 +138,14 @@ describe('footer', () => {
     }
   });
 
-  it('replaces the deferred identity effect with the responsive colophon grid', () => {
+  it('renders the deferred identity effect above the responsive colophon grid', () => {
     const markup = renderToStaticMarkup(
       createElement(Footer, { socials: profile.identity.socials }),
     );
+    const gradientStart = markup.indexOf('data-footer-identity-effect="true"');
+    const colophonStart = markup.indexOf('data-colophon="true"');
 
-    expect(markup).toContain('data-colophon="true"');
-    expect(markup).not.toContain('data-footer-identity-effect="true"');
+    expect(gradientStart).toBeGreaterThan(-1);
+    expect(colophonStart).toBeGreaterThan(gradientStart);
   });
 });

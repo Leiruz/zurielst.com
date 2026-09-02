@@ -48,6 +48,25 @@ async function measureViewport(browser, siteUrl, viewportWidth) {
     ]);
     await page.goto(siteUrl, { waitUntil: "networkidle0" });
     await page.evaluate(() => document.fonts.ready);
+    await page.evaluate(() => {
+      const footerIdentityEffect = document.querySelector(
+        "[data-footer-identity-effect='true']",
+      );
+      if (!(footerIdentityEffect instanceof HTMLElement)) {
+        throw new Error("Layout gate could not find the gradient wordmark wrapper");
+      }
+      footerIdentityEffect.scrollIntoView({ block: "center" });
+    });
+    await page.waitForSelector(
+      "[data-footer-identity-effect='true'] [data-slot='fluid-gradient-text']",
+      { timeout: 10_000, visible: true },
+    );
+    await page.evaluate(async () => {
+      scrollTo(0, 0);
+      await new Promise((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      });
+    });
 
     return await page.evaluate(async (longestGreeting) => {
       const shell = document.querySelector("#intro .dossier-shell");
@@ -65,6 +84,13 @@ async function measureViewport(browser, siteUrl, viewportWidth) {
       const introHeading = document.querySelector("#intro-title");
       const introGreeting = document.querySelector("[data-local-greeting='true']");
       const introAnchor = introHeading?.querySelector(".dossier-anchor");
+      const footerIdentityEffect = document.querySelector(
+        "[data-footer-identity-effect='true']",
+      );
+      const fluidGradientText = footerIdentityEffect?.querySelector(
+        "[data-slot='fluid-gradient-text']",
+      );
+      const colophon = document.querySelector("[data-colophon='true']");
       const timelineTargets = [
         ["heading", document.querySelector("#timeline-title")],
         [
@@ -86,6 +112,9 @@ async function measureViewport(browser, siteUrl, viewportWidth) {
         introHeading,
         introGreeting,
         introAnchor,
+        footerIdentityEffect,
+        fluidGradientText,
+        colophon,
         ...timelineTargets.map(([, target]) => target),
       ];
       if (!targets.every((target) => target instanceof HTMLElement)) {
@@ -109,6 +138,9 @@ async function measureViewport(browser, siteUrl, viewportWidth) {
       const introTextRect = introText.getBoundingClientRect();
       const introCopyRect = introCopy.getBoundingClientRect();
       const contributionsRect = contributions.getBoundingClientRect();
+      const footerIdentityRect = footerIdentityEffect.getBoundingClientRect();
+      const fluidGradientRect = fluidGradientText.getBoundingClientRect();
+      const colophonRect = colophon.getBoundingClientRect();
       const shellStyle = getComputedStyle(shell);
       const introCopyStyle = getComputedStyle(introCopy);
       const introBulletStyle = getComputedStyle(introBullet);
@@ -119,8 +151,7 @@ async function measureViewport(browser, siteUrl, viewportWidth) {
       const navGutter = gutterProbe.getBoundingClientRect().width;
       gutterProbe.remove();
 
-      const timelineIntersections = [];
-      for (const [name, target] of timelineTargets) {
+      const measureRailIntersection = async (name, target) => {
         target.scrollIntoView({ block: "center" });
         await new Promise((resolve) => {
           requestAnimationFrame(() => requestAnimationFrame(resolve));
@@ -137,15 +168,24 @@ async function measureViewport(browser, siteUrl, viewportWidth) {
           Math.min(currentLineNavRect.bottom, targetRect.bottom) -
             Math.max(currentLineNavRect.top, targetRect.top),
         );
-        timelineIntersections.push({
+        return {
           name,
           intersects: overlapX > 0 && overlapY > 0,
           navRight: currentLineNavRect.right,
           overlapX,
           overlapY,
           targetLeft: targetRect.left,
-        });
+        };
+      };
+
+      const timelineIntersections = [];
+      for (const [name, target] of timelineTargets) {
+        timelineIntersections.push(await measureRailIntersection(name, target));
       }
+      const footerIdentityIntersection = await measureRailIntersection(
+        "footer gradient wordmark",
+        footerIdentityEffect,
+      );
 
       return {
         viewportWidth: innerWidth,
@@ -183,6 +223,22 @@ async function measureViewport(browser, siteUrl, viewportWidth) {
         introGreetingBottom: introGreetingRect.bottom,
         introGreetingAnchorTop: introAnchorRect.top,
         introGreetingAnchorBottom: introAnchorRect.bottom,
+        footerIdentityBeforeColophon: Boolean(
+          footerIdentityEffect.compareDocumentPosition(colophon) &
+            Node.DOCUMENT_POSITION_FOLLOWING
+        ),
+        footerIdentityBottom: footerIdentityRect.bottom,
+        footerIdentityHeight: footerIdentityRect.height,
+        footerIdentityLeft: footerIdentityRect.left,
+        footerIdentityRight: footerIdentityRect.right,
+        fluidGradientHeight: fluidGradientRect.height,
+        fluidGradientWidth: fluidGradientRect.width,
+        fluidGradientAriaLabel: fluidGradientText.getAttribute("aria-label"),
+        fluidGradientMotion: fluidGradientText.dataset.gradientMotion,
+        colophonLeft: colophonRect.left,
+        colophonRight: colophonRect.right,
+        colophonTop: colophonRect.top,
+        footerIdentityIntersection,
         timelineIntersections,
       };
     }, LONGEST_GREETING);
@@ -445,6 +501,49 @@ function validateDesktopMeasurement(measurement) {
       measurement.introCopyMaxWidth + GEOMETRY_TOLERANCE_PX,
     `${measurement.viewportWidth}px intro copy exceeds its maximum measure`,
   );
+  assert.equal(
+    measurement.footerIdentityBeforeColophon,
+    true,
+    `${measurement.viewportWidth}px gradient wordmark does not precede the colophon`,
+  );
+  assert.ok(
+    measurement.footerIdentityBottom <=
+      measurement.colophonTop + GEOMETRY_TOLERANCE_PX,
+    `${measurement.viewportWidth}px gradient wordmark is not above the colophon`,
+  );
+  assertClose(
+    measurement.footerIdentityLeft,
+    measurement.colophonLeft,
+    `${measurement.viewportWidth}px gradient and colophon left edges differ`,
+  );
+  assertClose(
+    measurement.footerIdentityRight,
+    measurement.colophonRight,
+    `${measurement.viewportWidth}px gradient and colophon right edges differ`,
+  );
+  assert.ok(
+    measurement.footerIdentityHeight >= 80 &&
+      measurement.fluidGradientHeight > 0 &&
+      measurement.fluidGradientWidth > 0,
+    `${measurement.viewportWidth}px gradient wordmark has no large rendered box`,
+  );
+  assert.equal(
+    measurement.fluidGradientAriaLabel,
+    "Zuriel",
+    `${measurement.viewportWidth}px gradient wordmark lost its accessible label`,
+  );
+  assert.equal(
+    measurement.fluidGradientMotion,
+    "static",
+    `${measurement.viewportWidth}px reduced-motion gradient is not static`,
+  );
+  assert.equal(
+    measurement.footerIdentityIntersection.intersects,
+    false,
+    `${measurement.viewportWidth}px footer gradient wordmark intersects ` +
+      `the line-nav rail by ${measurement.footerIdentityIntersection.overlapX.toFixed(1)}px ` +
+      `horizontally and ${measurement.footerIdentityIntersection.overlapY.toFixed(1)}px vertically`,
+  );
   for (const intersection of measurement.timelineIntersections) {
     assert.equal(
       intersection.intersects,
@@ -543,6 +642,10 @@ export async function runLayoutGate() {
         `Timeline overlap ${Math.max(
           ...measurement.timelineIntersections.map(({ overlapX, intersects }) =>
             intersects ? overlapX : 0),
+        ).toFixed(1)}px, gradient overlap ${(
+          measurement.footerIdentityIntersection.intersects
+            ? measurement.footerIdentityIntersection.overlapX
+            : 0
         ).toFixed(1)}px`,
       );
     }

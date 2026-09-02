@@ -1,16 +1,19 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 // @ts-expect-error Vite virtual module has no type declaration.
 import styles from 'virtual:globals-css-source';
 
+import Home from '@/app/page';
 import * as fluidGradientModule from '@/components/registry/fluid-gradient-text';
 import { ShimmeringText } from '@/components/registry/shimmering-text';
 import { TextFlip } from '@/components/registry/text-flip';
 import { SiteNav } from '@/components/site-nav';
 
 const FluidGradientText = fluidGradientModule.FluidGradientText;
+
+vi.mock('server-only', () => ({}));
 
 describe('registry identity and motion adapters', () => {
   it('renders the accessible static Zuriel Shanley terminal wordmark', () => {
@@ -46,6 +49,17 @@ describe('registry identity and motion adapters', () => {
 
     expect(registryModules.some((m) => m.includes('spotlight-logo'))).toBe(false);
     expect(styles).not.toContain('spotlight-logo');
+  });
+
+  it('mounts the deferred gradient wordmark above the colophon in the composed page', () => {
+    const markup = renderToStaticMarkup(createElement(Home));
+    const gradientStart = markup.indexOf('data-footer-identity-effect="true"');
+    const colophonStart = markup.indexOf('data-colophon="true"');
+
+    expect(gradientStart).toBeGreaterThan(-1);
+    expect(colophonStart).toBeGreaterThan(-1);
+    expect(gradientStart).toBeLessThan(colophonStart);
+    expect(markup.slice(gradientStart, colophonStart)).toContain('Zuriel');
   });
 
   it('keeps text effects accessible in server markup', () => {
