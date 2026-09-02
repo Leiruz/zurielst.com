@@ -58,6 +58,41 @@ function removeOwnedBeaconBestEffort(script: HTMLScriptElement | null) {
   }
 }
 
+export function isCloudflareInsightsUrl(url: unknown): boolean {
+  try {
+    const candidate =
+      typeof Request !== 'undefined' && url instanceof Request ? url.url : String(url);
+    const { hostname } = new URL(candidate, 'https://zurielst.com');
+    return hostname === 'cloudflareinsights.com' || hostname.endsWith('.cloudflareinsights.com');
+  } catch {
+    return false;
+  }
+}
+
+function suppressBeaconTransmissionsBestEffort(document: Document) {
+  const view = document.defaultView;
+  if (!view) return;
+  try {
+    const navigatorObject = view.navigator as Navigator & {
+      sendBeacon?: Navigator['sendBeacon'];
+    };
+    const originalSendBeacon = navigatorObject.sendBeacon?.bind(navigatorObject);
+    if (originalSendBeacon) {
+      navigatorObject.sendBeacon = (url, data) =>
+        isCloudflareInsightsUrl(url) ? true : originalSendBeacon(url, data);
+    }
+    const originalFetch = view.fetch?.bind(view);
+    if (originalFetch) {
+      view.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
+        isCloudflareInsightsUrl(input)
+          ? Promise.resolve(new view.Response(null, { status: 204 }))
+          : originalFetch(input, init)) as typeof view.fetch;
+    }
+  } catch {
+    // Suppression is best effort; the immediate reload below is the hard stop.
+  }
+}
+
 export function syncCloudflareWebAnalytics({
   document,
   measurementGranted,
@@ -91,6 +126,7 @@ export function syncCloudflareWebAnalytics({
 
     if (action === 'reload') {
       state.revoked = true;
+      suppressBeaconTransmissionsBestEffort(document);
       removeOwnedBeaconBestEffort(state.script);
       try {
         if (persistDeniedConsent()) reload();

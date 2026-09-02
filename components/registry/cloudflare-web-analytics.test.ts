@@ -6,6 +6,7 @@ import cloudflareWebAnalyticsSource from './cloudflare-web-analytics.tsx?raw';
 import {
   CLOUDFLARE_ANALYTICS_BEACON_SRC,
   CLOUDFLARE_ANALYTICS_TOKEN,
+  isCloudflareInsightsUrl,
   decideCloudflareWebAnalyticsRevocation,
   syncCloudflareWebAnalytics,
 } from './cloudflare-web-analytics';
@@ -261,5 +262,63 @@ describe('Cloudflare Web Analytics consent loader', () => {
     expect(head.scripts).toHaveLength(0);
     expect(persistDeniedConsent).toHaveBeenCalledOnce();
     expect(reload).toHaveBeenCalledOnce();
+  });
+});
+
+describe('revocation transmission suppression', () => {
+  it('classifies insights URLs across shapes', () => {
+    expect(isCloudflareInsightsUrl('https://cloudflareinsights.com/cdn-cgi/rum')).toBe(true);
+    expect(isCloudflareInsightsUrl('https://static.cloudflareinsights.com/beacon.min.js')).toBe(true);
+    expect(isCloudflareInsightsUrl('https://zurielst.com/api/chat')).toBe(false);
+    expect(isCloudflareInsightsUrl('/cdn-cgi/rum')).toBe(false);
+    expect(isCloudflareInsightsUrl('https://evilcloudflareinsights.com/x')).toBe(false);
+    expect(isCloudflareInsightsUrl(undefined)).toBe(false);
+  });
+
+  it('blocks insights egress from the revocation instant while passing other traffic', () => {
+    const { document, head } = createDocumentHarness();
+    const sentBeacons: unknown[] = [];
+    const fetched: unknown[] = [];
+    const view = {
+      navigator: {
+        sendBeacon(url: unknown) {
+          sentBeacons.push(url);
+          return true;
+        },
+      },
+      fetch(input: unknown) {
+        fetched.push(input);
+        return Promise.resolve({ status: 200 });
+      },
+      Response: class {
+        status: number;
+        constructor(_body: unknown, init: { status: number }) {
+          this.status = init.status;
+        }
+      },
+    };
+    (document as unknown as { defaultView: unknown }).defaultView = view;
+
+    syncCloudflareWebAnalytics({
+      document,
+      measurementGranted: true,
+      persistDeniedConsent: () => true,
+      reload: () => {},
+    });
+    syncCloudflareWebAnalytics({
+      document,
+      measurementGranted: false,
+      persistDeniedConsent: () => true,
+      reload: () => {},
+    });
+
+    expect(head.scripts).toHaveLength(0);
+    view.navigator.sendBeacon('https://cloudflareinsights.com/cdn-cgi/rum');
+    view.navigator.sendBeacon('https://example.com/ok');
+    void view.fetch('https://cloudflareinsights.com/cdn-cgi/rum');
+    void view.fetch('https://zurielst.com/api/chat');
+
+    expect(sentBeacons).toEqual(['https://example.com/ok']);
+    expect(fetched).toEqual(['https://zurielst.com/api/chat']);
   });
 });
