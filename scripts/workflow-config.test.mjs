@@ -298,7 +298,8 @@ test("runbook records implemented consent-gated Web Analytics operations", async
   assert.ok(runbook.includes("default decline and an ignored banner make no analytics request"));
   assert.ok(runbook.includes("`components/registry/cloudflare-web-analytics.tsx`"));
   assert.ok(runbook.includes("`CLOUDFLARE_ANALYTICS_TOKEN`"));
-  assert.match(runbook, /working hypothesis for the site tag,\s*not a verified beacon token/);
+  assert.match(runbook, /a9179715ef1247b9a76ad1622a310854[\s\S]{0,200}verified the same day/);
+  assert.match(runbook, /Enable with JS Snippet installation[\s\S]{0,80}silently drops/);
 
   const readAccessIndex = normalizedRunbook.indexOf("only proves that the token can read analytics data");
   const consentedVisitIndex = normalizedRunbook.indexOf("make the consented visit");
