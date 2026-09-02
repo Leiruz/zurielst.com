@@ -286,10 +286,89 @@ test("runbook documents analytics refresh prerequisites and token rotation", asy
   assert.ok(revocationIndex > confirmationIndex, "the old token is revoked last");
 });
 
-test("runbook records the pending consent-gated Web Analytics setup", async () => {
+test("runbook records implemented consent-gated Web Analytics operations", async () => {
   const runbook = await readFile(new URL("../docs/runbook.md", import.meta.url), "utf8");
+  const normalizedRunbook = runbook.replace(/\s+/g, " ").toLowerCase();
 
-  assert.ok(runbook.includes(
+  assert.ok(!runbook.includes(
     "disable Web Analytics automatic setup and ship the manual snippet behind the consent measurement category, with the snippet token referenced from the dashboard",
   ));
+  assert.ok(runbook.includes("Manual Cloudflare Web Analytics setup has been active since 2026-09-01."));
+  assert.ok(runbook.includes("c15t `measurement` consent category"));
+  assert.ok(runbook.includes("default decline and an ignored banner make no analytics request"));
+  assert.ok(runbook.includes("`components/registry/cloudflare-web-analytics.tsx`"));
+  assert.ok(runbook.includes("`CLOUDFLARE_ANALYTICS_TOKEN`"));
+  assert.match(runbook, /working hypothesis for the site tag,\s*not a verified beacon token/);
+
+  const readAccessIndex = normalizedRunbook.indexOf("only proves that the token can read analytics data");
+  const consentedVisitIndex = normalizedRunbook.indexOf("make the consented visit");
+  const pageviewIndex = normalizedRunbook.indexOf("after-query confirms the pageview appears in `rumpageloadeventsadaptivegroups`");
+  const replacementIndex = normalizedRunbook.indexOf("replace the one `cloudflare_analytics_token` constant and redeploy");
+  assert.ok(readAccessIndex > -1, "the token query is limited to read-access verification");
+  assert.ok(consentedVisitIndex > readAccessIndex, "a consented visit follows token read verification");
+  assert.ok(pageviewIndex > readAccessIndex, "the runbook states the pageview confirmation goal");
+  assert.ok(replacementIndex > pageviewIndex, "a missing pageview triggers token replacement and redeploy");
+
+  const procedureInstructionIndex = normalizedRunbook.indexOf("start the procedure");
+  const baselineInstructionIndex = normalizedRunbook.indexOf("let it record the numeric baseline count");
+  const promptedVisitIndex = normalizedRunbook.indexOf("make a consented visit now");
+  assert.ok(procedureInstructionIndex > -1, "the runbook starts the procedure before the visit");
+  assert.ok(baselineInstructionIndex > procedureInstructionIndex, "the procedure records its baseline next");
+  assert.ok(promptedVisitIndex > baselineInstructionIndex, "the prompted consented visit follows the baseline");
+  assert.doesNotMatch(
+    runbook,
+    /After deploying the beacon,\s*make a consented visit/i,
+    "the runbook never sends an operator to visit before starting the procedure",
+  );
+});
+
+test("runbook provides an executable consented beacon-ingestion verification loop", async () => {
+  const runbook = await readFile(new URL("../docs/runbook.md", import.meta.url), "utf8");
+  const procedure = runbook.match(
+    /### Beacon ingestion verification[\s\S]*?```bash\n([\s\S]*?)\n```/,
+  )?.[1];
+
+  assert.ok(procedure, "the ingestion check is a separate Bash procedure");
+  assert.match(procedure, /set -euo pipefail/);
+  assert.match(procedure, /analytics_day="\$\(date -u \+%F\)"/);
+  assert.match(procedure, /rumPageloadEventsAdaptiveGroups/);
+  assert.ok(procedure.includes(String.raw`\$accountTag`), "GraphQL variables are protected from Bash expansion");
+  assert.ok(!procedure.includes(String.raw`\\$accountTag`), "GraphQL variables use one Bash escape");
+  assert.match(procedure, /curl --fail-with-body --silent --show-error/);
+  assert.match(procedure, /GraphQL errors/);
+  assert.match(procedure, /account envelope/);
+  assert.match(procedure, /count is not numeric/);
+  assert.match(procedure, /baseline_count="\$\(analytics_count\)"/);
+  assert.match(procedure, /Baseline count.*\$\{baseline_count\}/);
+  assert.match(procedure, /Make a consented visit/);
+  assert.match(procedure, /while true; do/);
+  assert.match(procedure, /read -r/);
+  assert.match(procedure, /after_count="\$\(analytics_count\)"/);
+  assert.match(procedure, /After count.*\$\{after_count\}/);
+  assert.match(procedure, /\(\( after_count > baseline_count \)\)/);
+  assert.match(procedure, /\[\[ "\$answer" == "stop" \]\]/);
+  assert.match(procedure, /replace the one CLOUDFLARE_ANALYTICS_TOKEN constant and redeploy/i);
+
+  const baselineAssignmentIndex = procedure.indexOf('baseline_count="$(analytics_count)"');
+  const promptedVisitIndex = procedure.indexOf("Make a consented visit now");
+  const afterAssignmentIndex = procedure.indexOf('after_count="$(analytics_count)"');
+  assert.ok(baselineAssignmentIndex > -1, "the procedure records a baseline count");
+  assert.ok(promptedVisitIndex > -1, "the procedure prompts for the consented visit");
+  assert.ok(afterAssignmentIndex > -1, "the procedure re-queries the count after the visit");
+  assert.ok(promptedVisitIndex > baselineAssignmentIndex, "the consented visit follows the baseline assignment");
+  assert.ok(afterAssignmentIndex > promptedVisitIndex, "the after-count query follows the consented visit prompt");
+});
+
+test("retirement checklist records repository consolidation safeguards", async () => {
+  const cutover = await readFile(new URL("../docs/cutover-2026-08-30.md", import.meta.url), "utf8");
+
+  assert.ok(cutover.includes("### Repository consolidation"));
+  assert.match(cutover, /back up local clones of `Leiruz\/resume` and `Leiruz\/Zuriel`/i);
+  assert.match(cutover, /selectively import still-wanted files into `zurielst\.com`/i);
+  assert.match(cutover, /Never merge full history because the old resume history contains the\s+unsanitized resume PDF/);
+  assert.match(cutover, /Archive both repositories on GitHub only after GitHub Pages retirement/);
+  assert.match(cutover, /resume repository remains the rollback origin until then/i);
+  assert.match(cutover, /Delete the repositories later only after a stable period passes/);
+  assert.match(cutover, /open `resume#2` pull request on the old repository becomes moot when\s+it is archived/i);
+  assert.ok(!cutover.includes("Execute the old-repo history decision."));
 });

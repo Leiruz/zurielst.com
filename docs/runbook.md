@@ -1,6 +1,6 @@
 # Operations runbook: zurielst.com
 
-Current as of 2026-08-31, after the 2026-08-30 cutover (full record and
+Current as of 2026-09-01, after the 2026-08-30 cutover (full record and
 retirement checklist: docs/cutover-2026-08-30.md).
 
 ## System overview
@@ -110,7 +110,101 @@ only by routes. Details are recorded in docs/cutover-2026-08-30.md.
 | TEMP configuration rule, SSL mode Full, apex plus www | ON PURPOSE, guards the GitHub Pages rollback origin | delete only at origin retirement |
 | Response-header CSP transform rule | stale, predates the rebuild | remove at retirement (owner) |
 
-Pending owner step: disable Web Analytics automatic setup and ship the manual snippet behind the consent measurement category, with the snippet token referenced from the dashboard.
+## Web Analytics
+
+Manual Cloudflare Web Analytics setup has been active since 2026-09-01. The
+client-only beacon is gated behind the c15t `measurement` consent category, so
+the default decline and an ignored banner make no analytics request. The loader
+reads the single beacon-token constant, `CLOUDFLARE_ANALYTICS_TOKEN`, in
+`components/registry/cloudflare-web-analytics.tsx`.
+
+`132089a6cdb94c13b46d32c7f2061e18` is a working hypothesis for the site tag,
+not a verified beacon token. The GraphQL check below only proves that the token
+can read analytics data. It does not confirm that a consented browser has sent
+a pageview.
+
+Keep the yesterday-dated GraphQL query in Secrets solely for token read-access
+verification. After deploying the beacon, start the procedure below. Let it
+record the numeric baseline count, then make the consented visit only when it
+prompts. Its after-query confirms the pageview appears in
+`rumPageloadEventsAdaptiveGroups`.
+
+### Beacon ingestion verification
+
+Run this Bash procedure during the deployment-verification window, with
+`VALUE` set to the same read-only token. It selects the current UTC date before
+the visit, records the numeric baseline count, and keeps that date for every
+recheck. Wait and retry as appropriate for the window. Do not assume a fixed
+ingestion time.
+
+```bash
+set -euo pipefail
+
+analytics_day="$(date -u +%F)"
+
+analytics_count() {
+  local response
+
+  if ! response="$(
+    curl --fail-with-body --silent --show-error \
+      --request POST \
+      --url https://api.cloudflare.com/client/v4/graphql \
+      --header "Authorization: Bearer $VALUE" \
+      --header "Content-Type: application/json" \
+      --data "{\"query\":\"query VerifyBeaconIngestion(\$accountTag: string, \$siteTag: string, \$date: Date) { viewer { accounts(filter: { accountTag: \$accountTag }) { rumPageloadEventsAdaptiveGroups(filter: { siteTag: \$siteTag, date_geq: \$date, date_leq: \$date }, limit: 1) { count } } } }\",\"variables\":{\"accountTag\":\"bfa514fe29643bf52b4999fa21e7b393\",\"siteTag\":\"132089a6cdb94c13b46d32c7f2061e18\",\"date\":\"$analytics_day\"}}"
+  )"; then
+    printf '%s\n' "Cloudflare GraphQL request failed." >&2
+    return 1
+  fi
+
+  printf '%s' "$response" | jq -er '
+    if .errors? != null then
+      error("GraphQL errors: \(.errors | tojson)")
+    elif (.data?.viewer?.accounts? | type) != "array" then
+      error("GraphQL response has no account envelope")
+    elif (.data.viewer.accounts | length) != 1 then
+      error("GraphQL response has an unexpected account envelope")
+    elif (.data.viewer.accounts[0].rumPageloadEventsAdaptiveGroups | type) != "array" then
+      error("GraphQL response has no rumPageloadEventsAdaptiveGroups envelope")
+    else
+      (.data.viewer.accounts[0].rumPageloadEventsAdaptiveGroups[0].count // 0) as $count
+      | if ($count | type) == "number" then $count
+        else error("rumPageloadEventsAdaptiveGroups count is not numeric")
+        end
+    end
+  '
+}
+
+baseline_count="$(analytics_count)"
+printf 'Baseline count for UTC date %s: %s\n' "$analytics_day" "${baseline_count}"
+printf '%s\n' "Make a consented visit now, before this UTC date rolls over."
+
+while true; do
+  read -r -p "Wait as appropriate, then press Enter to requery; type stop when the deployment-verification window ends: " answer
+
+  if [[ "$answer" == "stop" ]]; then
+    printf 'Count did not increase during the verification window. Baseline: %s; latest: %s\n' \
+      "${baseline_count}" "${after_count:-not checked}"
+    printf '%s\n' "Replace the one CLOUDFLARE_ANALYTICS_TOKEN constant and redeploy."
+    exit 1
+  fi
+
+  after_count="$(analytics_count)"
+  printf 'After count for UTC date %s: %s\n' "$analytics_day" "${after_count}"
+
+  if (( after_count > baseline_count )); then
+    printf 'Count increased from %s to %s. Beacon ingestion is confirmed.\n' \
+      "${baseline_count}" "${after_count}"
+    break
+  fi
+
+  printf '%s\n' "Count has not increased. Wait and retry, or type stop when the verification window ends."
+done
+```
+
+If repeated checks during the deployment-verification window do not increase,
+stop the procedure explicitly. It will instruct the operator to replace the one
+`CLOUDFLARE_ANALYTICS_TOKEN` constant and redeploy.
 
 ## Secrets
 

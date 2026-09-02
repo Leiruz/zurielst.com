@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { FooterTerminalTrigger } from '@/components/footer-terminal-trigger';
+import { FooterPrivacyChoices } from '@/components/footer-privacy-choices';
 import type { Social } from '@/content/schema';
 import { BUILD_DATE, BUILD_SHA } from '@/lib/build-info';
 import { withSiteUtm } from '@/lib/outbound-links';
@@ -107,24 +108,28 @@ export function Footer({
             <ColophonCell label="ANALYTICS">Cloudflare Web Analytics</ColophonCell>
           </dl>
 
-          <div data-colophon-bottom-row="true" className="grid grid-cols-2">
+          <div data-colophon-bottom-row="true" className="grid grid-cols-1 sm:grid-cols-2">
             <div className="flex min-h-16 items-center border-b border-r border-line px-5 sm:px-6">
               <FooterTerminalTrigger />
             </div>
-            <div className="flex min-h-16 items-center justify-end gap-1 border-b border-r border-line px-3 sm:px-4">
-              {socials.map((social) => (
-                <a
-                  key={social.platform}
-                  href={withSiteUtm(social.url)}
-                  target="_blank"
-                  rel="me noopener"
-                  aria-label={social.platform}
-                  data-footer-social="true"
-                  className="inline-flex size-11 items-center justify-center rounded-sm text-text-2 transition-colors duration-150 hover:bg-surface-hover hover:text-text-1 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
-                >
-                  <SocialIcon platform={social.platform} />
-                </a>
-              ))}
+
+            <div className="flex min-h-16 items-center justify-between gap-3 border-b border-r border-line px-3 sm:px-4">
+              <FooterPrivacyChoices />
+              <div className="flex items-center gap-1">
+                {socials.map((social) => (
+                  <a
+                    key={social.platform}
+                    href={withSiteUtm(social.url)}
+                    target="_blank"
+                    rel="me noopener"
+                    aria-label={social.platform}
+                    data-footer-social="true"
+                    className="inline-flex size-11 items-center justify-center rounded-sm text-text-2 transition-colors duration-150 hover:bg-surface-hover hover:text-text-1 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+                  >
+                    <SocialIcon platform={social.platform} />
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
         </div>

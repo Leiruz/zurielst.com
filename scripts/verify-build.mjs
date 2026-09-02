@@ -5,6 +5,20 @@ import { fileURLToPath } from "node:url";
 
 const PRODUCTION_ORIGIN = new URL("https://zurielst.com");
 const PREVIEW_RULE = "https://:version.:subdomain.workers.dev/*";
+const CLOUDFLARE_BEACON_ORIGIN = "https://static.cloudflareinsights.com";
+const CLOUDFLARE_ANALYTICS_ORIGINS = new Set([
+  CLOUDFLARE_BEACON_ORIGIN,
+  "https://cloudflareinsights.com",
+]);
+const NETWORK_HINT_RELATIONS = new Set([
+  "dns-prefetch",
+  "expect",
+  "modulepreload",
+  "preconnect",
+  "prefetch",
+  "preload",
+  "prerender",
+]);
 const LANDING_SECTION_IDS = [
   "identity",
   "intro",
@@ -71,11 +85,14 @@ const requiredCspDirectives = new Map([
   ["object-src", ["'none'"]],
   ["frame-ancestors", ["'none'"]],
   ["form-action", ["'self'"]],
-  ["script-src", ["'self'", "'unsafe-inline'"]],
+  [
+    "script-src",
+    ["'self'", "'unsafe-inline'", "https://static.cloudflareinsights.com"],
+  ],
   ["style-src", ["'self'", "'unsafe-inline'"]],
   ["img-src", ["'self'", "data:"]],
   ["font-src", ["'self'"]],
-  ["connect-src", ["'self'"]],
+  ["connect-src", ["'self'", "https://cloudflareinsights.com"]],
 ]);
 
 function validateRule(rule, lineNumber) {
@@ -340,6 +357,55 @@ function extractTags(html) {
   }
 
   return tags;
+}
+
+function normalizeAnalyticsUrl(value) {
+  try {
+    return new URL(value, PRODUCTION_ORIGIN);
+  } catch {
+    return null;
+  }
+}
+
+export function findStaticBeaconViolations(html, relativeFile = "index.html") {
+  const violations = [];
+  for (const tag of extractTags(html)) {
+    if (tag.attributes.has("data-cf-beacon")) {
+      violations.push(
+        `${relativeFile}: Cloudflare Web Analytics beacon markup must not be present in static HTML`,
+      );
+    }
+    for (const value of tag.attributes.values()) {
+      const url = normalizeAnalyticsUrl(value);
+      if (
+        url?.origin === CLOUDFLARE_BEACON_ORIGIN &&
+        url.pathname === "/beacon.min.js"
+      ) {
+        violations.push(
+          `${relativeFile}: Cloudflare Web Analytics beacon URL must not be present in static HTML`,
+        );
+      }
+    }
+    const href = tag.attributes.get("href");
+    const relations = new Set(
+      (tag.attributes.get("rel") ?? "").toLowerCase().split(/\s+/),
+    );
+    const isNetworkHint = [...relations].some((relation) =>
+      NETWORK_HINT_RELATIONS.has(relation),
+    );
+    const hintUrl = href ? normalizeAnalyticsUrl(href) : null;
+    if (
+      tag.name === "link" &&
+      isNetworkHint &&
+      hintUrl &&
+      CLOUDFLARE_ANALYTICS_ORIGINS.has(hintUrl.origin)
+    ) {
+      violations.push(
+        `${relativeFile}: Cloudflare Web Analytics network hint must not be present in static HTML`,
+      );
+    }
+  }
+  return violations;
 }
 
 function sourceListFor(policy, directiveName) {
@@ -1155,12 +1221,14 @@ export async function verifyBuildOutput(outputDirectory = path.resolve("out"), s
   const violations = [];
   for (const htmlFile of htmlFiles) {
     const relativeFile = path.relative(resolvedOutputDirectory, htmlFile);
+    const html = await readFile(htmlFile, "utf8");
     violations.push(
       ...findCspViolations(
-        await readFile(htmlFile, "utf8"),
+        html,
         policy,
         relativeFile,
       ),
+      ...findStaticBeaconViolations(html, relativeFile),
     );
   }
   for (const cssFile of cssFiles) {
