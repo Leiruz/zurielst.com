@@ -81,7 +81,7 @@ describe('chanhdai dossier direction', () => {
     expectClasses(
       markup,
       /<h2 id="intro-title" class="([^"]*)"/,
-      ['whitespace-nowrap', 'text-[clamp(1.75rem,13.5cqw,5rem)]'],
+      ['whitespace-nowrap', 'text-[clamp(1.75rem,11.25cqw,5rem)]'],
     );
     expect(markup).toMatch(
       /<h2 id="intro-title"[\s\S]*?<span data-local-greeting="true">Hello<\/span> <a href="#intro" class="dossier-anchor"/,
