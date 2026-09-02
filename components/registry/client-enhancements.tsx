@@ -85,15 +85,13 @@ export function scheduleAfterPaint(
 }
 
 export function shouldMountConsent({
-  engaged,
   introComplete,
   ready,
 }: {
-  engaged: boolean;
   introComplete: boolean;
   ready: boolean;
 }) {
-  return engaged && introComplete && ready;
+  return introComplete || ready;
 }
 
 export function listenForPageEngagement(
@@ -179,15 +177,20 @@ export function ClientEnhancements() {
     [],
   );
 
-  if (!ready) return null;
+  const mountConsent = shouldMountConsent({ introComplete, ready });
+  if (!mountConsent) return null;
 
   return (
     <>
-      {shouldMountConsent({ engaged, introComplete, ready }) ? (
-        <DeferredConsentManager>{null}</DeferredConsentManager>
+      <DeferredConsentManager mountUi={engaged && introComplete && ready}>
+        {null}
+      </DeferredConsentManager>
+      {ready ? (
+        <>
+          <DeferredIntroGate />
+          <HapticFeedback />
+        </>
       ) : null}
-      <DeferredIntroGate />
-      <HapticFeedback />
     </>
   );
 }

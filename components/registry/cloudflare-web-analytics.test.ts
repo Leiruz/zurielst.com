@@ -81,7 +81,7 @@ function ownedBeacons(head: FakeHead) {
 describe('Cloudflare Web Analytics consent loader', () => {
   it('pins the analytics token as an unverified site-tag hypothesis', () => {
     expect(cloudflareWebAnalyticsSource).toMatch(
-      /\/\/ UNVERIFIED: site-tag hypothesis until consented ingestion is confirmed via the runbook loop\r?\nexport const CLOUDFLARE_ANALYTICS_TOKEN =/,
+      /\/\/ Dashboard-sourced snippet token, ingestion VERIFIED 2026-09-02[\s\S]{0,240}?export const CLOUDFLARE_ANALYTICS_TOKEN = 'a9179715ef1247b9a76ad1622a310854';/,
     );
   });
 

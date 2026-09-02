@@ -4,8 +4,10 @@ import { useEffect } from 'react';
 
 export const CLOUDFLARE_ANALYTICS_BEACON_SRC =
   'https://static.cloudflareinsights.com/beacon.min.js';
-// UNVERIFIED: site-tag hypothesis until consented ingestion is confirmed via the runbook loop
-export const CLOUDFLARE_ANALYTICS_TOKEN = '132089a6cdb94c13b46d32c7f2061e18';
+// Dashboard-sourced snippet token, ingestion VERIFIED 2026-09-02: a consented
+// beacon send with this token surfaced in rumPageloadEventsAdaptiveGroups
+// under the expected siteTag. The earlier site-tag-hypothesis value was wrong.
+export const CLOUDFLARE_ANALYTICS_TOKEN = 'a9179715ef1247b9a76ad1622a310854';
 
 const OWNED_BEACON_SELECTOR = '[data-zst-cloudflare-analytics="true"]';
 

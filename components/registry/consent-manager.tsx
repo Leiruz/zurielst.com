@@ -3,19 +3,34 @@
 "use client"
 
 import {
+  deleteConsentFromStorage,
+  getCookie,
   getConsentFromStorage,
   saveConsentToStorage,
   type ConsentState,
   type StorageConfig,
 } from "@c15t/nextjs"
-import { lazy, Suspense, useCallback, useEffect } from "react"
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react"
 import {
   ConsentManagerProvider,
   useConsentManager,
 } from "@c15t/nextjs/headless"
 
-import { ConsentBanner } from "@/components/registry/consent-banner"
 import { CONSENT_TRANSLATIONS } from "@/components/registry/consent-copy"
+import {
+  restorePersistedConsent,
+  type PersistedConsent,
+  validatePersistedConsent,
+  type ValidPersistedConsent,
+} from "@/components/registry/consent-hydration"
 import { CloudflareWebAnalyticsLoader } from "@/components/registry/cloudflare-web-analytics"
 import {
   listenForPrivacyChoicesOpen,
@@ -26,14 +41,70 @@ type ConsentInfo = Parameters<
   typeof saveConsentToStorage
 >[0]["consentInfo"]
 
-type PersistedConsent = {
-  consents?: { measurement?: boolean }
-}
-
 type ReadConsent = (storageConfig?: StorageConfig) => PersistedConsent | null
+
+type PersistedConsentCheck =
+  | { consent: null; status: "absent" | "invalid" }
+  | { consent: ValidPersistedConsent; status: "valid" }
+
+const DEFAULT_CONSENT_STORAGE_KEY = "c15t"
+const LEGACY_CONSENT_STORAGE_KEY = "privacy-consent-storage"
 
 function readPersistedConsent(storageConfig?: StorageConfig) {
   return getConsentFromStorage<PersistedConsent>(storageConfig)
+}
+
+function checkPersistedConsent(storageConfig?: StorageConfig): PersistedConsentCheck {
+  if (typeof window === "undefined") return { consent: null, status: "absent" }
+
+  let result: PersistedConsentCheck
+  try {
+    const storageKey = storageConfig?.storageKey ?? DEFAULT_CONSENT_STORAGE_KEY
+    const localConsent = readRawLocalConsent(storageKey)
+    const cookieConsent = getCookie<unknown>(storageKey)
+    const rawConsent = cookieConsent || localConsent
+
+    if (!rawConsent) return { consent: null, status: "absent" }
+
+    const consent = validatePersistedConsent(rawConsent, {
+      allowOmittedFalse: Boolean(cookieConsent),
+    })
+    result = consent
+      ? { consent, status: "valid" }
+      : { consent: null, status: "invalid" }
+  } catch {
+    result = { consent: null, status: "invalid" }
+  }
+
+  if (result.status === "invalid") {
+    try {
+      deleteConsentFromStorage(undefined, storageConfig)
+    } catch {
+      // The runtime barrier below still resets live state and blocks analytics.
+    }
+  }
+
+  return result
+}
+
+function readRawLocalConsent(storageKey: string) {
+  const storage = window.localStorage
+
+  if (storageKey !== LEGACY_CONSENT_STORAGE_KEY) {
+    const current = storage.getItem(storageKey)
+    if (current) {
+      storage.removeItem(LEGACY_CONSENT_STORAGE_KEY)
+    } else {
+      const legacy = storage.getItem(LEGACY_CONSENT_STORAGE_KEY)
+      if (legacy) {
+        storage.setItem(storageKey, legacy)
+        storage.removeItem(LEGACY_CONSENT_STORAGE_KEY)
+      }
+    }
+  }
+
+  const stored = storage.getItem(storageKey)
+  return stored ? JSON.parse(stored) as unknown : null
 }
 
 export function persistDeniedMeasurementConsent({
@@ -59,55 +130,11 @@ export function persistDeniedMeasurementConsent({
   }
 }
 
-const DeferredConsentManagerDialog = lazy(() =>
-  import("@/components/registry/consent-manager-dialog").then((module) => ({
-    default: module.ConsentManagerDialog,
+const DeferredConsentManagerUi = lazy(() =>
+  import("@/components/registry/consent-manager-ui").then((module) => ({
+    default: module.ConsentManagerUi,
   }))
 )
-
-export function ConsentManagerDialogLoader({ isOpen }: { isOpen: boolean }) {
-  if (!isOpen) return null
-
-  return (
-    <Suspense fallback={null}>
-      <DeferredConsentManagerDialog />
-    </Suspense>
-  )
-}
-
-function ConsentManagerDialogMount() {
-  const { isPrivacyDialogOpen } = useConsentManager()
-
-  return <ConsentManagerDialogLoader isOpen={isPrivacyDialogOpen} />
-}
-
-function ConsentBannerMount() {
-  const {
-    saveConsents,
-    setIsPrivacyDialogOpen,
-    setShowPopup,
-    showPopup,
-  } = useConsentManager()
-
-  if (!showPopup) return null
-
-  return (
-    <ConsentBanner
-      onReject={() => {
-        setShowPopup(false)
-        saveConsents("necessary")
-      }}
-      onCustomize={() => {
-        setIsPrivacyDialogOpen(true)
-        setShowPopup(false, true)
-      }}
-      onAccept={() => {
-        setShowPopup(false)
-        saveConsents("all")
-      }}
-    />
-  )
-}
 
 function PrivacyChoicesListener() {
   const { setIsPrivacyDialogOpen } = useConsentManager()
@@ -143,7 +170,122 @@ function CloudflareWebAnalyticsMount() {
   )
 }
 
-export function ConsentManager({ children }: { children: React.ReactNode }) {
+function ConsentRuntime({
+  children,
+  mountUi,
+  persistedConsentCheck,
+}: {
+  children: React.ReactNode
+  mountUi: boolean
+  persistedConsentCheck: PersistedConsentCheck
+}) {
+  const {
+    consentInfo,
+    consents,
+    resetConsents,
+    saveConsents,
+    setSelectedConsent,
+    setShowPopup,
+    showPopup,
+  } = useConsentManager()
+  const reconciliationAttempted = useRef(false)
+  const [reconciliationRan, setReconciliationRan] = useState(false)
+  const [validationComplete, setValidationComplete] = useState(false)
+
+  useLayoutEffect(() => {
+    if (reconciliationAttempted.current) return
+    reconciliationAttempted.current = true
+
+    try {
+      if (persistedConsentCheck.status === "valid") {
+        const restored = restorePersistedConsent({
+          consents,
+          persistedConsent: persistedConsentCheck.consent,
+          saveConsents,
+          setSelectedConsent,
+        })
+        if (!restored) return
+      } else {
+        resetConsents()
+        setShowPopup(true, true)
+      }
+      setReconciliationRan(true)
+    } catch {
+      // Keep analytics and consent UI blocked unless live state is denied.
+    }
+  }, [
+    consents,
+    persistedConsentCheck,
+    resetConsents,
+    saveConsents,
+    setSelectedConsent,
+    setShowPopup,
+  ])
+
+  const liveStateMatches = persistedConsentCheck.status === "valid"
+    ? consentInfo?.type === "custom" &&
+      !showPopup &&
+      consentProfilesMatch(consents, persistedConsentCheck.consent.consents)
+    : consentInfo === null &&
+      showPopup &&
+      consents.necessary &&
+      !consents.experience &&
+      !consents.functionality &&
+      !consents.marketing &&
+      !consents.measurement
+
+  useLayoutEffect(() => {
+    if (validationComplete || !reconciliationRan || !liveStateMatches) return
+    setValidationComplete(true)
+  }, [liveStateMatches, reconciliationRan, validationComplete])
+
+  return (
+    <>
+      {validationComplete && mountUi ? <PrivacyChoicesListener /> : null}
+
+      {validationComplete && mountUi ? (
+        <Suspense fallback={null}>
+          <DeferredConsentManagerUi />
+        </Suspense>
+      ) : null}
+
+      {validationComplete ? <CloudflareWebAnalyticsMount /> : null}
+
+      {validationComplete ? children : null}
+    </>
+  )
+}
+
+function consentProfilesMatch(
+  left: ValidPersistedConsent["consents"],
+  right: ValidPersistedConsent["consents"],
+) {
+  return left.necessary === right.necessary &&
+    left.experience === right.experience &&
+    left.functionality === right.functionality &&
+    left.marketing === right.marketing &&
+    left.measurement === right.measurement
+}
+
+export function ConsentManager({
+  children,
+  mountUi = true,
+}: {
+  children: React.ReactNode
+  mountUi?: boolean
+}) {
+  const [persistedConsentCheck, setPersistedConsentCheck] =
+    useState<PersistedConsentCheck | null>(null)
+  const hasCheckedPersistedConsent = useRef(false)
+
+  useEffect(() => {
+    if (hasCheckedPersistedConsent.current) return
+    hasCheckedPersistedConsent.current = true
+    setPersistedConsentCheck(checkPersistedConsent())
+  }, [])
+
+  if (!persistedConsentCheck) return null
+
   return (
     <ConsentManagerProvider
       options={{
@@ -153,15 +295,12 @@ export function ConsentManager({ children }: { children: React.ReactNode }) {
         // ignoreGeoLocation: process.env.NODE_ENV === "development", // Useful for development to always view the banner.
       }}
     >
-      <PrivacyChoicesListener />
-
-      <ConsentBannerMount />
-
-      <ConsentManagerDialogMount />
-
-      <CloudflareWebAnalyticsMount />
-
-      {children}
+      <ConsentRuntime
+        mountUi={mountUi}
+        persistedConsentCheck={persistedConsentCheck}
+      >
+        {children}
+      </ConsentRuntime>
     </ConsentManagerProvider>
   )
 }

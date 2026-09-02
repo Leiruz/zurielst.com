@@ -118,10 +118,15 @@ the default decline and an ignored banner make no analytics request. The loader
 reads the single beacon-token constant, `CLOUDFLARE_ANALYTICS_TOKEN`, in
 `components/registry/cloudflare-web-analytics.tsx`.
 
-`132089a6cdb94c13b46d32c7f2061e18` is a working hypothesis for the site tag,
-not a verified beacon token. The GraphQL check below only proves that the token
-can read analytics data. It does not confirm that a consented browser has sent
-a pageview.
+The beacon token is `a9179715ef1247b9a76ad1622a310854`, copied from the
+dashboard snippet on 2026-09-02 and verified the same day: a consented browser
+send with it surfaced in rumPageloadEventsAdaptiveGroups under the site tag
+`132089a6cdb94c13b46d32c7f2061e18` (the tag remains the GraphQL filter value;
+it is NOT the beacon token, an earlier hypothesis that proved wrong). Two
+operational gotchas from that verification: the Web Analytics site must be in
+"Enable with JS Snippet installation" mode (the Disable mode silently drops
+RUM submissions), and ingestion can lag the GraphQL surface by around ten
+minutes, so poll before concluding a token is wrong.
 
 Keep the yesterday-dated GraphQL query in Secrets solely for token read-access
 verification. After deploying the beacon, start the procedure below. Let it
