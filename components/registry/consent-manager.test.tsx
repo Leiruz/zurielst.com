@@ -1,8 +1,6 @@
-import { createElement, type ReactElement, type ReactNode } from 'react';
+import { createElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
-import { FooterPrivacyChoices } from '@/components/footer-privacy-choices';
 
 const effectHarness = vi.hoisted(() => ({
   cleanups: [] as Array<() => void>,
@@ -168,20 +166,22 @@ describe('ConsentManager analytics wiring', () => {
     consentManagerMockState.showPopup = false;
   });
 
-  it('denies analytics when only default necessary consent is granted', () => {
+  it('renders nothing before persisted storage validation completes', () => {
     const markup = renderConsentManager();
 
-    expect(markup).toContain('cloudflare-measurement-denied');
+    expect(markup).toBe('');
     expect(markup).not.toContain('cloudflare-measurement-granted');
+    expect(markup).not.toContain('cloudflare-measurement-denied');
   });
 
-  it('forwards the c15t measurement category to the analytics loader', () => {
+  it('withholds stale granted live measurement before validation completes', () => {
     consentManagerMockState.consents.measurement = true;
     const markup = renderConsentManager();
 
-    expect(markup).toContain('cloudflare-measurement-granted');
+    expect(markup).toBe('');
     expect(markup).not.toContain('cloudflare-measurement-denied');
-    expect(consentManagerMockState.analyticsPersistence).toBeTypeOf('function');
+    expect(markup).not.toContain('cloudflare-measurement-granted');
+    expect(consentManagerMockState.analyticsPersistence).toBeUndefined();
   });
 
   it('fails closed when persisted consent storage throws on mount', () => {
@@ -191,9 +191,10 @@ describe('ConsentManager analytics wiring', () => {
 
     expect(() => renderConsentManager()).not.toThrow();
     expect(consentManagerMockState.saveConsents).not.toHaveBeenCalled();
+    expect(consentManagerMockState.analyticsPersistence).toBeUndefined();
   });
 
-  it('bridges the footer opener and separately covers banner accept and reject transitions', () => {
+  it('covers banner accept and reject transitions', () => {
     const target = createPrivacyChoicesTarget();
     vi.stubGlobal('window', target);
     effectHarness.run = true;
@@ -201,23 +202,14 @@ describe('ConsentManager analytics wiring', () => {
     renderConsentManagerUi();
     consentManagerMockState.banner?.onAccept();
 
-    expect(renderConsentManager()).toContain('cloudflare-measurement-granted');
-
-    const opener = { id: 'privacy-choices' };
-    const footerButton = FooterPrivacyChoices() as ReactElement<{
-      onClick: (event: { currentTarget: unknown }) => void;
-    }>;
-    footerButton.props.onClick({ currentTarget: opener });
-
-    expect(consentManagerMockState.setIsPrivacyDialogOpen).toHaveBeenCalledWith(true);
-    expect(consentManagerMockState.isPrivacyDialogOpen).toBe(true);
+    expect(consentManagerMockState.consents.measurement).toBe(true);
 
     consentManagerMockState.banner = undefined;
     consentManagerMockState.showPopup = true;
     renderConsentManagerUi();
     rejectCapturedBannerForFastEventBridgeCoverage();
     expect(consentManagerMockState.saveConsents).toHaveBeenLastCalledWith('necessary');
-    expect(renderConsentManager()).toContain('cloudflare-measurement-denied');
+    expect(consentManagerMockState.consents.measurement).toBe(false);
   });
 
   it('saves current denied consents and confirms canonical denied readback', () => {

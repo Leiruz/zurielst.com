@@ -8,6 +8,11 @@ export type PersistedConsent = {
   consents?: Partial<ConsentState>
 }
 
+export type ValidPersistedConsent = {
+  consentInfo: Record<string, unknown>
+  consents: ConsentState
+}
+
 const CONSENT_CATEGORIES = [
   "necessary",
   "functionality",
@@ -27,19 +32,49 @@ export function restorePersistedConsent({
   saveConsents: (type: "custom") => void
   setSelectedConsent: (name: AllConsentNames, value: boolean) => void
 }) {
-  if (!persistedConsent?.consentInfo || !persistedConsent.consents) return false
-
-  const storedConsents = persistedConsent.consents
-  if (
-    !CONSENT_CATEGORIES.every(
-      (category) => typeof storedConsents[category] === "boolean",
-    )
-  ) return false
-  if (storedConsents.necessary !== true) return false
+  const validatedConsent = validatePersistedConsent(persistedConsent)
+  if (!validatedConsent) return false
 
   for (const category of CONSENT_CATEGORIES) {
-    setSelectedConsent(category, storedConsents[category] as boolean)
+    setSelectedConsent(category, validatedConsent.consents[category])
   }
   saveConsents("custom")
   return true
+}
+
+export function validatePersistedConsent(
+  persistedConsent: unknown,
+  { allowOmittedFalse = false }: { allowOmittedFalse?: boolean } = {},
+): ValidPersistedConsent | null {
+  if (!isRecord(persistedConsent)) return null
+  if (!isRecord(persistedConsent.consentInfo)) return null
+  if (
+    typeof persistedConsent.consentInfo.time !== "number" ||
+    !Number.isFinite(persistedConsent.consentInfo.time)
+  ) return null
+  if (!isRecord(persistedConsent.consents)) return null
+
+  const consents = {} as ConsentState
+  for (const category of CONSENT_CATEGORIES) {
+    const value = persistedConsent.consents[category]
+    if (typeof value === "boolean") {
+      consents[category] = value
+      continue
+    }
+    if (allowOmittedFalse && value === undefined && category !== "necessary") {
+      consents[category] = false
+      continue
+    }
+    return null
+  }
+  if (!consents.necessary) return null
+
+  return {
+    consentInfo: persistedConsent.consentInfo,
+    consents,
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
 }

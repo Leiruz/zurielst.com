@@ -1,6 +1,7 @@
 import {
   act,
   createElement,
+  StrictMode,
   type ComponentType,
   type ReactNode,
 } from 'react';
@@ -12,20 +13,18 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PersistedConsent } from './consent-hydration';
-import { clearConsentManagerCache } from '../../node_modules/@c15t/react/dist/providers/consent-manager-provider.js';
 
 const runtimeHarness = vi.hoisted(() => ({
   consentManager: undefined as ComponentType<{
     children: ReactNode;
     mountUi?: boolean;
   }> | undefined,
-  persistedConsent: null as PersistedConsent | null,
   snapshots: [] as Array<{
     consentType: string | undefined;
     measurement: boolean;
     showPopup: boolean;
   }>,
-  storageReads: 0,
+  resetConsents: undefined as (() => void) | undefined,
 }));
 
 vi.mock('next/dynamic', () => {
@@ -61,17 +60,6 @@ vi.mock('@/components/registry/haptic-feedback', () => ({
   HapticFeedback: () => createElement('haptic-feedback'),
 }));
 
-vi.mock('@c15t/nextjs', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@c15t/nextjs')>();
-  return {
-    ...actual,
-    getConsentFromStorage: vi.fn(() => {
-      runtimeHarness.storageReads += 1;
-      return runtimeHarness.persistedConsent;
-    }),
-  };
-});
-
 import { useConsentManager } from '@c15t/nextjs/headless';
 
 import { ClientEnhancements } from './client-enhancements';
@@ -89,13 +77,12 @@ describe('ClientEnhancements persisted consent runtime', () => {
   let browser: ReturnType<typeof createBrowserHarness>;
   let renderer: ReactTestRenderer | undefined;
   let consoleError: ReturnType<typeof vi.spyOn>;
+  let consoleWarn: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    clearConsentManagerCache();
     runtimeHarness.consentManager = ConsentManager;
-    runtimeHarness.persistedConsent = null;
+    runtimeHarness.resetConsents = undefined;
     runtimeHarness.snapshots = [];
-    runtimeHarness.storageReads = 0;
     browser = createBrowserHarness();
     installBrowserHarness(browser);
     setReactActEnvironment(true);
@@ -107,23 +94,28 @@ describe('ClientEnhancements persisted consent runtime', () => {
       }
       originalConsoleError(...args);
     });
+    const originalConsoleWarn = console.warn;
+    consoleWarn = vi.spyOn(console, 'warn').mockImplementation((...args) => {
+      const expectedStorageWarning =
+        (args[0] === '[c15t] Failed to migrate legacy storage:' ||
+          args[0] === 'Failed to read consent from localStorage:') &&
+        args[1] instanceof Error &&
+        args[1].message === 'consent storage unavailable';
+      if (expectedStorageWarning) return;
+      originalConsoleWarn(...args);
+    });
   });
 
-  afterEach(async () => {
-    if (renderer) {
-      await act(async () => renderer?.unmount());
-      renderer = undefined;
-    }
-    clearConsentManagerCache();
-    consoleError.mockRestore();
-    setReactActEnvironment(false);
-    vi.unstubAllGlobals();
-  });
-
-  it('restores stored measurement consent after intro completion without engagement', async () => {
-    runtimeHarness.persistedConsent = createPersistedConsent(
-      createConsentProfile(true),
-    );
+  it('reconciles a provider read that changes after a denied preflight', async () => {
+    const denied = createPersistedConsent(createConsentProfile(false));
+    const granted = createPersistedConsent(createConsentProfile(true));
+    browser.seedConsent(granted);
+    browser.scriptConsentReads([
+      JSON.stringify(denied),
+      JSON.stringify(denied),
+      JSON.stringify(granted),
+      JSON.stringify(granted),
+    ]);
 
     await act(async () => {
       renderer = create(createElement(ClientEnhancements));
@@ -134,7 +126,43 @@ describe('ClientEnhancements persisted consent runtime', () => {
     });
     await flushConsentEffects();
 
-    expect(runtimeHarness.storageReads).toBe(1);
+    expect(runtimeHarness.snapshots.some(({ measurement }) => measurement)).toBe(false);
+    expect(latestConsentSnapshot()).toMatchObject({
+      consentType: 'custom',
+      measurement: false,
+      showPopup: false,
+    });
+    expect(browser.beaconInsertions).toBe(0);
+  });
+
+  afterEach(async () => {
+    if (runtimeHarness.resetConsents) {
+      await act(async () => runtimeHarness.resetConsents?.());
+    }
+    if (renderer) {
+      await act(async () => renderer?.unmount());
+      renderer = undefined;
+    }
+    consoleError.mockRestore();
+    consoleWarn.mockRestore();
+    setReactActEnvironment(false);
+    vi.unstubAllGlobals();
+  });
+
+  it('restores stored measurement consent after intro completion without engagement', async () => {
+    browser.seedConsent(createPersistedConsent(
+      createConsentProfile(true),
+    ));
+
+    await act(async () => {
+      renderer = create(createElement(ClientEnhancements));
+    });
+    await act(async () => {
+      browser.completeIntro();
+      await nextTask();
+    });
+    await flushConsentEffects();
+
     expect(latestConsentSnapshot()).toMatchObject({
       consentType: 'custom',
       measurement: true,
@@ -148,10 +176,34 @@ describe('ClientEnhancements persisted consent runtime', () => {
     expect(findBanner(renderer)).toHaveLength(0);
   });
 
+  it('accepts a compressed valid cookie before conflicting localStorage', async () => {
+    browser.seedConsent({
+      consentInfo: { identified: false, time: 1_756_684_800 },
+      consents: { measurement: false, necessary: false },
+    });
+    browser.seedGrantedConsentCookie();
+
+    await act(async () => {
+      renderer = create(createElement(ClientEnhancements));
+    });
+    await act(async () => {
+      browser.completeIntro();
+      await nextTask();
+    });
+    await flushConsentEffects();
+
+    expect(latestConsentSnapshot()).toMatchObject({
+      consentType: 'custom',
+      measurement: true,
+      showPopup: false,
+    });
+    expect(browser.beaconInsertions).toBe(1);
+  });
+
   it('restores stored denied consent after readiness without engagement or intro completion', async () => {
-    runtimeHarness.persistedConsent = createPersistedConsent(
+    browser.seedConsent(createPersistedConsent(
       createConsentProfile(false),
-    );
+    ));
 
     await act(async () => {
       renderer = create(createElement(ClientEnhancements));
@@ -162,7 +214,6 @@ describe('ClientEnhancements persisted consent runtime', () => {
     });
     await flushConsentEffects();
 
-    expect(runtimeHarness.storageReads).toBe(1);
     expect(latestConsentSnapshot()).toMatchObject({
       consentType: 'custom',
       measurement: false,
@@ -176,16 +227,163 @@ describe('ClientEnhancements persisted consent runtime', () => {
     expect(findBanner(renderer)).toHaveLength(0);
   });
 
+  it('fails closed for incomplete raw consent with granted measurement', async () => {
+    browser.seedConsent({
+      consentInfo: { identified: false, time: 1_756_684_800 },
+      consents: { measurement: true, necessary: true },
+    });
+
+    await mountWithEveryUiGateOpen();
+
+    expect.soft(browser.beaconInsertions).toBe(0);
+    expect.soft(browser.ownedBeacons()).toHaveLength(0);
+    expect.soft(runtimeHarness.snapshots.some(({ measurement }) => measurement)).toBe(false);
+    expect.soft(latestConsentSnapshot()).toMatchObject({
+      measurement: false,
+      showPopup: true,
+    });
+    expect.soft(browser.storedConsent()).toBeNull();
+    expect(findBanner(renderer)).toHaveLength(1);
+  });
+
+  it('fails closed for malformed raw consent with granted measurement', async () => {
+    browser.seedConsent({
+      consentInfo: { identified: false, time: 1_756_684_800 },
+      consents: {
+        experience: false,
+        functionality: false,
+        marketing: false,
+        measurement: true,
+        necessary: false,
+      },
+    });
+
+    await mountWithEveryUiGateOpen();
+
+    expect.soft(browser.beaconInsertions).toBe(0);
+    expect.soft(browser.ownedBeacons()).toHaveLength(0);
+    expect.soft(runtimeHarness.snapshots.some(({ measurement }) => measurement)).toBe(false);
+    expect.soft(latestConsentSnapshot()).toMatchObject({
+      measurement: false,
+      showPopup: true,
+    });
+    expect.soft(browser.storedConsent()).toBeNull();
+    expect(findBanner(renderer)).toHaveLength(1);
+  });
+
+  it('fails closed when raw localStorage access throws before a granted cookie', async () => {
+    browser.seedGrantedConsentCookie();
+    browser.failConsentReads();
+
+    await mountWithEveryUiGateOpen();
+
+    expect.soft(browser.beaconInsertions).toBe(0);
+    expect.soft(browser.ownedBeacons()).toHaveLength(0);
+    expect.soft(runtimeHarness.snapshots.some(({ measurement }) => measurement)).toBe(false);
+    expect.soft(latestConsentSnapshot()).toMatchObject({
+      measurement: false,
+      showPopup: true,
+    });
+    expect(findBanner(renderer)).toHaveLength(1);
+  });
+
+  it('retains one invalid preflight result across StrictMode effect replay', async () => {
+    browser.seedConsent({
+      consentInfo: { identified: false, time: 1_756_684_800 },
+      consents: { measurement: true, necessary: true },
+    });
+
+    await mountWithEveryUiGateOpen(true);
+
+    expect(browser.consentDeletions).toBe(2);
+    expect(runtimeHarness.snapshots.some(({ measurement }) => measurement)).toBe(false);
+    expect(browser.beaconInsertions).toBe(0);
+    expect(findBanner(renderer)).toHaveLength(1);
+  });
+
+  it.each([
+    ['absent', null],
+    [
+      'malformed',
+      {
+        consentInfo: { identified: false, time: 1_756_684_800 },
+        consents: { measurement: true, necessary: true },
+      },
+    ],
+  ])(
+    'reconciles a granted provider cache against %s storage under StrictMode',
+    async (_label, nextConsent) => {
+      await primeGrantedProviderCache();
+      browser = createBrowserHarness();
+      installBrowserHarness(browser);
+      if (nextConsent) browser.seedConsent(nextConsent);
+      runtimeHarness.snapshots = [];
+
+      await mountWithEveryUiGateOpen(true);
+
+      expect(runtimeHarness.snapshots.some(({ measurement }) => measurement)).toBe(false);
+      expect(latestConsentSnapshot()).toMatchObject({
+        measurement: false,
+        showPopup: true,
+      });
+      expect(browser.beaconInsertions).toBe(0);
+      expect(findBanner(renderer)).toHaveLength(1);
+    },
+  );
+
+  async function primeGrantedProviderCache() {
+    browser.seedConsent(createPersistedConsent(createConsentProfile(true)));
+    await act(async () => {
+      renderer = create(createElement(ClientEnhancements));
+    });
+    await act(async () => {
+      browser.completeIntro();
+      await nextTask();
+    });
+    await flushConsentEffects();
+    expect(latestConsentSnapshot()?.measurement).toBe(true);
+
+    await act(async () => renderer?.unmount());
+    renderer = undefined;
+  }
+
+  async function mountWithEveryUiGateOpen(strictMode = false) {
+    await import('./consent-manager-ui');
+    await act(async () => {
+      const enhancements = createElement(ClientEnhancements);
+      renderer = create(
+        strictMode
+          ? createElement(StrictMode, null, enhancements)
+          : enhancements,
+      );
+    });
+    await act(async () => {
+      browser.completeIntro();
+      browser.frames.flush();
+      browser.engage();
+      await nextTask();
+    });
+    await flushConsentEffects();
+    await flushUntil(() => findBanner(renderer).length === 1);
+  }
+
   async function flushConsentEffects() {
     await act(async () => {
       await nextTask();
       await nextTask();
     });
   }
+
+  async function flushUntil(condition: () => boolean) {
+    for (let attempt = 0; attempt < 50 && !condition(); attempt += 1) {
+      await act(async () => nextTask());
+    }
+  }
 });
 
 function ConsentStateProbe() {
-  const { consentInfo, consents, showPopup } = useConsentManager();
+  const { consentInfo, consents, resetConsents, showPopup } = useConsentManager();
+  runtimeHarness.resetConsents = resetConsents;
   runtimeHarness.snapshots.push({
     consentType: consentInfo?.type,
     measurement: consents.measurement,
@@ -249,9 +447,12 @@ function installBrowserHarness(browser: ReturnType<typeof createBrowserHarness>)
 function createBrowserHarness() {
   let beaconInsertions = 0;
   let cookie = '';
+  let consentDeletions = 0;
   let engagementDispatches = 0;
   let introObserverCallback = () => {};
   let nextFrameId = 1;
+  let throwOnConsentRead = false;
+  const scriptedConsentReads: string[] = [];
   const frameCallbacks = new Map<number, FrameRequestCallback>();
   const listeners = new Map<string, EventListener>();
   const localStorageValues = new Map<string, string>();
@@ -296,9 +497,16 @@ function createBrowserHarness() {
       localStorageValues.clear();
     },
     getItem(key: string) {
+      if (throwOnConsentRead && key === 'c15t') {
+        throw new Error('consent storage unavailable');
+      }
+      if (key === 'c15t' && scriptedConsentReads.length > 0) {
+        return scriptedConsentReads.shift() ?? null;
+      }
       return localStorageValues.get(key) ?? null;
     },
     removeItem(key: string) {
+      if (key === 'c15t') consentDeletions += 1;
       localStorageValues.delete(key);
     },
     setItem(key: string, value: string) {
@@ -371,6 +579,9 @@ function createBrowserHarness() {
     get beaconInsertions() {
       return beaconInsertions;
     },
+    get consentDeletions() {
+      return consentDeletions;
+    },
     document,
     frames: {
       cancel(handle: number) {
@@ -396,6 +607,12 @@ function createBrowserHarness() {
     get engagementDispatches() {
       return engagementDispatches;
     },
+    engage() {
+      listeners.get('pointerdown')?.(new Event('pointerdown'));
+    },
+    failConsentReads() {
+      throwOnConsentRead = true;
+    },
     completeIntro() {
       documentRoot.dataset.intro = 'done';
       introObserverCallback();
@@ -414,6 +631,19 @@ function createBrowserHarness() {
         (script) =>
           script.getAttribute('data-zst-cloudflare-analytics') === 'true',
       );
+    },
+    seedConsent(value: unknown) {
+      localStorage.setItem('c15t', JSON.stringify(value));
+    },
+    seedGrantedConsentCookie() {
+      cookie = 'c15t=c.necessary:1,c.measurement:1,i.t:1756684800,i.y:custom';
+    },
+    scriptConsentReads(values: string[]) {
+      scriptedConsentReads.push(...values);
+    },
+    storedConsent() {
+      const stored = localStorage.getItem('c15t');
+      return stored === null ? null : JSON.parse(stored) as unknown;
     },
     window,
   };

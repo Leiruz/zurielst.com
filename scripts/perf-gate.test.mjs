@@ -214,7 +214,7 @@ test("landing-route controls avoid superseded identity motion code and unnecessa
   assert.match(siteNavSource, /site-nav-enhancement/);
 });
 
-test("consent UI code loads only after engagement and keeps the dialog split", async () => {
+test("consent runtime validates before analytics and keeps UI code split", async () => {
   const managerSource = await readFile(
     new URL("../components/registry/consent-manager.tsx", import.meta.url),
     "utf8",
@@ -223,16 +223,37 @@ test("consent UI code loads only after engagement and keeps the dialog split", a
     new URL("../components/registry/consent-manager-ui.tsx", import.meta.url),
     "utf8",
   );
+  const integrationTestSource = await readFile(
+    new URL(
+      "../components/registry/client-enhancements-consent.test.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
 
   assert.match(managerSource, /from ["']@c15t\/nextjs\/headless["']/);
+  assert.match(managerSource, /deleteConsentFromStorage/);
+  assert.match(managerSource, /validatePersistedConsent/);
+  assert.match(managerSource, /if \(!persistedConsentCheck\) return null/);
   assert.doesNotMatch(managerSource, /@c15t\/react\/cookie-banner/);
   assert.match(
     managerSource,
     /import\(["']@\/components\/registry\/consent-manager-ui["']\)/,
   );
-  assert.match(managerSource, /mountUi \? <PrivacyChoicesListener \/>/);
+  assert.match(
+    managerSource,
+    /validationComplete && mountUi \? <PrivacyChoicesListener \/>/,
+  );
+  assert.match(
+    managerSource,
+    /validationComplete \? <CloudflareWebAnalyticsMount \/>/,
+  );
   assert.doesNotMatch(managerSource, /<ConsentBanner/);
   assert.doesNotMatch(managerSource, /consent-manager-dialog/);
+  assert.doesNotMatch(
+    integrationTestSource,
+    /node_modules\/@c15t\/react\/dist\/providers/,
+  );
 
   assert.match(uiSource, /<ConsentBanner/);
   assert.match(uiSource, /isPrivacyDialogOpen/);
@@ -262,6 +283,30 @@ test("consent UI code loads only after engagement and keeps the dialog split", a
   assert.match(bannerSource, /onReject/);
   assert.match(bannerSource, /onCustomize/);
   assert.match(bannerSource, /onAccept/);
+});
+
+test("documents consent restore, runtime, and UI gates", async () => {
+  const docs = await readFile(
+    new URL("../docs/components-map.md", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    docs,
+    /valid matching records are restored unconditionally through c15t's custom-consent save path/i,
+  );
+  assert.match(
+    docs,
+    /runtime mounts after either the two-frame readiness signal or intro completion/i,
+  );
+  assert.match(
+    docs,
+    /privacy choices listener, banner, and dialog payload remain gated until engagement, readiness, and intro completion have all occurred/i,
+  );
+  assert.doesNotMatch(
+    docs,
+    /provider waits for both intro completion and the visitor's first/i,
+  );
 });
 
 test("command palette code loads only from an explicit open interaction", async () => {
