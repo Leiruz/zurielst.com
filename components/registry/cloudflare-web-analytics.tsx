@@ -69,6 +69,22 @@ export function isCloudflareInsightsUrl(url: unknown): boolean {
   }
 }
 
+function blockInsightsEgressViaCsp(document: Document) {
+  try {
+    // A document-level CSP applies below the beacon's transport selection:
+    // sendBeacon, fetch, XHR, and references captured before revocation all
+    // obey connect-src, unlike wrapped globals. The page reloads right after,
+    // and the site's own connect-src is 'self' plus the insights host, so
+    // tightening to 'self' only drops analytics egress.
+    const meta = document.createElement('meta');
+    meta.setAttribute('http-equiv', 'Content-Security-Policy');
+    meta.setAttribute('content', "connect-src 'self'");
+    document.head.appendChild(meta);
+  } catch {
+    // Best effort; the wrapped transports and the reload still apply.
+  }
+}
+
 function suppressBeaconTransmissionsBestEffort(document: Document) {
   const view = document.defaultView;
   if (!view) return;
@@ -126,6 +142,7 @@ export function syncCloudflareWebAnalytics({
 
     if (action === 'reload') {
       state.revoked = true;
+      blockInsightsEgressViaCsp(document);
       suppressBeaconTransmissionsBestEffort(document);
       removeOwnedBeaconBestEffort(state.script);
       try {

@@ -72,6 +72,12 @@ function createDocumentHarness() {
   return { document: document as unknown as Document, head };
 }
 
+function ownedBeacons(head: FakeHead) {
+  return head.scripts.filter(
+    (node) => node.getAttribute('data-zst-cloudflare-analytics') === 'true',
+  );
+}
+
 describe('Cloudflare Web Analytics consent loader', () => {
   it('pins the analytics token as an unverified site-tag hypothesis', () => {
     expect(cloudflareWebAnalyticsSource).toMatch(
@@ -124,7 +130,7 @@ describe('Cloudflare Web Analytics consent loader', () => {
       reload,
     });
 
-    expect(head.scripts).toHaveLength(0);
+    expect(ownedBeacons(head)).toHaveLength(0);
     expect(persistDeniedConsent).not.toHaveBeenCalled();
     expect(reload).not.toHaveBeenCalled();
   });
@@ -183,7 +189,7 @@ describe('Cloudflare Web Analytics consent loader', () => {
 
     expect(persistDeniedConsent).toHaveBeenCalledOnce();
     expect(reload).not.toHaveBeenCalled();
-    expect(head.scripts).toHaveLength(0);
+    expect(ownedBeacons(head)).toHaveLength(0);
   });
 
   it('fails closed and retains the revoked guard when persistence throws', () => {
@@ -204,7 +210,7 @@ describe('Cloudflare Web Analytics consent loader', () => {
     syncCloudflareWebAnalytics({ document, measurementGranted: true });
 
     expect(reload).not.toHaveBeenCalled();
-    expect(head.scripts).toHaveLength(0);
+    expect(ownedBeacons(head)).toHaveLength(0);
   });
 
   it('does not reload again when denied consent is repeated', () => {
@@ -259,7 +265,7 @@ describe('Cloudflare Web Analytics consent loader', () => {
     });
 
     expect(events).toEqual(['persist', 'reload']);
-    expect(head.scripts).toHaveLength(0);
+    expect(ownedBeacons(head)).toHaveLength(0);
     expect(persistDeniedConsent).toHaveBeenCalledOnce();
     expect(reload).toHaveBeenCalledOnce();
   });
@@ -312,7 +318,7 @@ describe('revocation transmission suppression', () => {
       reload: () => {},
     });
 
-    expect(head.scripts).toHaveLength(0);
+    expect(ownedBeacons(head)).toHaveLength(0);
     view.navigator.sendBeacon('https://cloudflareinsights.com/cdn-cgi/rum');
     view.navigator.sendBeacon('https://example.com/ok');
     void view.fetch('https://cloudflareinsights.com/cdn-cgi/rum');
@@ -320,5 +326,28 @@ describe('revocation transmission suppression', () => {
 
     expect(sentBeacons).toEqual(['https://example.com/ok']);
     expect(fetched).toEqual(['https://zurielst.com/api/chat']);
+  });
+
+  it('tightens the document CSP to self-only connects at revocation', () => {
+    const { document, head } = createDocumentHarness();
+    (document as unknown as { defaultView: unknown }).defaultView = {};
+
+    syncCloudflareWebAnalytics({
+      document,
+      measurementGranted: true,
+      persistDeniedConsent: () => true,
+      reload: () => {},
+    });
+    syncCloudflareWebAnalytics({
+      document,
+      measurementGranted: false,
+      persistDeniedConsent: () => true,
+      reload: () => {},
+    });
+
+    const meta = head.scripts.find(
+      (node) => node.getAttribute('http-equiv') === 'Content-Security-Policy',
+    );
+    expect(meta?.getAttribute('content')).toBe("connect-src 'self'");
   });
 });
