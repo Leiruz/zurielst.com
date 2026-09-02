@@ -37,12 +37,6 @@ export function restorePersistedConsent({
   ) return false
   if (storedConsents.necessary !== true) return false
 
-  if (
-    CONSENT_CATEGORIES.every(
-      (category) => consents[category] === storedConsents[category],
-    )
-  ) return false
-
   for (const category of CONSENT_CATEGORIES) {
     setSelectedConsent(category, storedConsents[category] as boolean)
   }

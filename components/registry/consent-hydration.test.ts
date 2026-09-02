@@ -34,11 +34,51 @@ const storedConsents = {
   necessary: true,
 } satisfies ConsentState
 
+const allDeniedConsents = {
+  experience: false,
+  functionality: false,
+  marketing: false,
+  measurement: false,
+  necessary: true,
+} satisfies ConsentState
+
 afterEach(() => {
   vi.unstubAllGlobals()
 })
 
 describe("persisted consent hydration", () => {
+  it("keeps the banner hidden and does not inject a beacon for a stored all-denied profile", () => {
+    const manager = createManagerHarness()
+    const store = createConsentManagerStore(manager, {
+      initialGdprTypes: ["necessary", "measurement"],
+    })
+    const { document, head } = createDocumentHarness()
+    vi.stubGlobal("window", { location: { hostname: "zurielst.com" } })
+    store.setState({
+      consents: allDeniedConsents,
+      selectedConsents: allDeniedConsents,
+      showPopup: true,
+    })
+
+    syncCloudflareWebAnalytics({
+      document,
+      measurementGranted: store.getState().consents.measurement,
+    })
+    restorePersistedConsent({
+      consents: store.getState().consents,
+      persistedConsent: createPersistedConsent(allDeniedConsents),
+      saveConsents: store.getState().saveConsents,
+      setSelectedConsent: store.getState().setSelectedConsent,
+    })
+    syncCloudflareWebAnalytics({
+      document,
+      measurementGranted: store.getState().consents.measurement,
+    })
+
+    expect(store.getState().showPopup).toBe(false)
+    expect(ownedBeacons(head)).toHaveLength(0)
+  })
+
   it("updates a fresh live store and injects one beacon without a banner action", async () => {
     const manager = createManagerHarness()
     const store = createConsentManagerStore(manager, {
