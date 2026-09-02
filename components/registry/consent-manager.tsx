@@ -3,8 +3,6 @@
 "use client"
 
 import {
-  deleteConsentFromStorage,
-  getCookie,
   getConsentFromStorage,
   saveConsentToStorage,
   type ConsentState,
@@ -28,7 +26,7 @@ import { CONSENT_TRANSLATIONS } from "@/components/registry/consent-copy"
 import {
   restorePersistedConsent,
   type PersistedConsent,
-  validatePersistedConsent,
+  type PersistedConsentCheck,
   type ValidPersistedConsent,
 } from "@/components/registry/consent-hydration"
 import { CloudflareWebAnalyticsLoader } from "@/components/registry/cloudflare-web-analytics"
@@ -43,68 +41,8 @@ type ConsentInfo = Parameters<
 
 type ReadConsent = (storageConfig?: StorageConfig) => PersistedConsent | null
 
-type PersistedConsentCheck =
-  | { consent: null; status: "absent" | "invalid" }
-  | { consent: ValidPersistedConsent; status: "valid" }
-
-const DEFAULT_CONSENT_STORAGE_KEY = "c15t"
-const LEGACY_CONSENT_STORAGE_KEY = "privacy-consent-storage"
-
 function readPersistedConsent(storageConfig?: StorageConfig) {
   return getConsentFromStorage<PersistedConsent>(storageConfig)
-}
-
-function checkPersistedConsent(storageConfig?: StorageConfig): PersistedConsentCheck {
-  if (typeof window === "undefined") return { consent: null, status: "absent" }
-
-  let result: PersistedConsentCheck
-  try {
-    const storageKey = storageConfig?.storageKey ?? DEFAULT_CONSENT_STORAGE_KEY
-    const localConsent = readRawLocalConsent(storageKey)
-    const cookieConsent = getCookie<unknown>(storageKey)
-    const rawConsent = cookieConsent || localConsent
-
-    if (!rawConsent) return { consent: null, status: "absent" }
-
-    const consent = validatePersistedConsent(rawConsent, {
-      allowOmittedFalse: Boolean(cookieConsent),
-    })
-    result = consent
-      ? { consent, status: "valid" }
-      : { consent: null, status: "invalid" }
-  } catch {
-    result = { consent: null, status: "invalid" }
-  }
-
-  if (result.status === "invalid") {
-    try {
-      deleteConsentFromStorage(undefined, storageConfig)
-    } catch {
-      // The runtime barrier below still resets live state and blocks analytics.
-    }
-  }
-
-  return result
-}
-
-function readRawLocalConsent(storageKey: string) {
-  const storage = window.localStorage
-
-  if (storageKey !== LEGACY_CONSENT_STORAGE_KEY) {
-    const current = storage.getItem(storageKey)
-    if (current) {
-      storage.removeItem(LEGACY_CONSENT_STORAGE_KEY)
-    } else {
-      const legacy = storage.getItem(LEGACY_CONSENT_STORAGE_KEY)
-      if (legacy) {
-        storage.setItem(storageKey, legacy)
-        storage.removeItem(LEGACY_CONSENT_STORAGE_KEY)
-      }
-    }
-  }
-
-  const stored = storage.getItem(storageKey)
-  return stored ? JSON.parse(stored) as unknown : null
 }
 
 export function persistDeniedMeasurementConsent({
@@ -170,7 +108,7 @@ function CloudflareWebAnalyticsMount() {
   )
 }
 
-function ConsentRuntime({
+function ConsentManagerRuntime({
   children,
   mountUi,
   persistedConsentCheck,
@@ -270,20 +208,12 @@ function consentProfilesMatch(
 export function ConsentManager({
   children,
   mountUi = true,
+  persistedConsentCheck,
 }: {
-  children: React.ReactNode
+  children?: React.ReactNode
   mountUi?: boolean
+  persistedConsentCheck: PersistedConsentCheck | null
 }) {
-  const [persistedConsentCheck, setPersistedConsentCheck] =
-    useState<PersistedConsentCheck | null>(null)
-  const hasCheckedPersistedConsent = useRef(false)
-
-  useEffect(() => {
-    if (hasCheckedPersistedConsent.current) return
-    hasCheckedPersistedConsent.current = true
-    setPersistedConsentCheck(checkPersistedConsent())
-  }, [])
-
   if (!persistedConsentCheck) return null
 
   return (
@@ -295,12 +225,12 @@ export function ConsentManager({
         // ignoreGeoLocation: process.env.NODE_ENV === "development", // Useful for development to always view the banner.
       }}
     >
-      <ConsentRuntime
+      <ConsentManagerRuntime
         mountUi={mountUi}
         persistedConsentCheck={persistedConsentCheck}
       >
         {children}
-      </ConsentRuntime>
+      </ConsentManagerRuntime>
     </ConsentManagerProvider>
   )
 }

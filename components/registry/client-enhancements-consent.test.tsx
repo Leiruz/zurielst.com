@@ -2,8 +2,6 @@ import {
   act,
   createElement,
   StrictMode,
-  type ComponentType,
-  type ReactNode,
 } from 'react';
 import {
   create,
@@ -15,10 +13,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PersistedConsent } from './consent-hydration';
 
 const runtimeHarness = vi.hoisted(() => ({
-  consentManager: undefined as ComponentType<{
-    children: ReactNode;
-    mountUi?: boolean;
-  }> | undefined,
   snapshots: [] as Array<{
     consentType: string | undefined;
     measurement: boolean;
@@ -35,22 +29,10 @@ vi.mock('next/dynamic', () => {
       const importIndex = dynamicImportIndex;
       dynamicImportIndex += 1;
 
-      return function DeferredComponent(props: {
-        children?: ReactNode;
-        mountUi?: boolean;
-      }) {
-        if (importIndex === 0) {
-          const ConsentManager = runtimeHarness.consentManager;
-          if (!ConsentManager) {
-            throw new Error('Consent manager harness is not ready');
-          }
-          return createElement(ConsentManager, {
-            ...props,
-            children: createElement(ConsentStateProbe),
-          });
-        }
-        if (importIndex === 1) return createElement('intro-gate');
-        return createElement('theme-switcher');
+      return function DeferredComponent() {
+        return createElement(
+          importIndex === 0 ? 'intro-gate' : 'theme-switcher',
+        );
       };
     },
   };
@@ -63,7 +45,7 @@ vi.mock('@/components/registry/haptic-feedback', () => ({
 import { useConsentManager } from '@c15t/nextjs/headless';
 
 import { ClientEnhancements } from './client-enhancements';
-import { ConsentManager } from './consent-manager';
+import { ConsentRuntime } from './consent-runtime';
 
 type ConsentProfile = NonNullable<PersistedConsent['consents']> & {
   experience: boolean;
@@ -80,7 +62,6 @@ describe('ClientEnhancements persisted consent runtime', () => {
   let consoleWarn: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    runtimeHarness.consentManager = ConsentManager;
     runtimeHarness.resetConsents = undefined;
     runtimeHarness.snapshots = [];
     browser = createBrowserHarness();
@@ -117,14 +98,7 @@ describe('ClientEnhancements persisted consent runtime', () => {
       JSON.stringify(granted),
     ]);
 
-    await act(async () => {
-      renderer = create(createElement(ClientEnhancements));
-    });
-    await act(async () => {
-      browser.completeIntro();
-      await nextTask();
-    });
-    await flushConsentEffects();
+    await mountConsentRuntimeWithUi();
 
     expect(runtimeHarness.snapshots.some(({ measurement }) => measurement)).toBe(false);
     expect(latestConsentSnapshot()).toMatchObject({
@@ -161,18 +135,25 @@ describe('ClientEnhancements persisted consent runtime', () => {
       browser.completeIntro();
       await nextTask();
     });
-    await flushConsentEffects();
+    await settleConsentRuntime();
 
-    expect(latestConsentSnapshot()).toMatchObject({
-      consentType: 'custom',
-      measurement: true,
-      showPopup: false,
-    });
+    expect(runtimeHarness.snapshots).toHaveLength(0);
     expect(browser.engagementDispatches).toBe(0);
     expect(browser.ownedBeacons()).toHaveLength(1);
     expect(browser.beaconInsertions).toBe(1);
     expect(findByType(renderer, 'intro-gate')).toHaveLength(0);
     expect(findByType(renderer, 'haptic-feedback')).toHaveLength(0);
+    expect(findBanner(renderer)).toHaveLength(0);
+
+    await act(async () => {
+      browser.frames.flush();
+      browser.engage();
+      await nextTask();
+    });
+    await settleConsentRuntime();
+
+    expect(browser.ownedBeacons()).toHaveLength(1);
+    expect(browser.beaconInsertions).toBe(1);
     expect(findBanner(renderer)).toHaveLength(0);
   });
 
@@ -190,13 +171,9 @@ describe('ClientEnhancements persisted consent runtime', () => {
       browser.completeIntro();
       await nextTask();
     });
-    await flushConsentEffects();
+    await settleConsentRuntime();
 
-    expect(latestConsentSnapshot()).toMatchObject({
-      consentType: 'custom',
-      measurement: true,
-      showPopup: false,
-    });
+    expect(runtimeHarness.snapshots).toHaveLength(0);
     expect(browser.beaconInsertions).toBe(1);
   });
 
@@ -212,23 +189,30 @@ describe('ClientEnhancements persisted consent runtime', () => {
       browser.frames.flush();
       await nextTask();
     });
-    await flushConsentEffects();
+    await settleConsentRuntime();
 
-    expect(latestConsentSnapshot()).toMatchObject({
-      consentType: 'custom',
-      measurement: false,
-      showPopup: false,
-    });
+    expect(runtimeHarness.snapshots).toHaveLength(0);
     expect(browser.engagementDispatches).toBe(0);
     expect(browser.ownedBeacons()).toHaveLength(0);
     expect(browser.beaconInsertions).toBe(0);
     expect(findByType(renderer, 'intro-gate')).toHaveLength(1);
     expect(findByType(renderer, 'haptic-feedback')).toHaveLength(1);
     expect(findBanner(renderer)).toHaveLength(0);
+
+    await act(async () => {
+      browser.completeIntro();
+      browser.engage();
+      await nextTask();
+    });
+    await settleConsentRuntime();
+
+    expect(browser.ownedBeacons()).toHaveLength(0);
+    expect(browser.beaconInsertions).toBe(0);
+    expect(findBanner(renderer)).toHaveLength(0);
   });
 
   it('keeps the validated runtime open after a first-time visitor accepts the banner', async () => {
-    await mountWithEveryUiGateOpen();
+    await mountConsentRuntimeWithUi();
 
     const acceptButton = renderer?.root.findByProps({
       'data-testid': 'cookie-banner-accept-button',
@@ -258,7 +242,7 @@ describe('ClientEnhancements persisted consent runtime', () => {
       consents: { measurement: true, necessary: true },
     });
 
-    await mountWithEveryUiGateOpen();
+    await mountConsentRuntimeWithUi();
 
     expect.soft(browser.beaconInsertions).toBe(0);
     expect.soft(browser.ownedBeacons()).toHaveLength(0);
@@ -283,7 +267,7 @@ describe('ClientEnhancements persisted consent runtime', () => {
       },
     });
 
-    await mountWithEveryUiGateOpen();
+    await mountConsentRuntimeWithUi();
 
     expect.soft(browser.beaconInsertions).toBe(0);
     expect.soft(browser.ownedBeacons()).toHaveLength(0);
@@ -300,7 +284,7 @@ describe('ClientEnhancements persisted consent runtime', () => {
     browser.seedGrantedConsentCookie();
     browser.failConsentReads();
 
-    await mountWithEveryUiGateOpen();
+    await mountConsentRuntimeWithUi();
 
     expect.soft(browser.beaconInsertions).toBe(0);
     expect.soft(browser.ownedBeacons()).toHaveLength(0);
@@ -318,7 +302,7 @@ describe('ClientEnhancements persisted consent runtime', () => {
       consents: { measurement: true, necessary: true },
     });
 
-    await mountWithEveryUiGateOpen(true);
+    await mountConsentRuntimeWithUi(true);
 
     expect(browser.consentDeletions).toBe(2);
     expect(runtimeHarness.snapshots.some(({ measurement }) => measurement)).toBe(false);
@@ -344,7 +328,7 @@ describe('ClientEnhancements persisted consent runtime', () => {
       if (nextConsent) browser.seedConsent(nextConsent);
       runtimeHarness.snapshots = [];
 
-      await mountWithEveryUiGateOpen(true);
+      await mountConsentRuntimeWithUi(true);
 
       expect(runtimeHarness.snapshots.some(({ measurement }) => measurement)).toBe(false);
       expect(latestConsentSnapshot()).toMatchObject({
@@ -358,40 +342,38 @@ describe('ClientEnhancements persisted consent runtime', () => {
 
   async function primeGrantedProviderCache() {
     browser.seedConsent(createPersistedConsent(createConsentProfile(true)));
-    await act(async () => {
-      renderer = create(createElement(ClientEnhancements));
-    });
-    await act(async () => {
-      browser.completeIntro();
-      await nextTask();
-    });
-    await flushConsentEffects();
+    await mountConsentRuntimeWithUi();
     expect(latestConsentSnapshot()?.measurement).toBe(true);
 
     await act(async () => renderer?.unmount());
     renderer = undefined;
   }
 
-  async function mountWithEveryUiGateOpen(strictMode = false) {
+  async function mountConsentRuntimeWithUi(strictMode = false) {
     await act(async () => {
-      const enhancements = createElement(ClientEnhancements);
+      const runtime = createElement(
+        ConsentRuntime,
+        { mountUi: true },
+        createElement(ConsentStateProbe),
+      );
       renderer = create(
         strictMode
-          ? createElement(StrictMode, null, enhancements)
-          : enhancements,
+          ? createElement(StrictMode, null, runtime)
+          : runtime,
       );
     });
-    await act(async () => {
-      browser.completeIntro();
-      browser.frames.flush();
-      browser.engage();
-      await nextTask();
-    });
-    await flushConsentEffects();
-    // Wait for React.lazy's cross-runtime module request, not timer turns.
+    await settleConsentRuntime();
+  }
+
+  async function settleConsentRuntime() {
     await act(async () => {
       await vi.dynamicImportSettled();
     });
+    await flushConsentEffects();
+    await act(async () => {
+      await vi.dynamicImportSettled();
+    });
+    await flushConsentEffects();
   }
 
   async function flushConsentEffects() {
@@ -400,7 +382,6 @@ describe('ClientEnhancements persisted consent runtime', () => {
       await nextTask();
     });
   }
-
 });
 
 function ConsentStateProbe() {
