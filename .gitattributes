@@ -1,1 +1,4 @@
 public/robots.txt text eol=lf
+# Byte-exact staged registry payloads and hash-pinned docs must never be EOL-smudged on Windows checkouts.
+registry-stage/*.json -text
+docs/runbook.md text eol=lf
