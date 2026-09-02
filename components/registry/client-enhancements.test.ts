@@ -70,27 +70,39 @@ describe('scheduleAfterPaint', () => {
 });
 
 describe('consent enhancement gating', () => {
-  it('mounts the consent runtime after either paint or intro completion', () => {
+  it('mounts the consent manager only after engagement, intro completion, and paint readiness', () => {
+    const beforeEngagement = {
+      engaged: false,
+      introComplete: true,
+      ready: true,
+    };
+    expect(
+      shouldMountConsent(beforeEngagement),
+    ).toBe(false);
+
     expect(
       shouldMountConsent({
+        engaged: true,
         introComplete: true,
         ready: false,
       }),
-    ).toBe(true);
+    ).toBe(false);
 
     expect(
       shouldMountConsent({
+        engaged: true,
         introComplete: false,
         ready: true,
       }),
-    ).toBe(true);
+    ).toBe(false);
 
     expect(
       shouldMountConsent({
-        introComplete: false,
-        ready: false,
+        engaged: true,
+        introComplete: true,
+        ready: true,
       }),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it('reports the first page engagement and removes every listener', () => {

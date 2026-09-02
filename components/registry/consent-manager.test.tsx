@@ -7,21 +7,6 @@ const effectHarness = vi.hoisted(() => ({
   run: false,
 }));
 
-const consentStorageMock = vi.hoisted(() => ({
-  readError: undefined as Error | undefined,
-}));
-
-vi.mock('@c15t/nextjs', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@c15t/nextjs')>();
-  return {
-    ...actual,
-    getConsentFromStorage: vi.fn(() => {
-      if (consentStorageMock.readError) throw consentStorageMock.readError;
-      return null;
-    }),
-  };
-});
-
 vi.mock('react', async (importOriginal) => {
   const react = await importOriginal<typeof import('react')>();
   return {
@@ -133,7 +118,9 @@ function createDeniedConsents(): ConsentState {
 }
 
 function renderConsentManager() {
-  return renderToStaticMarkup(createElement(ConsentManager, null, null));
+  return renderToStaticMarkup(createElement(ConsentManager, {
+    persistedConsentCheck: null,
+  }));
 }
 
 function renderConsentManagerUi() {
@@ -148,7 +135,6 @@ describe('ConsentManager analytics wiring', () => {
   });
 
   beforeEach(() => {
-    consentStorageMock.readError = undefined;
     consentManagerMockState.analyticsPersistence = undefined;
     Object.assign(consentManagerMockState.consents, {
       experience: false,
@@ -181,16 +167,6 @@ describe('ConsentManager analytics wiring', () => {
     expect(markup).toBe('');
     expect(markup).not.toContain('cloudflare-measurement-denied');
     expect(markup).not.toContain('cloudflare-measurement-granted');
-    expect(consentManagerMockState.analyticsPersistence).toBeUndefined();
-  });
-
-  it('fails closed when persisted consent storage throws on mount', () => {
-    consentStorageMock.readError = new Error('storage unavailable');
-    vi.stubGlobal('window', createPrivacyChoicesTarget());
-    effectHarness.run = true;
-
-    expect(() => renderConsentManager()).not.toThrow();
-    expect(consentManagerMockState.saveConsents).not.toHaveBeenCalled();
     expect(consentManagerMockState.analyticsPersistence).toBeUndefined();
   });
 

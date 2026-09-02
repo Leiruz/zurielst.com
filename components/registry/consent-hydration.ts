@@ -13,6 +13,10 @@ export type ValidPersistedConsent = {
   consents: ConsentState
 }
 
+export type PersistedConsentCheck =
+  | { consent: null; status: "absent" | "invalid" }
+  | { consent: ValidPersistedConsent; status: "valid" }
+
 const CONSENT_CATEGORIES = [
   "necessary",
   "functionality",

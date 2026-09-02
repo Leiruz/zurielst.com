@@ -215,27 +215,46 @@ test("landing-route controls avoid superseded identity motion code and unnecessa
 });
 
 test("consent runtime validates before analytics and keeps UI code split", async () => {
-  const managerSource = await readFile(
-    new URL("../components/registry/consent-manager.tsx", import.meta.url),
-    "utf8",
-  );
-  const uiSource = await readFile(
-    new URL("../components/registry/consent-manager-ui.tsx", import.meta.url),
-    "utf8",
-  );
-  const integrationTestSource = await readFile(
-    new URL(
-      "../components/registry/client-enhancements-consent.test.tsx",
-      import.meta.url,
-    ),
-    "utf8",
-  );
+  const [enhancementsSource, integrationTestSource, managerSource, runtimeSource, uiSource] =
+    await Promise.all(
+      [
+        "../components/registry/client-enhancements.tsx",
+        "../components/registry/client-enhancements-consent.test.tsx",
+        "../components/registry/consent-manager.tsx",
+        "../components/registry/consent-runtime.tsx",
+        "../components/registry/consent-manager-ui.tsx",
+      ].map((relativePath) =>
+        readFile(new URL(relativePath, import.meta.url), "utf8"),
+      ),
+    );
 
   assert.match(managerSource, /from ["']@c15t\/nextjs\/headless["']/);
-  assert.match(managerSource, /deleteConsentFromStorage/);
-  assert.match(managerSource, /validatePersistedConsent/);
   assert.match(managerSource, /if \(!persistedConsentCheck\) return null/);
   assert.doesNotMatch(managerSource, /@c15t\/react\/cookie-banner/);
+  assert.match(runtimeSource, /validatePersistedConsent/);
+  assert.match(runtimeSource, /deletePersistedConsentBestEffort/);
+  assert.doesNotMatch(runtimeSource, /from ["']@c15t\//);
+  assert.match(
+    runtimeSource,
+    /import\(["']@\/components\/registry\/consent-manager["']\)/,
+  );
+  assert.match(runtimeSource, /<CloudflareWebAnalyticsLoader/);
+  assert.ok(
+    runtimeSource.indexOf("if (!persistedConsentCheck) return null") <
+      runtimeSource.indexOf("<CloudflareWebAnalyticsLoader"),
+  );
+  assert.match(
+    enhancementsSource,
+    /import\(["']@\/components\/registry\/consent-runtime["']\)/,
+  );
+  assert.match(
+    enhancementsSource,
+    /const loadConsentRuntime = introComplete \|\| ready/,
+  );
+  assert.match(
+    enhancementsSource,
+    /mountUi=\{shouldMountConsent\(\{ engaged, introComplete, ready \}\)\}/,
+  );
   assert.match(
     managerSource,
     /import\(["']@\/components\/registry\/consent-manager-ui["']\)/,
@@ -293,15 +312,15 @@ test("documents consent restore, runtime, and UI gates", async () => {
 
   assert.match(
     docs,
-    /valid matching records are restored unconditionally through c15t's custom-consent save path/i,
+    /validated result is then restored unconditionally through c15t's custom-consent save path/i,
   );
   assert.match(
     docs,
-    /runtime mounts after either the two-frame readiness signal or intro completion/i,
+    /runtime loads dynamically after either the two-frame readiness signal or intro completion/i,
   );
   assert.match(
     docs,
-    /privacy choices listener, banner, and dialog payload remain gated until engagement, readiness, and intro completion have all occurred/i,
+    /c15t provider, privacy choices listener, banner, and dialog remain gated until engagement, readiness, and intro completion have all occurred/i,
   );
   assert.doesNotMatch(
     docs,

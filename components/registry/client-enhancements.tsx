@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 
 import { HapticFeedback } from '@/components/registry/haptic-feedback';
 
@@ -38,12 +38,10 @@ type IntroCompletionObserverFactory = (
   notify: () => void,
 ) => IntroCompletionObserver;
 
-const DeferredConsentManager = dynamic(
-  () =>
-    import('@/components/registry/consent-manager').then(
-      (module) => module.ConsentManager,
-    ),
-  { ssr: false },
+const DeferredConsentRuntime = lazy(() =>
+  import('@/components/registry/consent-runtime').then((module) => ({
+    default: module.ConsentRuntime,
+  })),
 );
 
 const DeferredIntroGate = dynamic(
@@ -85,13 +83,15 @@ export function scheduleAfterPaint(
 }
 
 export function shouldMountConsent({
+  engaged,
   introComplete,
   ready,
 }: {
+  engaged: boolean;
   introComplete: boolean;
   ready: boolean;
 }) {
-  return introComplete || ready;
+  return engaged && introComplete && ready;
 }
 
 export function listenForPageEngagement(
@@ -177,14 +177,16 @@ export function ClientEnhancements() {
     [],
   );
 
-  const mountConsent = shouldMountConsent({ introComplete, ready });
-  if (!mountConsent) return null;
+  const loadConsentRuntime = introComplete || ready;
+  if (!loadConsentRuntime) return null;
 
   return (
     <>
-      <DeferredConsentManager mountUi={engaged && introComplete && ready}>
-        {null}
-      </DeferredConsentManager>
+      <Suspense fallback={null}>
+        <DeferredConsentRuntime
+          mountUi={shouldMountConsent({ engaged, introComplete, ready })}
+        />
+      </Suspense>
       {ready ? (
         <>
           <DeferredIntroGate />
