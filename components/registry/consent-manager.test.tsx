@@ -9,6 +9,21 @@ const effectHarness = vi.hoisted(() => ({
   run: false,
 }));
 
+const consentStorageMock = vi.hoisted(() => ({
+  readError: undefined as Error | undefined,
+}));
+
+vi.mock('@c15t/nextjs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@c15t/nextjs')>();
+  return {
+    ...actual,
+    getConsentFromStorage: vi.fn(() => {
+      if (consentStorageMock.readError) throw consentStorageMock.readError;
+      return null;
+    }),
+  };
+});
+
 vi.mock('react', async (importOriginal) => {
   const react = await importOriginal<typeof import('react')>();
   return {
@@ -40,9 +55,10 @@ const consentManagerMockState = vi.hoisted(() => ({
     onReject: () => void;
   },
   isPrivacyDialogOpen: false,
-  saveConsents: vi.fn((choice: 'all' | 'necessary') => {
+  saveConsents: vi.fn((choice: 'all' | 'custom' | 'necessary') => {
     consentManagerMockState.consents.measurement = choice === 'all';
   }),
+  setSelectedConsent: vi.fn(),
   setIsPrivacyDialogOpen: vi.fn((isOpen: boolean) => {
     consentManagerMockState.isPrivacyDialogOpen = isOpen;
   }),
@@ -60,6 +76,7 @@ vi.mock('@c15t/nextjs/headless', () => ({
     consents: consentManagerMockState.consents,
     isPrivacyDialogOpen: consentManagerMockState.isPrivacyDialogOpen,
     saveConsents: consentManagerMockState.saveConsents,
+    setSelectedConsent: consentManagerMockState.setSelectedConsent,
     setIsPrivacyDialogOpen: consentManagerMockState.setIsPrivacyDialogOpen,
     setShowPopup: consentManagerMockState.setShowPopup,
     showPopup: consentManagerMockState.showPopup,
@@ -124,6 +141,7 @@ describe('ConsentManager analytics wiring', () => {
   });
 
   beforeEach(() => {
+    consentStorageMock.readError = undefined;
     consentManagerMockState.analyticsPersistence = undefined;
     Object.assign(consentManagerMockState.consents, {
       experience: false,
@@ -135,6 +153,7 @@ describe('ConsentManager analytics wiring', () => {
     consentManagerMockState.banner = undefined;
     consentManagerMockState.isPrivacyDialogOpen = false;
     consentManagerMockState.saveConsents.mockClear();
+    consentManagerMockState.setSelectedConsent.mockClear();
     consentManagerMockState.setIsPrivacyDialogOpen.mockClear();
     consentManagerMockState.setShowPopup.mockClear();
     consentManagerMockState.showPopup = false;
@@ -154,6 +173,15 @@ describe('ConsentManager analytics wiring', () => {
     expect(markup).toContain('cloudflare-measurement-granted');
     expect(markup).not.toContain('cloudflare-measurement-denied');
     expect(consentManagerMockState.analyticsPersistence).toBeTypeOf('function');
+  });
+
+  it('fails closed when persisted consent storage throws on mount', () => {
+    consentStorageMock.readError = new Error('storage unavailable');
+    vi.stubGlobal('window', createPrivacyChoicesTarget());
+    effectHarness.run = true;
+
+    expect(() => renderConsentManager()).not.toThrow();
+    expect(consentManagerMockState.saveConsents).not.toHaveBeenCalled();
   });
 
   it('bridges the footer opener and separately covers banner accept and reject transitions', () => {

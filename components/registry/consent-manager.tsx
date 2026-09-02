@@ -8,7 +8,7 @@ import {
   type ConsentState,
   type StorageConfig,
 } from "@c15t/nextjs"
-import { lazy, Suspense, useCallback, useEffect } from "react"
+import { lazy, Suspense, useCallback, useEffect, useRef } from "react"
 import {
   ConsentManagerProvider,
   useConsentManager,
@@ -16,6 +16,10 @@ import {
 
 import { ConsentBanner } from "@/components/registry/consent-banner"
 import { CONSENT_TRANSLATIONS } from "@/components/registry/consent-copy"
+import {
+  restorePersistedConsent,
+  type PersistedConsent,
+} from "@/components/registry/consent-hydration"
 import { CloudflareWebAnalyticsLoader } from "@/components/registry/cloudflare-web-analytics"
 import {
   listenForPrivacyChoicesOpen,
@@ -26,14 +30,39 @@ type ConsentInfo = Parameters<
   typeof saveConsentToStorage
 >[0]["consentInfo"]
 
-type PersistedConsent = {
-  consents?: { measurement?: boolean }
-}
-
 type ReadConsent = (storageConfig?: StorageConfig) => PersistedConsent | null
 
 function readPersistedConsent(storageConfig?: StorageConfig) {
   return getConsentFromStorage<PersistedConsent>(storageConfig)
+}
+
+function PersistedConsentHydrator() {
+  const {
+    consents,
+    saveConsents,
+    setSelectedConsent,
+    storageConfig,
+  } = useConsentManager()
+  const hasRestored = useRef(false)
+
+  useEffect(() => {
+    if (hasRestored.current) return
+    hasRestored.current = true
+
+    try {
+      const persistedConsent = readPersistedConsent(storageConfig)
+      restorePersistedConsent({
+        consents,
+        persistedConsent,
+        saveConsents,
+        setSelectedConsent,
+      })
+    } catch {
+      // Keep the provider's fail-closed defaults when storage is unavailable.
+    }
+  }, [consents, saveConsents, setSelectedConsent, storageConfig])
+
+  return null
 }
 
 export function persistDeniedMeasurementConsent({
@@ -153,6 +182,8 @@ export function ConsentManager({ children }: { children: React.ReactNode }) {
         // ignoreGeoLocation: process.env.NODE_ENV === "development", // Useful for development to always view the banner.
       }}
     >
+      <PersistedConsentHydrator />
+
       <PrivacyChoicesListener />
 
       <ConsentBannerMount />
