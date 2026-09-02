@@ -111,7 +111,6 @@ only by routes. Details are recorded in docs/cutover-2026-08-30.md.
 | Response-header CSP transform rule | DELETED by owner 2026-09-01; CSP ships only from _headers | done |
 | www to apex redirect rule | REQUIRED since retirement: the 301 previously came from the GitHub Pages canonical-domain redirect, which died with Pages; a zone Redirect Rule (www.zurielst.com to https://zurielst.com preserving path and query, 301) must exist or www serves 404 | keep forever |
 
-<<<<<<< HEAD
 ## Web Analytics
 
 Manual Cloudflare Web Analytics setup has been active since 2026-09-01. The
@@ -127,8 +126,9 @@ send with it surfaced in rumPageloadEventsAdaptiveGroups under the site tag
 it is NOT the beacon token, an earlier hypothesis that proved wrong). Two
 operational gotchas from that verification: the Web Analytics site must be in
 "Enable with JS Snippet installation" mode (the Disable mode silently drops
-RUM submissions), and ingestion can lag the GraphQL surface by around ten
-minutes, so poll before concluding a token is wrong.
+RUM submissions), and ingestion lag to the GraphQL surface varied between
+eight and twenty-five minutes across three verified sends, so poll for at
+least thirty minutes before concluding a token is wrong.
 
 Keep the yesterday-dated GraphQL query in Secrets solely for token read-access
 verification. After deploying the beacon, start the procedure below. Let it
@@ -212,7 +212,7 @@ done
 If repeated checks during the deployment-verification window do not increase,
 stop the procedure explicitly. It will instruct the operator to replace the one
 `CLOUDFLARE_ANALYTICS_TOKEN` constant and redeploy.
-=======
+
 ## Retirement, executed 2026-09-02
 
 Rollback to the GitHub Pages origin is NO LONGER POSSIBLE. Executed with
@@ -234,14 +234,16 @@ Documents/Github Repos/_retired-backups before any deletion):
   challenge-free; TowerBlock certificate healthy to 2026-10-10.
   www was 404 until the redirect rule above exists (found and fixed same day).
 - Owner decisions recorded: ImgBot PR #45 image optimizations KEPT;
-  robots content signals to be opened by the owner in the dashboard
-  (repo public/robots.txt is already fully open; the ai-train=no line is
-  Cloudflare's managed Content Signals injection, dashboard-controlled);
+  robots opened to AI crawlers (repo public/robots.txt was already fully
+  open; the ai-train=no line was Cloudflare's managed Content Signals
+  injection, now disabled);
   M10 (AI media round) REMOVED from the plan.
-- Outstanding owner clicks after this entry: create the www redirect rule,
-  open the managed content signals, rotate the three pasted API tokens per
-  the Secrets section.
->>>>>>> c6d5f5c (docs(runbook): record the executed 2026-09-02 retirement)
+- Owner clicks completed the same day and verified: the www redirect rule
+  (301 with path and query preserved), and AI bot access opened (Block AI
+  training bots set to do not block; managed robots.txt configuration
+  disabled, so the served robots.txt is exactly public/robots.txt).
+- Remaining owner step, deliberately last: rotate the three pasted API tokens
+  per the Secrets section.
 
 ## Secrets
 
