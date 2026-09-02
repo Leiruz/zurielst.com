@@ -190,6 +190,7 @@ function ConsentRuntime({
   } = useConsentManager()
   const reconciliationAttempted = useRef(false)
   const [reconciliationRan, setReconciliationRan] = useState(false)
+  const [validationComplete, setValidationComplete] = useState(false)
 
   useLayoutEffect(() => {
     if (reconciliationAttempted.current) return
@@ -232,7 +233,11 @@ function ConsentRuntime({
       !consents.functionality &&
       !consents.marketing &&
       !consents.measurement
-  const validationComplete = reconciliationRan && liveStateMatches
+
+  useLayoutEffect(() => {
+    if (validationComplete || !reconciliationRan || !liveStateMatches) return
+    setValidationComplete(true)
+  }, [liveStateMatches, reconciliationRan, validationComplete])
 
   return (
     <>

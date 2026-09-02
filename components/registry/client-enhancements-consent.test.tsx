@@ -227,6 +227,31 @@ describe('ClientEnhancements persisted consent runtime', () => {
     expect(findBanner(renderer)).toHaveLength(0);
   });
 
+  it('keeps the validated runtime open after a first-time visitor accepts the banner', async () => {
+    await mountWithEveryUiGateOpen();
+
+    const acceptButton = renderer?.root.findByProps({
+      'data-testid': 'cookie-banner-accept-button',
+    });
+    expect(acceptButton).toBeDefined();
+
+    await act(async () => {
+      acceptButton?.props.onClick();
+      await nextTask();
+    });
+    await flushConsentEffects();
+
+    expect(findBanner(renderer)).toHaveLength(0);
+    expect(findByType(renderer, 'consent-state-probe')).toHaveLength(1);
+    expect(latestConsentSnapshot()).toMatchObject({
+      consentType: 'all',
+      measurement: true,
+      showPopup: false,
+    });
+    expect(browser.ownedBeacons()).toHaveLength(1);
+    expect(browser.beaconInsertions).toBe(1);
+  });
+
   it('fails closed for incomplete raw consent with granted measurement', async () => {
     browser.seedConsent({
       consentInfo: { identified: false, time: 1_756_684_800 },
