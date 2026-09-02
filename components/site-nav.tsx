@@ -1,5 +1,4 @@
 import { DeferredThemeSwitcher } from '@/components/registry/client-enhancements';
-import { ShimmeringText } from '@/components/registry/shimmering-text';
 
 export const SITE_NAV_LINKS = [
   ['Work', '#work'],
@@ -82,10 +81,12 @@ export function SiteNav() {
           data-haptic
           className="group inline-flex h-11 min-w-0 shrink-0 items-center justify-start rounded-sm font-mono transition-colors duration-150 motion-reduce:transition-none"
         >
-          <ShimmeringText
-            text="Zuriel Shanley"
-            className="block whitespace-nowrap text-xs font-semibold tracking-[0.04em] sm:text-sm sm:tracking-[0.08em]"
-          />
+          <span
+            data-nav-wordmark="true"
+            className="block whitespace-nowrap text-xs font-semibold tracking-[0.04em] text-text-3 sm:text-sm sm:tracking-[0.08em]"
+          >
+            Zuriel Shanley
+          </span>
         </button>
 
         <div className="ml-auto hidden items-center gap-5 lg:flex">

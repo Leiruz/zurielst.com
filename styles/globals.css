@@ -275,6 +275,12 @@ canvas {
   padding-inline: var(--dossier-shell-padding);
 }
 
+.timeline-shell {
+  width: auto;
+  margin-inline: 0;
+  padding-inline: 0;
+}
+
 @media (min-width: 80rem) {
   .section-line-nav {
     width: var(--section-line-nav-width);
@@ -764,8 +770,8 @@ canvas {
 
 .theme-switcher-button {
   display: grid;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2.25rem;
+  height: 2.25rem;
   place-items: center;
   border: 1px solid transparent;
   border-radius: 9999px;
@@ -779,11 +785,15 @@ canvas {
 
 .theme-switcher-button:focus-visible {
   border-color: var(--border);
+  /* The reveal wrapper clips overflow for the icon swap, which would cut
+     the global outside ring; an inset ring cannot be clipped by a parent. */
+  outline: 2px solid var(--ring);
+  outline-offset: -3px;
 }
 
 .theme-switcher-button svg {
-  width: 1rem;
-  height: 1rem;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 [data-slot='icon-swap'],

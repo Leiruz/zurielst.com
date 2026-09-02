@@ -13,14 +13,16 @@ export function Timeline({ profile }: TimelineProps) {
 
   return (
     <section id="timeline" className="dossier-section bg-canvas" aria-labelledby="timeline-title">
-      <Experience01 experiences={experiences}>
-        <ScrollFadeEffect entrance>
-          <p className="fig-label">Fig. 7. Timeline</p>
-          <h2 id="timeline-title" className="dossier-title screen-line-top screen-line-bottom mt-4 text-text-1">
-            Timeline <SectionAnchor href="#timeline" label="timeline" />
-          </h2>
-        </ScrollFadeEffect>
-      </Experience01>
+      <div className="dossier-shell timeline-shell min-w-0">
+        <Experience01 experiences={experiences}>
+          <ScrollFadeEffect entrance>
+            <p className="fig-label">Fig. 7. Timeline</p>
+            <h2 id="timeline-title" className="dossier-title screen-line-top screen-line-bottom mt-4 text-text-1">
+              Timeline <SectionAnchor href="#timeline" label="timeline" />
+            </h2>
+          </ScrollFadeEffect>
+        </Experience01>
+      </div>
     </section>
   );
 }

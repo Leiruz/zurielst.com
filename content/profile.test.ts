@@ -43,6 +43,14 @@ describe('content/profile.json', () => {
     expect(profile.identity).not.toHaveProperty('status');
   });
 
+  it('keeps the three public social profiles in their display order', () => {
+    expect(profile.identity.socials).toEqual([
+      { platform: 'GitHub', url: 'https://github.com/Leiruz' },
+      { platform: 'LinkedIn', url: 'https://www.linkedin.com/in/zuriel-shanley/' },
+      { platform: 'Instagram', url: 'https://www.instagram.com/zureal.st' },
+    ]);
+  });
+
   it('rejects an identity status as an unknown field', () => {
     expect(ProfileSchema.safeParse({
       ...profile,
