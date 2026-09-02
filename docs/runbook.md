@@ -105,11 +105,13 @@ only by routes. Details are recorded in docs/cutover-2026-08-30.md.
 | Object | State | Rule |
 | --- | --- | --- |
 | WAF custom rule "Challenge non-read HTTP methods" | amended 2026-08-30 to exempt POST zurielst.com/api/chat | keep |
-| Rate-limiting rule (the single free-plan rule) | exact path /api/chat, 8 requests per 10 seconds per IP and colo, action block, mitigation timeout 10 | keep; re-swap to /ai/ only on full rollback |
+| Rate-limiting rule (the single free-plan rule) | exact path /api/chat, 8 requests per 10 seconds per IP and colo, action block, mitigation timeout 10 | keep (the /ai* rollback target no longer exists) |
 | ACME skip rule | permanent | never touch |
-| TEMP configuration rule, SSL mode Full, apex plus www | ON PURPOSE, guards the GitHub Pages rollback origin | delete only at origin retirement |
-| Response-header CSP transform rule | stale, predates the rebuild | remove at retirement (owner) |
+| TEMP configuration rule, SSL mode Full, apex plus www | DELETED 2026-09-02 (retirement); zone is uniformly Full strict | done |
+| Response-header CSP transform rule | DELETED by owner 2026-09-01; CSP ships only from _headers | done |
+| www to apex redirect rule | REQUIRED since retirement: the 301 previously came from the GitHub Pages canonical-domain redirect, which died with Pages; a zone Redirect Rule (www.zurielst.com to https://zurielst.com preserving path and query, 301) must exist or www serves 404 | keep forever |
 
+<<<<<<< HEAD
 ## Web Analytics
 
 Manual Cloudflare Web Analytics setup has been active since 2026-09-01. The
@@ -210,6 +212,36 @@ done
 If repeated checks during the deployment-verification window do not increase,
 stop the procedure explicitly. It will instruct the operator to replace the one
 `CLOUDFLARE_ANALYTICS_TOKEN` constant and redeploy.
+=======
+## Retirement, executed 2026-09-02
+
+Rollback to the GitHub Pages origin is NO LONGER POSSIBLE. Executed with
+mirror backups first (both repositories cloned with git clone --mirror to
+Documents/Github Repos/_retired-backups before any deletion):
+
+- Leiruz/resume: open PR #2 closed as moot (its docs live in this repo),
+  GitHub Pages site deleted, repository archived.
+- Leiruz/Zuriel: repository archived. Consolidation decision: selective
+  import only, and nothing needed importing (the useful media was vendored
+  during the rebuild); NEVER merge full history, the old resume history
+  contains the unsanitized resume PDF.
+- Worker zuriel-ai-resume-assistant deleted from the account.
+- TEMP SSL Full configuration rule deleted; config-settings phase is empty.
+- Remote branch cleanup: 29 merged tri/* branches plus the retired
+  tri/2-content and tri/6-chat-worker deleted (PR refs preserve history).
+- Regression matrix after all deletions: apex, staging, citadel, towerblock,
+  sitemap, resume.pdf, chat all 200; exploit probe 403; ACME path 404
+  challenge-free; TowerBlock certificate healthy to 2026-10-10.
+  www was 404 until the redirect rule above exists (found and fixed same day).
+- Owner decisions recorded: ImgBot PR #45 image optimizations KEPT;
+  robots content signals to be opened by the owner in the dashboard
+  (repo public/robots.txt is already fully open; the ai-train=no line is
+  Cloudflare's managed Content Signals injection, dashboard-controlled);
+  M10 (AI media round) REMOVED from the plan.
+- Outstanding owner clicks after this entry: create the www redirect rule,
+  open the managed content signals, rotate the three pasted API tokens per
+  the Secrets section.
+>>>>>>> c6d5f5c (docs(runbook): record the executed 2026-09-02 retirement)
 
 ## Secrets
 
