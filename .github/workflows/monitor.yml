@@ -80,6 +80,8 @@ jobs:
           check_status "staging" "https://staging.zurielst.com/" 200
           check_status "sitemap" "https://zurielst.com/sitemap.xml" 200
           check_status "resume" "https://zurielst.com/media/resume.pdf" 200
+          # Regression guard for the 2026-09-02 WAF finding: utm and ref links must never 403.
+          check_status "query" "https://zurielst.com/?utm_source=canary" 200
 
           if ! CHAT_STATUS="$(curl \
             --silent \

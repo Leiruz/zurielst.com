@@ -109,6 +109,7 @@ only by routes. Details are recorded in docs/cutover-2026-08-30.md.
 | ACME skip rule | permanent | never touch |
 | TEMP configuration rule, SSL mode Full, apex plus www | DELETED 2026-09-02 (retirement); zone is uniformly Full strict | done |
 | Response-header CSP transform rule | DELETED by owner 2026-09-01; CSP ships only from _headers | done |
+| WAF custom rule "Block strict static-site exploit traffic" | amended to v4.2 on 2026-09-02: the blanket any-query-string clause was removed because it returned 403 for every utm and ref link; query-borne exploit patterns stay covered by the raw URI checks | keep; the canary probes a utm URL |
 | www to apex redirect rule | REQUIRED since retirement: the 301 previously came from the GitHub Pages canonical-domain redirect, which died with Pages; a zone Redirect Rule (www.zurielst.com to https://zurielst.com preserving path and query, 301) must exist or www serves 404 | keep forever |
 
 ## Web Analytics

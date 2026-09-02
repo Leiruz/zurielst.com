@@ -170,6 +170,11 @@ test("monitor runs a secretless six-hour production canary", async () => {
   assert.match(workflow, /check_status\s+"staging"[^\n]+200/);
   assert.match(workflow, /check_status\s+"sitemap"[^\n]+200/);
   assert.match(workflow, /check_status\s+"resume"[^\n]+200/);
+  assert.match(
+    workflow,
+    /check_status\s+"query"\s+"https:\/\/zurielst\.com\/\?utm_source=canary"\s+200/,
+    "a query-string URL must keep returning 200 (the WAF once blocked every query string)",
+  );
   assert.ok(workflow.includes("--request POST"), "chat is exercised with POST");
   assert.ok(workflow.includes("User-Agent: Mozilla/5.0"), "chat uses a browser-like user agent");
   assert.ok(
