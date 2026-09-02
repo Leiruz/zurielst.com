@@ -230,13 +230,6 @@ describe('ClientEnhancements persisted consent runtime', () => {
   it('keeps the validated runtime open after a first-time visitor accepts the banner', async () => {
     await mountWithEveryUiGateOpen();
 
-    // The lazy banner wrapper mounts before its inner controls settle, so
-    // wait for the button itself rather than only the wrapper.
-    await flushUntil(() =>
-      (renderer?.root.findAllByProps({
-        'data-testid': 'cookie-banner-accept-button',
-      }).length ?? 0) === 1,
-    );
     const acceptButton = renderer?.root.findByProps({
       'data-testid': 'cookie-banner-accept-button',
     });
@@ -380,7 +373,6 @@ describe('ClientEnhancements persisted consent runtime', () => {
   }
 
   async function mountWithEveryUiGateOpen(strictMode = false) {
-    await import('./consent-manager-ui');
     await act(async () => {
       const enhancements = createElement(ClientEnhancements);
       renderer = create(
@@ -396,7 +388,10 @@ describe('ClientEnhancements persisted consent runtime', () => {
       await nextTask();
     });
     await flushConsentEffects();
-    await flushUntil(() => findBanner(renderer).length === 1);
+    // Wait for React.lazy's cross-runtime module request, not timer turns.
+    await act(async () => {
+      await vi.dynamicImportSettled();
+    });
   }
 
   async function flushConsentEffects() {
@@ -406,11 +401,6 @@ describe('ClientEnhancements persisted consent runtime', () => {
     });
   }
 
-  async function flushUntil(condition: () => boolean) {
-    for (let attempt = 0; attempt < 50 && !condition(); attempt += 1) {
-      await act(async () => nextTask());
-    }
-  }
 });
 
 function ConsentStateProbe() {
