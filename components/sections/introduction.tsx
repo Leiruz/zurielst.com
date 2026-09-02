@@ -23,7 +23,7 @@ export function Introduction({ contributions, profile }: IntroductionProps) {
               <p className="fig-label">Fig. 2. Introduction</p>
               <h2
                 id="intro-title"
-                className="mt-4 min-h-[1.15em] whitespace-nowrap text-[clamp(1.75rem,13.5cqw,5rem)] font-light italic leading-[1.15] tracking-tight text-text-1"
+                className="mt-4 min-h-[1.15em] whitespace-nowrap text-[clamp(1.75rem,11.25cqw,5rem)] font-light italic leading-[1.15] tracking-tight text-text-1"
               >
                 <LocalGreeting />{' '}
                 <SectionAnchor href="#intro" label="introduction" />
