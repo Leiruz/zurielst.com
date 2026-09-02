@@ -18,12 +18,12 @@ export function Introduction({ contributions, profile }: IntroductionProps) {
           data-intro-layout="true"
           className="grid min-w-0 gap-12 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] md:items-center"
         >
-          <div data-intro-copy-column="true" className="min-w-0">
+          <div data-intro-copy-column="true" className="min-w-0 [container-type:inline-size]">
             <ScrollFadeEffect entrance>
               <p className="fig-label">Fig. 2. Introduction</p>
               <h2
                 id="intro-title"
-                className="mt-4 min-h-[1.15em] text-[clamp(2.5rem,7vw,5rem)] font-light italic leading-[1.15] tracking-tight text-text-1"
+                className="mt-4 min-h-[1.15em] whitespace-nowrap text-[clamp(1.75rem,13.5cqw,5rem)] font-light italic leading-[1.15] tracking-tight text-text-1"
               >
                 <LocalGreeting />{' '}
                 <SectionAnchor href="#intro" label="introduction" />

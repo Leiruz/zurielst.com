@@ -70,6 +70,24 @@ describe('chanhdai dossier direction', () => {
     }
   });
 
+  it('keeps the local greeting and introduction anchor on one column-sized line', () => {
+    const markup = sectionMarkup(renderToStaticMarkup(createElement(Home)), 'intro');
+
+    expectClasses(
+      markup,
+      /data-intro-copy-column="true" class="([^"]*)"/,
+      ['[container-type:inline-size]'],
+    );
+    expectClasses(
+      markup,
+      /<h2 id="intro-title" class="([^"]*)"/,
+      ['whitespace-nowrap', 'text-[clamp(1.75rem,13.5cqw,5rem)]'],
+    );
+    expect(markup).toMatch(
+      /<h2 id="intro-title"[\s\S]*?<span data-local-greeting="true">Hello<\/span> <a href="#intro" class="dossier-anchor"/,
+    );
+  });
+
   it('restores individual capability, education, product, and accolade cards', () => {
     const markup = renderToStaticMarkup(createElement(Home));
     const capabilityMarkup = sectionMarkup(markup, 'capabilities');
