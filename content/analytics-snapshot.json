@@ -1,94 +1,10 @@
 {
-  "generated_at": "2026-08-31T02:55:53.248Z",
+  "generated_at": "2026-09-14T08:53:08.355Z",
   "range": {
-    "from": "2026-08-01",
-    "to": "2026-08-30"
+    "from": "2026-08-15",
+    "to": "2026-09-13"
   },
   "days": [
-    {
-      "date": "2026-08-01",
-      "views": 0,
-      "visits": 0,
-      "sampled": false
-    },
-    {
-      "date": "2026-08-02",
-      "views": 0,
-      "visits": 0,
-      "sampled": false
-    },
-    {
-      "date": "2026-08-03",
-      "views": 0,
-      "visits": 0,
-      "sampled": false
-    },
-    {
-      "date": "2026-08-04",
-      "views": 0,
-      "visits": 0,
-      "sampled": false
-    },
-    {
-      "date": "2026-08-05",
-      "views": 0,
-      "visits": 0,
-      "sampled": false
-    },
-    {
-      "date": "2026-08-06",
-      "views": 0,
-      "visits": 0,
-      "sampled": false
-    },
-    {
-      "date": "2026-08-07",
-      "views": 0,
-      "visits": 0,
-      "sampled": false
-    },
-    {
-      "date": "2026-08-08",
-      "views": 0,
-      "visits": 0,
-      "sampled": false
-    },
-    {
-      "date": "2026-08-09",
-      "views": 0,
-      "visits": 0,
-      "sampled": false
-    },
-    {
-      "date": "2026-08-10",
-      "views": 0,
-      "visits": 0,
-      "sampled": false
-    },
-    {
-      "date": "2026-08-11",
-      "views": 0,
-      "visits": 0,
-      "sampled": false
-    },
-    {
-      "date": "2026-08-12",
-      "views": 0,
-      "visits": 0,
-      "sampled": false
-    },
-    {
-      "date": "2026-08-13",
-      "views": 0,
-      "visits": 0,
-      "sampled": false
-    },
-    {
-      "date": "2026-08-14",
-      "views": 0,
-      "visits": 0,
-      "sampled": false
-    },
     {
       "date": "2026-08-15",
       "views": 0,
@@ -184,6 +100,90 @@
       "views": 60,
       "visits": 40,
       "sampled": true
+    },
+    {
+      "date": "2026-08-31",
+      "views": 180,
+      "visits": 20,
+      "sampled": true
+    },
+    {
+      "date": "2026-09-01",
+      "views": 0,
+      "visits": 0,
+      "sampled": false
+    },
+    {
+      "date": "2026-09-02",
+      "views": 0,
+      "visits": 0,
+      "sampled": false
+    },
+    {
+      "date": "2026-09-03",
+      "views": 10,
+      "visits": 10,
+      "sampled": true
+    },
+    {
+      "date": "2026-09-04",
+      "views": 10,
+      "visits": 10,
+      "sampled": true
+    },
+    {
+      "date": "2026-09-05",
+      "views": 0,
+      "visits": 0,
+      "sampled": false
+    },
+    {
+      "date": "2026-09-06",
+      "views": 0,
+      "visits": 0,
+      "sampled": false
+    },
+    {
+      "date": "2026-09-07",
+      "views": 0,
+      "visits": 0,
+      "sampled": false
+    },
+    {
+      "date": "2026-09-08",
+      "views": 0,
+      "visits": 0,
+      "sampled": false
+    },
+    {
+      "date": "2026-09-09",
+      "views": 0,
+      "visits": 0,
+      "sampled": false
+    },
+    {
+      "date": "2026-09-10",
+      "views": 0,
+      "visits": 0,
+      "sampled": false
+    },
+    {
+      "date": "2026-09-11",
+      "views": 0,
+      "visits": 0,
+      "sampled": false
+    },
+    {
+      "date": "2026-09-12",
+      "views": 0,
+      "visits": 0,
+      "sampled": false
+    },
+    {
+      "date": "2026-09-13",
+      "views": 0,
+      "visits": 0,
+      "sampled": false
     }
   ]
 }
