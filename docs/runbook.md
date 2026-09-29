@@ -81,10 +81,22 @@ missing. Workflow-token pushes do not trigger the normal push deployment,
 which is why the explicit dispatch is needed.
 
 `deploy-auto` is an unattended production path constrained to snapshot-only commits by the guard.
-Before any install, build, or deploy, the guard requires HEAD to differ from
-its first parent by exactly `content/analytics-snapshot.json`. Missing parent
-history, an empty diff, any other file, or a merge carrying other changes
-fails closed. The data-only path uses this guard as its release evidence and
+Before any install, build, or deploy, `scripts/deployment-anchor.mjs` queries
+the GitHub deployments API for both `deploy` and `deploy-auto`, including all
+pages, and selects the most recent deployment whose latest status is `success`.
+The workflow token needs `deployments: read`. A pending, failed, or inactive
+deployment is not successful release evidence, even if it has an older success
+status. API errors and missing evidence fail closed; establish an anchor with
+a successful reviewer-approved normal deploy first.
+
+Checkout fetches full history. `scripts/verify-data-only-deploy.mjs` requires
+HEAD to have exactly one parent, the deployed SHA to be an ancestor of HEAD,
+and the entire diff from that SHA to HEAD to contain exactly
+`content/analytics-snapshot.json`. Root commits, all merge commits, missing or
+shallow history, an empty diff, and any other changed file fail closed. This
+also rejects an undeployed code commit beneath a snapshot commit: that code
+must pass a normal reviewer-approved deploy before unattended refreshes resume.
+The data-only path uses this guard as its release evidence and
 skips only the reviewer-protection preflight. Typecheck, tests, build, layout
 gate, deploy, and paired rollback evidence still run on both paths. The build
 verifier validates the snapshot contract. Normal deployments still use

@@ -1,5 +1,5 @@
 # Production deploy: normal runs use the reviewer-protected deploy environment.
-# Data-only dispatches use deploy-auto after a snapshot-only commit guard.
+# Data-only dispatches use deploy-auto after checking changes since a successful deploy.
 # Deploys the assets-only site worker; chat-api deploys remain manual.
 name: deploy
 
@@ -16,6 +16,7 @@ on:
 permissions:
   contents: read
   actions: read
+  deployments: read
 
 concurrency: deploy-production
 
@@ -27,30 +28,30 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          fetch-depth: 2
-      # Release evidence for unattended deploys: HEAD may change only the snapshot.
-      - name: Verify data-only snapshot commit
-        if: ${{ inputs.data_only == true }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          if ! git rev-parse --verify HEAD^1 >/dev/null 2>&1; then
-            echo "::error::Data-only deploy requires HEAD's first parent; refusing to deploy without diff evidence."
-            exit 1
-          fi
-          if ! changed_files="$(git diff --name-only --no-renames HEAD^1 HEAD --)"; then
-            echo "::error::Could not compare HEAD to its first parent; refusing data-only deploy."
-            exit 1
-          fi
-          if [[ "$changed_files" != "content/analytics-snapshot.json" ]]; then
-            echo "::error::Data-only deploy requires exactly one changed file against HEAD's first parent: content/analytics-snapshot.json."
-            printf 'Changed files:\n%s\n' "$changed_files"
-            exit 1
-          fi
+          fetch-depth: 0
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version-file: .node-version
           cache: npm
+      # Release evidence: find a successful deployment in either production environment.
+      - name: Find successful deployment anchor
+        id: deployed
+        if: ${{ inputs.data_only == true }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          anchor="$(node scripts/deployment-anchor.mjs)"
+          echo "sha=$anchor" >> "$GITHUB_OUTPUT"
+      # The full tree delta from that deployed SHA must contain only the snapshot.
+      - name: Verify data-only snapshot commit
+        if: ${{ inputs.data_only == true }}
+        env:
+          DEPLOYED_SHA: ${{ steps.deployed.outputs.sha }}
+        shell: bash
+        run: node scripts/verify-data-only-deploy.mjs "$DEPLOYED_SHA"
       - run: npm ci
       - run: npm run typecheck
       - run: npm test

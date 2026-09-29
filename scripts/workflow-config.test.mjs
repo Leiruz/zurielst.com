@@ -4,7 +4,8 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import yaml from "js-yaml";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import * as yaml from "js-yaml";
 
 const prerequisiteComment =
   "# Prerequisite: repo Settings -> Environments -> deploy must exist with a required reviewer and the CLOUDFLARE_* secrets; this workflow cannot create it.";
@@ -286,21 +287,28 @@ test("data-only deploy selects deploy-auto and replaces only the reviewer prefli
   assert.ok(config.on.workflow_dispatch?.inputs?.data_only, "manual deployment declares data_only");
   assert.equal(config.on.workflow_dispatch.inputs.data_only.type, "boolean");
   assert.equal(config.on.workflow_dispatch.inputs.data_only.default, false);
+  assert.equal(config.permissions.deployments, "read", "the workflow may read trusted deployment evidence");
   const job = config.jobs.production;
   assert.equal(job.environment, "${{ inputs.data_only == true && 'deploy-auto' || 'deploy' }}");
-  assert.equal(job.steps[0].with["fetch-depth"], 2, "checkout includes HEAD's first parent");
+  assert.equal(job.steps[0].with["fetch-depth"], 0, "checkout includes the full ancestry of the deployed anchor");
+  const lookup = job.steps.find((step) => step.id === "deployed");
   const guard = job.steps.find((step) => step.name === "Verify data-only snapshot commit");
   const preflight = job.steps.find((step) => step.name === "Verify deploy environment protection");
   assert.ok(guard);
+  assert.ok(lookup, "deployment evidence lookup is separate from the Git decision");
+  assert.equal(lookup.if, "${{ inputs.data_only == true }}");
+  assert.equal(lookup.env.GH_TOKEN, "${{ github.token }}");
+  assert.equal(lookup.env.GITHUB_REPOSITORY, "${{ github.repository }}");
+  assert.match(lookup.run, /set -euo pipefail/);
+  assert.ok(lookup.run.includes('anchor="$(node scripts/deployment-anchor.mjs)"'));
+  assert.ok(lookup.run.includes('echo "sha=$anchor" >> "$GITHUB_OUTPUT"'));
+  assert.ok(job.steps.indexOf(lookup) < job.steps.indexOf(guard));
   assert.equal(guard.if, "${{ inputs.data_only == true }}");
   assert.equal(preflight.if, "${{ inputs.data_only != true }}");
-  assert.match(guard.run, /set -euo pipefail/);
-  assert.match(guard.run, /git rev-parse --verify HEAD\^1/);
-  assert.match(guard.run, /git diff --name-only --no-renames HEAD\^1 HEAD --/);
-  assert.match(guard.run, /::error::/);
-  assert.match(guard.run, /exit 1/);
+  assert.equal(guard.env.DEPLOYED_SHA, "${{ steps.deployed.outputs.sha }}");
+  assert.equal(guard.run, 'node scripts/verify-data-only-deploy.mjs "$DEPLOYED_SHA"');
   assert.ok(job.steps.indexOf(guard) < job.steps.findIndex((step) => step.run === "npm ci"));
-  for (const step of job.steps.filter((step) => step !== guard && step !== preflight)) {
+  for (const step of job.steps.filter((step) => step !== guard && step !== preflight && step !== lookup)) {
     assert.equal(step.if, undefined, `${step.name ?? step.run ?? step.uses} runs on both paths`);
   }
 });
@@ -346,11 +354,15 @@ test("analytics dispatch handles environment existence, absence, and API failure
   }
 });
 
-test("data-only guard accepts only a snapshot diff against the first parent", async (t) => {
-  const config = yaml.load(await readWorkflow("deploy.yml"));
-  const guard = config.jobs.production.steps.find((step) => step.name === "Verify data-only snapshot commit");
-  assert.ok(guard, "the fail-closed guard exists");
-  const cases = ["snapshot", "root", "empty", "code", "snapshot and code", "merge with code"];
+test("data-only guard requires one parent and only snapshot changes since the deployed anchor", async (t) => {
+  const guardPath = fileURLToPath(new URL("./verify-data-only-deploy.mjs", import.meta.url));
+  const cases = [
+    "snapshot", "root", "empty", "code", "snapshot and code", "merge with code",
+    "snapshot-only merge", "snapshot-only multi-parent merge", "undeployed code beneath snapshot",
+    "missing deployment evidence",
+    "older anchor snapshot", "non-ancestor snapshot", "unknown snapshot anchor", "invalid snapshot anchor",
+    "shallow snapshot",
+  ];
   for (const scenario of cases) {
     await t.test(scenario, async (t) => {
       const directory = await mkdtemp(join(tmpdir(), "workflow-guard-"));
@@ -365,7 +377,47 @@ test("data-only guard accepts only a snapshot diff against the first parent", as
       await writeFile(join(directory, "app.js"), "// original\n");
       git("add", ".");
       git("commit", "-m", "initial");
-      if (scenario === "merge with code") {
+      let anchor = git("rev-parse", "HEAD").trim();
+      let cwd = directory;
+      if (scenario === "missing deployment evidence") anchor = "";
+      if (scenario === "unknown snapshot anchor") anchor = "f".repeat(40);
+      if (scenario === "invalid snapshot anchor") anchor = "HEAD^1";
+      if (scenario === "non-ancestor snapshot") {
+        git("checkout", "-b", "divergent");
+        git("commit", "--allow-empty", "-m", "divergent anchor");
+        anchor = git("rev-parse", "HEAD").trim();
+        git("checkout", "main");
+      }
+      if (scenario === "older anchor snapshot") {
+        for (let update = 1; update <= 3; update += 1) {
+          await writeFile(join(directory, "content/analytics-snapshot.json"), JSON.stringify({ update }));
+          git("commit", "-am", `snapshot ${update}`);
+        }
+      }
+      if (scenario.startsWith("snapshot-only")) {
+        git("checkout", "-b", "snapshot");
+        await writeFile(join(directory, "content/analytics-snapshot.json"), '{"updated":true}\n');
+        git("commit", "-am", "snapshot change");
+        git("checkout", "main");
+        if (scenario.includes("multi-parent")) {
+          git("checkout", "-b", "other");
+          git("commit", "--allow-empty", "-m", "other parent");
+          git("checkout", "main");
+          git("commit", "--allow-empty", "-m", "main parent");
+          git("merge", "--no-ff", "snapshot", "other", "-m", "merge snapshots");
+          assert.equal(git("rev-list", "--parents", "-n", "1", "HEAD").trim().split(/\s+/).length, 4);
+        } else {
+          git("merge", "--no-ff", "snapshot", "-m", "merge snapshot");
+        }
+      } else if (scenario === "undeployed code beneath snapshot") {
+        await writeFile(join(directory, "app.js"), "// unapproved code\n");
+        git("commit", "-am", "undeployed code");
+        await writeFile(join(directory, "content/analytics-snapshot.json"), '{"updated":true}\n');
+        git("commit", "-am", "snapshot change");
+      } else if (scenario === "missing deployment evidence") {
+        await writeFile(join(directory, "content/analytics-snapshot.json"), '{"updated":true}\n');
+        git("commit", "-am", "snapshot change");
+      } else if (scenario === "merge with code") {
         git("checkout", "-b", "feature");
         await writeFile(join(directory, "app.js"), "// changed\n");
         git("commit", "-am", "code change");
@@ -382,17 +434,27 @@ test("data-only guard accepts only a snapshot diff against the first parent", as
         }
         git("commit", "-am", scenario, "--allow-empty");
       }
-      const result = spawnSync("bash", ["--noprofile", "--norc", "-s"], {
-        cwd: directory,
-        input: guard.run,
+      if (scenario === "shallow snapshot") {
+        cwd = join(directory, "shallow");
+        git("clone", "--depth=1", pathToFileURL(directory).href, cwd);
+      }
+      const result = spawnSync(process.execPath, [guardPath, anchor], {
+        cwd,
         encoding: "utf8",
       });
       assert.ifError(result.error);
-      if (scenario === "snapshot") {
+      if (scenario === "snapshot" || scenario === "older anchor snapshot") {
         assert.equal(result.status, 0, result.stdout + result.stderr);
       } else {
         assert.equal(result.status, 1, result.stdout + result.stderr);
         assert.match(result.stdout + result.stderr, /::error::/);
+        if (scenario.includes("merge") || scenario === "root") {
+          assert.match(result.stderr, /exactly one parent/);
+        }
+        if (scenario === "undeployed code beneath snapshot") assert.match(result.stderr, /deployed anchor/);
+        if (scenario === "missing deployment evidence") assert.match(result.stderr, /No successful deployment evidence/);
+        if (scenario === "non-ancestor snapshot") assert.match(result.stderr, /not an ancestor/);
+        if (scenario === "shallow snapshot") assert.match(result.stderr, /full Git history/);
       }
     });
   }
