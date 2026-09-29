@@ -1,12 +1,17 @@
-﻿# Production deploy (plan rev 3): push to main (the owner's merge IS the
-# gate), plus the reviewer-protected environment holding the single deploy
-# token. Deploys the assets-only site worker; the chat-api worker deploy is
-# wired in only when M6 lands its full pipeline and tests.
+# Production deploy: normal runs use the reviewer-protected deploy environment.
+# Data-only dispatches use deploy-auto after a snapshot-only commit guard.
+# Deploys the assets-only site worker; chat-api deploys remain manual.
 name: deploy
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      data_only:
+        description: Deploy a snapshot-only commit without reviewer approval
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -18,9 +23,30 @@ jobs:
   production:
     # Prerequisite: repo Settings -> Environments -> deploy must exist with a required reviewer and the CLOUDFLARE_* secrets; this workflow cannot create it.
     runs-on: ubuntu-latest
-    environment: deploy
+    environment: ${{ inputs.data_only == true && 'deploy-auto' || 'deploy' }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 2
+      # Release evidence for unattended deploys: HEAD may change only the snapshot.
+      - name: Verify data-only snapshot commit
+        if: ${{ inputs.data_only == true }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! git rev-parse --verify HEAD^1 >/dev/null 2>&1; then
+            echo "::error::Data-only deploy requires HEAD's first parent; refusing to deploy without diff evidence."
+            exit 1
+          fi
+          if ! changed_files="$(git diff --name-only --no-renames HEAD^1 HEAD --)"; then
+            echo "::error::Could not compare HEAD to its first parent; refusing data-only deploy."
+            exit 1
+          fi
+          if [[ "$changed_files" != "content/analytics-snapshot.json" ]]; then
+            echo "::error::Data-only deploy requires exactly one changed file against HEAD's first parent: content/analytics-snapshot.json."
+            printf 'Changed files:\n%s\n' "$changed_files"
+            exit 1
+          fi
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version-file: .node-version
@@ -34,6 +60,7 @@ jobs:
       - run: npm run layout:gate
       # Release evidence: verify the required-reviewers protection rule before deploying.
       - name: Verify deploy environment protection
+        if: ${{ inputs.data_only != true }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

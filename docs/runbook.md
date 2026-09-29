@@ -35,7 +35,8 @@ There are exactly two ways anything reaches production.
 
 ### 1. CI deploy (code changes, no routes)
 
-.github/workflows/deploy.yml runs on every push to main:
+.github/workflows/deploy.yml runs on pushes to main and manual dispatches.
+Normal runs (the default `data_only=false`) use this path:
 
 1. typecheck, test, build (Linux; this is the enforcing test gate),
 2. verifies the `deploy` environment still has a required reviewer,
@@ -43,7 +44,7 @@ There are exactly two ways anything reaches production.
 4. records the built-artifact hash and `wrangler deployments list` output in
    the step summary as paired rollback evidence.
 
-The `deploy` GitHub environment holds the only secrets
+The `deploy` GitHub environment holds the production secrets
 (CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN) and requires one reviewer
 approval per run. The CI token deliberately CANNOT edit routes, so a CI
 deploy can never attach or detach a route. Because the config has no
@@ -62,26 +63,48 @@ PR previews: pr-ci.yml builds and uploads the artifact secretlessly;
 preview-deploy.yml (same `deploy` environment, one approval per preview)
 uploads a preview version of the site worker and comments the URL.
 
-The weekly `.github/workflows/analytics-snapshot.yml` workflow has a
-mandatory owner prerequisite. In repository Settings > Actions > General >
-Workflow permissions, enable
-`Allow GitHub Actions to create and approve pull requests`. Its
-workflow-level `pull-requests: write` permission does not replace this
-repository setting.
+### Weekly analytics refresh without approval clicks
 
-### Weekly analytics refresh PR needs one approval click
+Every Monday `analytics-snapshot.yml` refreshes `content/analytics-snapshot.json`.
+If it changed, the workflow commits directly to `main` using the workflow
+token with `chore(analytics): refresh snapshot through <to-date>` and a plain
+fast-forward push. If main moves underneath the refresh, the push fails;
+rerun the workflow. An unchanged snapshot exits successfully without a
+commit or deployment. The analytics token remains scoped to the fetch step.
 
-Every Monday `analytics-snapshot.yml` refreshes `content/analytics-snapshot.json`
-and force-pushes the `analytics/refresh` branch behind PR "chore: refresh
-analytics snapshot", authored by `github-actions[bot]`. Because a bot author
-has no write access, GitHub holds the PR's `pr-ci` run until a maintainer
-approves it. The held run shows as conclusion `action_required` with zero
-jobs: that is the approval gate, not a failure, and it recurs weekly until the
-PR is merged. Handle it in two steps: approve the run (Actions tab, "Approve
-and run", or `gh api -X POST repos/Leiruz/zurielst.com/actions/runs/<id>/approve`),
-then merge on green and approve the deploy. The build verifier derives its
-insights contract from the committed snapshot, so a data-only refresh passes
-CI by design.
+After a successful push, the workflow checks for environment `deploy-auto`.
+If it exists, the workflow dispatches `deploy.yml` on `main` with
+`data_only=true`. If it does not exist (HTTP 404), the workflow prints a notice
+and exits successfully: the snapshot will ride the next regular deploy.
+Other API errors fail the refresh rather than assuming the environment is
+missing. Workflow-token pushes do not trigger the normal push deployment,
+which is why the explicit dispatch is needed.
+
+`deploy-auto` is an unattended production path constrained to snapshot-only commits by the guard.
+Before any install, build, or deploy, the guard requires HEAD to differ from
+its first parent by exactly `content/analytics-snapshot.json`. Missing parent
+history, an empty diff, any other file, or a merge carrying other changes
+fails closed. The data-only path uses this guard as its release evidence and
+skips only the reviewer-protection preflight. Typecheck, tests, build, layout
+gate, deploy, and paired rollback evidence still run on both paths. The build
+verifier validates the snapshot contract. Normal deployments still use
+`deploy` and its required reviewer. If main advances to a code-changing commit
+before the data-only dispatch resolves, the guard rejects that deployment.
+
+Owner setup: create environment `deploy-auto` in repository Settings >
+Environments with **NO required reviewers**, then copy the two secret values
+from `deploy`: `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`. Use the same
+original values from your secure store because GitHub cannot reveal saved
+secrets. Set them from Bash with `printf` to avoid CRLF or trailing newlines:
+
+```bash
+printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | gh secret set CLOUDFLARE_ACCOUNT_ID --repo Leiruz/zurielst.com --env deploy-auto
+printf '%s' "$CLOUDFLARE_API_TOKEN" | gh secret set CLOUDFLARE_API_TOKEN --repo Leiruz/zurielst.com --env deploy-auto
+```
+
+Until `deploy-auto` exists, the refresh commits to main and the snapshot rides
+the next regular deploy. The workflow token has `contents: write` for the push
+and `actions: write` for dispatch; it creates no PR.
 
 ### 2. Manual route deploy (overlay configs, wrangler OAuth)
 
