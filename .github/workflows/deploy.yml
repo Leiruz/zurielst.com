@@ -1,12 +1,17 @@
-﻿# Production deploy (plan rev 3): push to main (the owner's merge IS the
-# gate), plus the reviewer-protected environment holding the single deploy
-# token. Deploys the assets-only site worker; the chat-api worker deploy is
-# wired in only when M6 lands its full pipeline and tests.
+# Production deploy: normal runs use the reviewer-protected deploy environment.
+# Data-only dispatches use deploy-auto after checking changes since a successful deploy.
+# Deploys the assets-only site worker; chat-api deploys remain manual.
 name: deploy
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      data_only:
+        description: Deploy a snapshot-only commit without reviewer approval
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -18,13 +23,34 @@ jobs:
   production:
     # Prerequisite: repo Settings -> Environments -> deploy must exist with a required reviewer and the CLOUDFLARE_* secrets; this workflow cannot create it.
     runs-on: ubuntu-latest
-    environment: deploy
+    environment: ${{ inputs.data_only == true && 'deploy-auto' || 'deploy' }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version-file: .node-version
           cache: npm
+      # Release evidence: find the last successful production run of deploy.yml.
+      - name: Find successful deployment anchor
+        id: deployed
+        if: ${{ inputs.data_only == true }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          anchor="$(node scripts/deployment-anchor.mjs)"
+          echo "sha=$anchor" >> "$GITHUB_OUTPUT"
+      # The full tree delta from that deployed SHA must contain only the snapshot.
+      - name: Verify data-only snapshot commit
+        if: ${{ inputs.data_only == true }}
+        env:
+          DEPLOYED_SHA: ${{ steps.deployed.outputs.sha }}
+        shell: bash
+        run: node scripts/verify-data-only-deploy.mjs "$DEPLOYED_SHA"
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
@@ -34,6 +60,7 @@ jobs:
       - run: npm run layout:gate
       # Release evidence: verify the required-reviewers protection rule before deploying.
       - name: Verify deploy environment protection
+        if: ${{ inputs.data_only != true }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

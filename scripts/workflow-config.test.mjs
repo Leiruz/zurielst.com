@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { execFileSync, spawnSync } from "node:child_process";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import * as yaml from "js-yaml";
 
 const prerequisiteComment =
   "# Prerequisite: repo Settings -> Environments -> deploy must exist with a required reviewer and the CLOUDFLARE_* secrets; this workflow cannot create it.";
@@ -212,12 +217,17 @@ test("monitor runs a secretless six-hour production canary", async () => {
   );
 });
 
-test("analytics snapshot refresh uses pinned actions and a direct gh pull request", async () => {
+test("analytics snapshot refresh commits directly to main with pinned actions", async () => {
   const workflow = await readWorkflow("analytics-snapshot.yml");
+  const config = yaml.load(workflow);
+  const steps = config.jobs.refresh.steps;
+  const fetchStep = steps.find((step) => step.name === "Fetch analytics snapshot");
+  const commitStep = steps.find((step) => step.id === "snapshot");
 
   assert.match(workflow, /cron:\s*["']17 3 \* \* 1["']/);
   assert.ok(workflow.includes("workflow_dispatch:"), "operators may refresh manually");
-  assert.match(workflow, /permissions:\s*\n\s+contents:\s*write\s*\n\s+pull-requests:\s*write/);
+  assert.deepEqual(config.permissions, { contents: "write", actions: "write" });
+  assert.equal(steps[0].with.ref, "main");
   assert.ok(workflow.includes("concurrency:"), "overlapping refreshes are serialized");
   assert.ok(workflow.includes("timeout-minutes:"), "the job has a finite timeout");
 
@@ -240,34 +250,238 @@ test("analytics snapshot refresh uses pinned actions and a direct gh pull reques
     1,
     "the analytics secret is exposed to the fetch step only",
   );
-  assert.ok(workflow.includes("git add -- content/analytics-snapshot.json"));
-  assert.ok(workflow.includes("analytics/refresh"));
-  assert.ok(workflow.includes("--force-with-lease"));
+  assert.deepEqual(fetchStep.env, { CF_ANALYTICS_TOKEN: "${{ secrets.CF_ANALYTICS_TOKEN }}" });
+  assert.equal(fetchStep.run, "node scripts/fetch-analytics.mjs");
+  assert.equal(config.env?.CF_ANALYTICS_TOKEN, undefined);
+  assert.equal(config.jobs.refresh.env?.CF_ANALYTICS_TOKEN, undefined);
+  assert.match(commitStep.run, /set -euo pipefail/);
+  assert.ok(commitStep.run.includes("git add -- content/analytics-snapshot.json"));
+  assert.match(commitStep.run, /if git diff --cached --quiet; then[\s\S]*changed=false[\s\S]*exit 0/);
+  assert.match(commitStep.run, /range\.to/);
+  assert.ok(commitStep.run.includes('git commit -m "chore(analytics): refresh snapshot through ${to_date}"'));
+  assert.ok(commitStep.run.includes("git push origin HEAD:refs/heads/main"));
+  assert.ok(commitStep.run.indexOf("git push") < commitStep.run.indexOf("changed=true"));
+  assert.doesNotMatch(workflow, /analytics\/refresh|--force|gh pr |pull-requests:|create-pull-request/);
+  assert.ok(!workflow.includes(actionsPullRequestSetting));
   assert.ok(workflow.includes("GH_TOKEN: ${{ github.token }}"));
-  assert.ok(workflow.includes("gh pr list"));
-  assert.ok(workflow.includes("gh pr create"));
-  assert.ok(!workflow.includes("peter-evans/create-pull-request"));
+});
 
-  assert.ok(
-    workflow.includes(`# Owner prerequisite: repo Settings -> Actions -> General -> Workflow permissions must enable "${actionsPullRequestSetting}".`),
-    "the workflow records the repository-level pull request prerequisite",
-  );
-  const guardedCreateIndex = workflow.indexOf("if ! gh pr create");
-  const createErrorIndex = workflow.indexOf("::error::", guardedCreateIndex);
-  const settingIndex = workflow.indexOf(actionsPullRequestSetting, createErrorIndex);
-  const createExitIndex = workflow.indexOf("exit 1", settingIndex);
-  const createGuardEndIndex = workflow.indexOf("\n            fi", createExitIndex);
-  assert.notEqual(guardedCreateIndex, -1, "pull request creation failures are caught");
-  assert.ok(createErrorIndex > guardedCreateIndex, "a rejected pull request emits an annotation");
-  assert.ok(settingIndex > createErrorIndex, "the annotation names the required setting");
-  assert.ok(createExitIndex > settingIndex, "the rejected pull request still fails the job");
-  assert.ok(createGuardEndIndex > createExitIndex, "the failure handling stays in the create guard");
+test("analytics dispatch requires both a pushed snapshot and deploy-auto", async () => {
+  const config = yaml.load(await readWorkflow("analytics-snapshot.yml"));
+  const steps = config.jobs.refresh.steps;
+  const dispatch = steps.find((step) => step.name === "Dispatch data-only deploy if configured");
+  assert.ok(dispatch, "the optional deployment step exists");
+  assert.ok(steps.indexOf(dispatch) > steps.findIndex((step) => step.id === "snapshot"));
+  assert.equal(dispatch.if, "steps.snapshot.outputs.changed == 'true'");
+  assert.equal(dispatch.env.GH_TOKEN, "${{ github.token }}");
+  assert.match(dispatch.run, /set -euo pipefail/);
+  assert.ok(dispatch.run.includes('gh api --method GET "repos/${{ github.repository }}/environments/deploy-auto"'));
+  assert.match(dispatch.run, /if [^\n]*gh api[^\n]*; then\n\s+echo "::notice::[^\n]*deploy-auto[^\n]*\n\s+gh workflow run deploy.yml --ref main -f data_only=true/);
+  assert.match(dispatch.run, /HTTP 404[\s\S]*::notice::[^\n]*next regular deploy[\s\S]*exit 0/);
+  assert.match(dispatch.run, /::error::[^\n]*deploy-auto[\s\S]*exit 1/);
+});
+
+test("data-only deploy selects deploy-auto and replaces only the reviewer preflight", async () => {
+  const config = yaml.load(await readWorkflow("deploy.yml"));
+  assert.deepEqual(config.on.push.branches, ["main"]);
+  assert.ok(config.on.workflow_dispatch?.inputs?.data_only, "manual deployment declares data_only");
+  assert.equal(config.on.workflow_dispatch.inputs.data_only.type, "boolean");
+  assert.equal(config.on.workflow_dispatch.inputs.data_only.default, false);
+  assert.equal(config.permissions.actions, "read", "the workflow may read production workflow runs");
+  assert.equal(config.permissions.deployments, undefined, "environment deployment records are not release evidence");
+  const job = config.jobs.production;
+  assert.equal(job.environment, "${{ inputs.data_only == true && 'deploy-auto' || 'deploy' }}");
+  assert.equal(job.steps[0].with["fetch-depth"], 0, "checkout includes the full ancestry of the deployed anchor");
+  const lookup = job.steps.find((step) => step.id === "deployed");
+  const guard = job.steps.find((step) => step.name === "Verify data-only snapshot commit");
+  const preflight = job.steps.find((step) => step.name === "Verify deploy environment protection");
+  assert.ok(guard);
+  assert.ok(lookup, "deployment evidence lookup is separate from the Git decision");
+  assert.equal(lookup.if, "${{ inputs.data_only == true }}");
+  assert.equal(lookup.env.GH_TOKEN, "${{ github.token }}");
+  assert.equal(lookup.env.GITHUB_REPOSITORY, "${{ github.repository }}");
+  assert.match(lookup.run, /set -euo pipefail/);
+  assert.ok(lookup.run.includes('anchor="$(node scripts/deployment-anchor.mjs)"'));
+  assert.ok(lookup.run.includes('echo "sha=$anchor" >> "$GITHUB_OUTPUT"'));
+  const anchorScript = await readRepositoryFile("scripts/deployment-anchor.mjs");
+  assert.ok(anchorScript.includes('repos/${repository}/actions/workflows/deploy.yml/runs?status=success&branch=main&per_page=50'));
+  assert.ok(anchorScript.includes('"--paginate"'));
+  assert.ok(anchorScript.includes('"--slurp"'));
+  assert.doesNotMatch(anchorScript, /\/deployments|environment=|event=push/);
+  assert.ok(job.steps.indexOf(lookup) < job.steps.indexOf(guard));
+  assert.equal(guard.if, "${{ inputs.data_only == true }}");
+  assert.equal(preflight.if, "${{ inputs.data_only != true }}");
+  assert.equal(guard.env.DEPLOYED_SHA, "${{ steps.deployed.outputs.sha }}");
+  assert.equal(guard.run, 'node scripts/verify-data-only-deploy.mjs "$DEPLOYED_SHA"');
+  assert.ok(job.steps.indexOf(guard) < job.steps.findIndex((step) => step.run === "npm ci"));
+  for (const step of job.steps.filter((step) => step !== guard && step !== preflight && step !== lookup)) {
+    assert.equal(step.if, undefined, `${step.name ?? step.run ?? step.uses} runs on both paths`);
+  }
+});
+
+test("analytics dispatch handles environment existence, absence, and API failures", async (t) => {
+  const config = yaml.load(await readWorkflow("analytics-snapshot.yml"));
+  const dispatch = config.jobs.refresh.steps.find((step) => step.name === "Dispatch data-only deploy if configured");
+  for (const [scenario, apiStatus, dispatchStatus, expectedStatus] of [
+    ["configured", 0, 0, 0],
+    ["missing", 404, 0, 0],
+    ["forbidden", 403, 0, 1],
+    ["server error", 500, 0, 1],
+    ["dispatch rejected", 0, 1, 1],
+  ]) {
+    await t.test(scenario, () => {
+      // Stub only the network boundary; execute the workflow's actual Bash.
+      const stub = `gh() {
+        if [[ "$1" == "api" ]]; then
+          if [[ "$API_STATUS" == "0" ]]; then
+            printf '{"name":"deploy-auto"}\\n'
+            return 0
+          fi
+          echo "gh: request failed (HTTP $API_STATUS)" >&2
+          return 1
+        fi
+        printf 'DISPATCH: %s\\n' "$*"
+        return "$DISPATCH_STATUS"
+      }\n`;
+      const result = spawnSync("bash", ["--noprofile", "--norc", "-s"], {
+        input: stub + dispatch.run.replaceAll("${{ github.repository }}", "example/repository"),
+        encoding: "utf8",
+        env: { ...process.env, API_STATUS: String(apiStatus), DISPATCH_STATUS: String(dispatchStatus) },
+      });
+      assert.ifError(result.error);
+      assert.equal(result.status, expectedStatus, result.stdout + result.stderr);
+      if (apiStatus === 0) {
+        assert.match(result.stdout, /DISPATCH: workflow run deploy.yml --ref main -f data_only=true/);
+      } else {
+        assert.doesNotMatch(result.stdout, /DISPATCH:/);
+        assert.match(result.stdout, apiStatus === 404 ? /::notice::.*next regular deploy/ : /::error::/);
+      }
+    });
+  }
+});
+
+test("data-only guard requires one parent and only snapshot changes since the deployed anchor", async (t) => {
+  const guardPath = fileURLToPath(new URL("./verify-data-only-deploy.mjs", import.meta.url));
+  const cases = [
+    "snapshot", "root", "empty", "code", "snapshot and code", "merge with code",
+    "snapshot-only merge", "snapshot-only multi-parent merge", "undeployed code beneath snapshot",
+    "missing deployment evidence",
+    "older anchor snapshot", "non-ancestor snapshot", "unknown snapshot anchor", "invalid snapshot anchor",
+    "shallow snapshot",
+  ];
+  for (const scenario of cases) {
+    await t.test(scenario, async (t) => {
+      const directory = await mkdtemp(join(tmpdir(), "workflow-guard-"));
+      t.after(() => rm(directory, { recursive: true, force: true }));
+      const git = (...args) => execFileSync("git", args, { cwd: directory, encoding: "utf8", stdio: "pipe" });
+      git("init", "--initial-branch=main");
+      git("config", "user.name", "Workflow test");
+      git("config", "user.email", "workflow-test@example.invalid");
+      git("config", "commit.gpgsign", "false");
+      await mkdir(join(directory, "content"));
+      await writeFile(join(directory, "content/analytics-snapshot.json"), "{}\n");
+      await writeFile(join(directory, "app.js"), "// original\n");
+      git("add", ".");
+      git("commit", "-m", "initial");
+      let anchor = git("rev-parse", "HEAD").trim();
+      let cwd = directory;
+      if (scenario === "missing deployment evidence") anchor = "";
+      if (scenario === "unknown snapshot anchor") anchor = "f".repeat(40);
+      if (scenario === "invalid snapshot anchor") anchor = "HEAD^1";
+      if (scenario === "non-ancestor snapshot") {
+        git("checkout", "-b", "divergent");
+        git("commit", "--allow-empty", "-m", "divergent anchor");
+        anchor = git("rev-parse", "HEAD").trim();
+        git("checkout", "main");
+      }
+      if (scenario === "older anchor snapshot") {
+        for (let update = 1; update <= 3; update += 1) {
+          await writeFile(join(directory, "content/analytics-snapshot.json"), JSON.stringify({ update }));
+          git("commit", "-am", `snapshot ${update}`);
+        }
+      }
+      if (scenario.startsWith("snapshot-only")) {
+        git("checkout", "-b", "snapshot");
+        await writeFile(join(directory, "content/analytics-snapshot.json"), '{"updated":true}\n');
+        git("commit", "-am", "snapshot change");
+        git("checkout", "main");
+        if (scenario.includes("multi-parent")) {
+          git("checkout", "-b", "other");
+          git("commit", "--allow-empty", "-m", "other parent");
+          git("checkout", "main");
+          git("commit", "--allow-empty", "-m", "main parent");
+          git("merge", "--no-ff", "snapshot", "other", "-m", "merge snapshots");
+          assert.equal(git("rev-list", "--parents", "-n", "1", "HEAD").trim().split(/\s+/).length, 4);
+        } else {
+          git("merge", "--no-ff", "snapshot", "-m", "merge snapshot");
+        }
+      } else if (scenario === "undeployed code beneath snapshot") {
+        await writeFile(join(directory, "app.js"), "// unapproved code\n");
+        git("commit", "-am", "undeployed code");
+        await writeFile(join(directory, "content/analytics-snapshot.json"), '{"updated":true}\n');
+        git("commit", "-am", "snapshot change");
+      } else if (scenario === "missing deployment evidence") {
+        await writeFile(join(directory, "content/analytics-snapshot.json"), '{"updated":true}\n');
+        git("commit", "-am", "snapshot change");
+      } else if (scenario === "merge with code") {
+        git("checkout", "-b", "feature");
+        await writeFile(join(directory, "app.js"), "// changed\n");
+        git("commit", "-am", "code change");
+        git("checkout", "main");
+        await writeFile(join(directory, "content/analytics-snapshot.json"), '{"updated":true}\n');
+        git("commit", "-am", "snapshot change");
+        git("merge", "--no-ff", "feature", "-m", "merge code");
+      } else if (scenario !== "root") {
+        if (scenario.includes("snapshot")) {
+          await writeFile(join(directory, "content/analytics-snapshot.json"), '{"updated":true}\n');
+        }
+        if (scenario.includes("code")) {
+          await writeFile(join(directory, "app.js"), "// changed\n");
+        }
+        git("commit", "-am", scenario, "--allow-empty");
+      }
+      if (scenario === "shallow snapshot") {
+        cwd = join(directory, "shallow");
+        git("clone", "--depth=1", pathToFileURL(directory).href, cwd);
+      }
+      const result = spawnSync(process.execPath, [guardPath, anchor], {
+        cwd,
+        encoding: "utf8",
+      });
+      assert.ifError(result.error);
+      if (scenario === "snapshot" || scenario === "older anchor snapshot") {
+        assert.equal(result.status, 0, result.stdout + result.stderr);
+      } else {
+        assert.equal(result.status, 1, result.stdout + result.stderr);
+        assert.match(result.stdout + result.stderr, /::error::/);
+        if (scenario.includes("merge") || scenario === "root") {
+          assert.match(result.stderr, /exactly one parent/);
+        }
+        if (scenario === "undeployed code beneath snapshot") assert.match(result.stderr, /deployed anchor/);
+        if (scenario === "missing deployment evidence") assert.match(result.stderr, /No successful deployment evidence/);
+        if (scenario === "non-ancestor snapshot") assert.match(result.stderr, /not an ancestor/);
+        if (scenario === "shallow snapshot") assert.match(result.stderr, /full Git history/);
+      }
+    });
+  }
 });
 
 test("runbook documents analytics refresh prerequisites and token rotation", async () => {
   const runbook = await readFile(new URL("../docs/runbook.md", import.meta.url), "utf8");
 
-  assert.ok(runbook.includes(actionsPullRequestSetting));
+  assert.ok(!runbook.includes(actionsPullRequestSetting));
+  assert.match(runbook, /deploy-auto` is an unattended production path/);
+  assert.match(runbook, /snapshot-only commits by the guard/);
+  assert.match(runbook, /the last successful run of `deploy.yml`/);
+  assert.match(runbook, /`actions: read`/);
+  assert.doesNotMatch(runbook, /GitHub deployments API|`deployments: read`/);
+  assert.match(runbook, /NO required reviewers/);
+  assert.match(runbook, /next regular deploy/);
+  for (const secret of ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"]) {
+    assert.ok(runbook.includes(`printf '%s' "$${secret}" | gh secret set ${secret}`));
+  }
+  assert.match(runbook, /--env deploy-auto/);
+  assert.match(runbook, /CRLF/);
   assert.match(runbook, /CF_ANALYTICS_TOKEN.*repository Actions secret/is);
   assert.ok(runbook.includes("`Account > Account Analytics > Read` as its only permission"));
   assert.match(runbook, /It needs no\s+zone or edit permissions/);
