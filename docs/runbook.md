@@ -69,6 +69,20 @@ Workflow permissions, enable
 workflow-level `pull-requests: write` permission does not replace this
 repository setting.
 
+### Weekly analytics refresh PR needs one approval click
+
+Every Monday `analytics-snapshot.yml` refreshes `content/analytics-snapshot.json`
+and force-pushes the `analytics/refresh` branch behind PR "chore: refresh
+analytics snapshot", authored by `github-actions[bot]`. Because a bot author
+has no write access, GitHub holds the PR's `pr-ci` run until a maintainer
+approves it. The held run shows as conclusion `action_required` with zero
+jobs: that is the approval gate, not a failure, and it recurs weekly until the
+PR is merged. Handle it in two steps: approve the run (Actions tab, "Approve
+and run", or `gh api -X POST repos/Leiruz/zurielst.com/actions/runs/<id>/approve`),
+then merge on green and approve the deploy. The build verifier derives its
+insights contract from the committed snapshot, so a data-only refresh passes
+CI by design.
+
 ### 2. Manual route deploy (overlay configs, wrangler OAuth)
 
 Route changes only ever happen through the overlay configs, deployed
