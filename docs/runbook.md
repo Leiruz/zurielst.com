@@ -296,13 +296,18 @@ Documents/Github Repos/_retired-backups before any deletion):
   training bots set to do not block; managed robots.txt configuration
   disabled, so the served robots.txt is exactly public/robots.txt).
 - Remaining owner step, deliberately last: rotate the three pasted API tokens
-  per the Secrets section.
+  per the Secrets section. The Workers deploy token was rotated on 2026-09-29;
+  the zone and analytics tokens remain.
 
 ## Secrets
 
 - CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN live only in the GitHub
-  environment `deploy`. The token has deploy permissions but no route
-  (zone) permissions, by design.
+  environments `deploy` and `deploy-auto`. The token has deploy permissions
+  but no route (zone) permissions, by design. Current token:
+  `zurielst-deploy-workers-2026-09` (Workers Scripts read and write, account
+  scoped, no expiry), rotated into both environments on 2026-09-29. After any
+  rotation, revoke the previous token only once the first deploy on the new
+  token is green.
 - CF_ANALYTICS_TOKEN is a repository Actions secret used only by the weekly
   analytics snapshot workflow. Create a dedicated Cloudflare API token
   restricted to account `bfa514fe29643bf52b4999fa21e7b393` with
