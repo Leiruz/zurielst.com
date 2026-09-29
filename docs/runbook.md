@@ -82,12 +82,15 @@ which is why the explicit dispatch is needed.
 
 `deploy-auto` is an unattended production path constrained to snapshot-only commits by the guard.
 Before any install, build, or deploy, `scripts/deployment-anchor.mjs` queries
-the GitHub deployments API for both `deploy` and `deploy-auto`, including all
-pages, and selects the most recent deployment whose latest status is `success`.
-The workflow token needs `deployments: read`. A pending, failed, or inactive
-deployment is not successful release evidence, even if it has an older success
-status. API errors and missing evidence fail closed; establish an anchor with
-a successful reviewer-approved normal deploy first.
+the GitHub Actions API for the last successful run of `deploy.yml` on `main`
+whose `head_sha` is an ancestor of HEAD. It requests the workflow file's runs
+with `status=success&branch=main&per_page=50`, including all returned pages,
+and defensively requires conclusion `success` and path exactly
+`.github/workflows/deploy.yml`. Both `push` and `workflow_dispatch` runs count,
+including successful data-only publishes. Preview runs and environment
+deployment records cannot supply the anchor. The workflow token needs
+`actions: read`. API errors and missing evidence fail closed; establish an
+anchor with a successful reviewer-approved normal deploy first.
 
 Checkout fetches full history. `scripts/verify-data-only-deploy.mjs` requires
 HEAD to have exactly one parent, the deployed SHA to be an ancestor of HEAD,

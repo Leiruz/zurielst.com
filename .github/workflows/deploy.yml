@@ -16,7 +16,6 @@ on:
 permissions:
   contents: read
   actions: read
-  deployments: read
 
 concurrency: deploy-production
 
@@ -33,7 +32,7 @@ jobs:
         with:
           node-version-file: .node-version
           cache: npm
-      # Release evidence: find a successful deployment in either production environment.
+      # Release evidence: find the last successful production run of deploy.yml.
       - name: Find successful deployment anchor
         id: deployed
         if: ${{ inputs.data_only == true }}

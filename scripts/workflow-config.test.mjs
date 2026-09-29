@@ -287,7 +287,8 @@ test("data-only deploy selects deploy-auto and replaces only the reviewer prefli
   assert.ok(config.on.workflow_dispatch?.inputs?.data_only, "manual deployment declares data_only");
   assert.equal(config.on.workflow_dispatch.inputs.data_only.type, "boolean");
   assert.equal(config.on.workflow_dispatch.inputs.data_only.default, false);
-  assert.equal(config.permissions.deployments, "read", "the workflow may read trusted deployment evidence");
+  assert.equal(config.permissions.actions, "read", "the workflow may read production workflow runs");
+  assert.equal(config.permissions.deployments, undefined, "environment deployment records are not release evidence");
   const job = config.jobs.production;
   assert.equal(job.environment, "${{ inputs.data_only == true && 'deploy-auto' || 'deploy' }}");
   assert.equal(job.steps[0].with["fetch-depth"], 0, "checkout includes the full ancestry of the deployed anchor");
@@ -302,6 +303,11 @@ test("data-only deploy selects deploy-auto and replaces only the reviewer prefli
   assert.match(lookup.run, /set -euo pipefail/);
   assert.ok(lookup.run.includes('anchor="$(node scripts/deployment-anchor.mjs)"'));
   assert.ok(lookup.run.includes('echo "sha=$anchor" >> "$GITHUB_OUTPUT"'));
+  const anchorScript = await readRepositoryFile("scripts/deployment-anchor.mjs");
+  assert.ok(anchorScript.includes('repos/${repository}/actions/workflows/deploy.yml/runs?status=success&branch=main&per_page=50'));
+  assert.ok(anchorScript.includes('"--paginate"'));
+  assert.ok(anchorScript.includes('"--slurp"'));
+  assert.doesNotMatch(anchorScript, /\/deployments|environment=|event=push/);
   assert.ok(job.steps.indexOf(lookup) < job.steps.indexOf(guard));
   assert.equal(guard.if, "${{ inputs.data_only == true }}");
   assert.equal(preflight.if, "${{ inputs.data_only != true }}");
@@ -466,6 +472,9 @@ test("runbook documents analytics refresh prerequisites and token rotation", asy
   assert.ok(!runbook.includes(actionsPullRequestSetting));
   assert.match(runbook, /deploy-auto` is an unattended production path/);
   assert.match(runbook, /snapshot-only commits by the guard/);
+  assert.match(runbook, /the last successful run of `deploy.yml`/);
+  assert.match(runbook, /`actions: read`/);
+  assert.doesNotMatch(runbook, /GitHub deployments API|`deployments: read`/);
   assert.match(runbook, /NO required reviewers/);
   assert.match(runbook, /next regular deploy/);
   for (const secret of ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"]) {
