@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -92,7 +92,6 @@ test("chat configs and operations docs agree on the resolved production limits",
 
 for (const [fileName, followingStep] of [
   ["deploy.yml", "- name: Deploy site worker"],
-  ["preview-deploy.yml", "- name: Upload preview version (trusted base-branch config)"],
 ]) {
   test(`${fileName} verifies deploy reviewer protection before release`, async () => {
     const workflow = await readWorkflow(fileName);
@@ -135,17 +134,18 @@ test("production build injects the deployed commit SHA", async () => {
   assert.ok(buildStep.includes("BUILD_SHA: ${{ github.sha }}"));
 });
 
-test("preview comments identify the enforced noindex header", async () => {
-  const workflow = await readWorkflow("preview-deploy.yml");
+test("workflows do not declare workflow_run triggers", async () => {
+  const fileNames = await readdir(new URL("../.github/workflows/", import.meta.url));
 
-  assert.ok(
-    workflow.includes("X-Robots-Tag: noindex"),
-    "the preview comment names the host-specific indexing control",
-  );
-  assert.ok(
-    !workflow.includes("noindex hardening lands with M8"),
-    "the completed M8 work is not described as future work",
-  );
+  for (const fileName of fileNames) {
+    const config = yaml.load(await readWorkflow(fileName));
+    const triggers = config.on ?? config.true;
+    const events = typeof triggers === "string"
+      ? [triggers]
+      : Array.isArray(triggers) ? triggers : Object.keys(triggers ?? {});
+
+    assert.ok(!events.includes("workflow_run"), `${fileName} must not trigger on workflow_run`);
+  }
 });
 
 test("monitor runs a secretless six-hour production canary", async () => {

@@ -59,9 +59,11 @@ manual:
 run by the operator under wrangler OAuth (below). This routeless deploy
 also leaves the /api/chat routes attached.
 
-PR previews: pr-ci.yml builds and uploads the artifact secretlessly;
-preview-deploy.yml (same `deploy` environment, one approval per preview)
-uploads a preview version of the site worker and comments the URL.
+PR previews were retired on 2026-09-30 (issue #71). After every green
+pr-ci run, preview-deploy.yml waited for `deploy` environment approval.
+No previews were approved; GitHub failed each waiting run after 30 days and
+emailed a failure notice. pr-ci is now a secretless build plus gates only.
+Review a change from its pr-ci run and from production after an approved deploy.
 
 ### Weekly analytics refresh without approval clicks
 
@@ -87,7 +89,7 @@ whose `head_sha` is an ancestor of HEAD. It requests the workflow file's runs
 with `status=success&branch=main&per_page=50`, including all returned pages,
 and defensively requires conclusion `success` and path exactly
 `.github/workflows/deploy.yml`. Both `push` and `workflow_dispatch` runs count,
-including successful data-only publishes. Preview runs and environment
+including successful data-only publishes. Other workflows and environment
 deployment records cannot supply the anchor. The workflow token needs
 `actions: read`. API errors and missing evidence fail closed; establish an
 anchor with a successful reviewer-approved normal deploy first.
