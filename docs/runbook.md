@@ -7,7 +7,7 @@ retirement checklist: docs/cutover-2026-08-30.md).
 
 Two Cloudflare Workers on the zurielst.com zone:
 
-- zurielst-site: Next.js static export served as Worker assets from `out/`.
+- zurielst-site: Next.js static export served as Worker assets from `out/`, with a root-only Markdown negotiation handler. See [public portfolio discovery](agent-discovery.md).
   Configs: workers/site/wrangler.jsonc (routeless, what CI deploys) and
   workers/site/wrangler.cutover.jsonc (same plus routes).
 - zurielst-chat-api: exact-route API worker for POST /api/chat. Workers AI

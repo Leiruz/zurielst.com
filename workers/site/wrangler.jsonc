@@ -1,13 +1,17 @@
 ﻿{
-  // zurielst-site: static assets ONLY. No bindings, no secrets, no Durable
-  // Objects, so per-version preview URLs work (plan rev 3, F1/R2 findings).
+  // Public static assets with root-only Markdown content negotiation.
+  // The assets binding has no credentials, persistence, or API capabilities.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "zurielst-site",
+  "main": "index.mjs",
   "compatibility_date": "2025-09-06",
   "assets": {
     "directory": "../../out",
+    "binding": "ASSETS",
+    "run_worker_first": ["/"],
     "not_found_handling": "404-page"
   },
+  "rules": [{ "type": "Text", "globs": ["**/_headers"], "fallthrough": true }],
   // Manual version uploads can use preview URLs. Production routes remain
   // attached to the deployed worker.
   "workers_dev": false,
