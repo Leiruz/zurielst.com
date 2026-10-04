@@ -483,9 +483,12 @@ function validateDesktopMeasurement(measurement) {
     `${measurement.viewportWidth}px shell exceeds its 80rem maximum`,
   );
   assertClose(
-    measurement.shellLeft - measurement.navGutter,
-    measurement.shellRightGap,
-    `${measurement.viewportWidth}px shell is not balanced beside the line nav`,
+    measurement.shellLeft,
+    Math.max(
+      measurement.navGutter + measurement.shellPaddingLeft,
+      (measurement.viewportWidth - measurement.shellWidth) / 2,
+    ),
+    `${measurement.viewportWidth}px shell is not viewport-centered with nav clearance`,
   );
   assert.ok(
     measurement.shellLeft + measurement.shellPaddingLeft > measurement.navRight,
