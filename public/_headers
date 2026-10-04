@@ -10,3 +10,11 @@
 # Cloudflare version previews use workers.dev; production custom domains do not.
 https://:version.:subdomain.workers.dev/*
   X-Robots-Tag: noindex
+
+# Discovery for the existing public profile exports.
+/dossier.md
+  Content-Type: text/markdown; charset=utf-8
+  Link: <https://zurielst.com/dossier.md>; rel="canonical", <https://zurielst.com/>; rel="alternate"; type="text/html", <https://zurielst.com/llms.txt>; rel="describedby"; type="text/plain"
+
+/llms.txt
+  Link: <https://zurielst.com/llms.txt>; rel="canonical", <https://zurielst.com/dossier.md>; rel="describedby"; type="text/markdown"
