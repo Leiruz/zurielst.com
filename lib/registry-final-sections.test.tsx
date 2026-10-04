@@ -153,7 +153,7 @@ describe('final registry sections', () => {
     }
   });
 
-  it('defines one shell inset and centers wide shells in the space beside the line nav', () => {
+  it('defines one shell inset and centers wide shells on the viewport with nav clearance', () => {
     const wideShellRule = styles.match(/\.dossier-page\s+\.dossier-shell\s*\{([^}]*)\}/)?.[1] ?? '';
 
     expect(styles).toMatch(/--section-line-nav-width:\s*10rem/);
@@ -167,13 +167,13 @@ describe('final registry sections', () => {
       /width:\s*min\(\s*calc\(\s*100%\s*-\s*var\(--section-line-nav-gutter\)\s*-\s*var\(--dossier-shell-padding\)\s*-\s*var\(--dossier-shell-padding\)\s*\),\s*80rem\s*\)/,
     );
     expect(wideShellRule).toMatch(
-      /margin-left:\s*max\(\s*calc\(var\(--section-line-nav-gutter\)\s*\+\s*var\(--dossier-shell-padding\)\),\s*calc\(\(100%\s*\+\s*var\(--section-line-nav-gutter\)\s*-\s*80rem\)\s*\/\s*2\)\s*\)/,
+      /margin-left:\s*max\(\s*calc\(var\(--section-line-nav-gutter\)\s*\+\s*var\(--dossier-shell-padding\)\),\s*calc\(\(100%\s*-\s*80rem\)\s*\/\s*2\)\s*\)/,
     );
     expect(wideShellRule).toMatch(/margin-right:\s*auto/);
   });
 
   it.each([1280, 1440, 1600, 1920, 2560])(
-    'keeps a balanced shell, a bounded width, and line-nav clearance at %ipx',
+    'centers where space permits with bounded width and line-nav clearance at %ipx',
     (viewportWidth) => {
       const rootFontSize = 16;
       const navRight = 10 * rootFontSize;
@@ -185,12 +185,18 @@ describe('final registry sections', () => {
         availableWidth - (2 * shellPadding),
         maxShellWidth,
       );
-      const shellLeft = navGutter + ((availableWidth - shellWidth) / 2);
+      const shellLeft = Math.max(
+        navGutter + shellPadding,
+        (viewportWidth - shellWidth) / 2,
+      );
       const shellRightGap = viewportWidth - shellLeft - shellWidth;
 
       expect(shellRightGap).toBeGreaterThanOrEqual(shellPadding);
       expect(shellWidth).toBeLessThanOrEqual(maxShellWidth);
-      expect(shellLeft - navGutter).toBeCloseTo(shellRightGap, 5);
+      expect(shellLeft).toBeGreaterThanOrEqual(navGutter + shellPadding);
+      if (viewportWidth >= maxShellWidth + (2 * (navGutter + shellPadding))) {
+        expect(shellLeft).toBeCloseTo(shellRightGap, 5);
+      }
       expect(navRight).toBeLessThan(shellLeft + shellPadding);
     },
   );

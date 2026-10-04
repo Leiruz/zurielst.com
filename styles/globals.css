@@ -294,9 +294,10 @@ canvas {
       ),
       80rem
     );
+    /* Center on the viewport where space permits, keeping the nav gutter. */
     margin-left: max(
       calc(var(--section-line-nav-gutter) + var(--dossier-shell-padding)),
-      calc((100% + var(--section-line-nav-gutter) - 80rem) / 2)
+      calc((100% - 80rem) / 2)
     );
     margin-right: auto;
   }
