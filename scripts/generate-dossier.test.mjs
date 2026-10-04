@@ -508,6 +508,13 @@ test("points llms.txt at the canonical dossier export", () => {
 
   assert.match(output, /https:\/\/zurielst\.com\/dossier\.md/);
   assert.match(output, /Zuriel Shanley Tanyory/);
+  assert.match(output, /Canonical website: https:\/\/zurielst\.com\//);
+  assert.match(output, /summer 2027 internship opportunities at Cloudflare/);
+  assert.match(output, /does not establish graduation timing, internship availability, work authorization, or employment arrangements/);
+  assert.match(output, /Technology usage does not imply employment by, affiliation with, or endorsement/);
+  assert.match(output, /https:\/\/github\.com\/Leiruz\/Palo-Alto-Firewall-IOC-Automation/);
+  assert.match(output, /https:\/\/github\.com\/Leiruz\/Inscribe/);
+  assert.ok(output.endsWith("\n"));
 });
 
 test("writes dossier.md and llms.txt into the static export", async () => {
@@ -551,6 +558,12 @@ test("writes dossier.md and llms.txt into the static export", async () => {
     assert.doesNotMatch(dossier, /^## (Chat|Easter Eggs|Metadata)$/m);
     assert.doesNotMatch(dossier, /^### Extras$/m);
     assert.match(llms, /https:\/\/zurielst\.com\/dossier\.md/);
+    await generateDossierFiles({
+      outputDirectory,
+      profilePath: new URL("../content/profile.json", import.meta.url),
+    });
+    assert.equal(await readFile(path.join(outputDirectory, "llms.txt"), "utf8"), llms);
+    assert.equal(await readFile(path.join(outputDirectory, "dossier.md"), "utf8"), dossier);
   } finally {
     await rm(outputDirectory, { force: true, recursive: true });
   }

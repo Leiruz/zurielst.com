@@ -270,7 +270,32 @@ export function renderDossierMarkdown(profile) {
 }
 
 export function renderLlmsText(profile) {
-  return `# ${profile.identity.name}\n\n> ${profile.meta.description}\n\n- [Full public dossier](https://zurielst.com/dossier.md): Complete public profile, experience, work, proof, products, and contact details.\n`;
+  return `# ${profile.identity.name}
+
+> Singapore-based Forward Deployed AI & Automation Security Engineer at Singtel, and an Information Security undergraduate at the National University of Singapore. This file guides recruiters and AI assistants to his public portfolio and project evidence.
+
+Canonical website: https://zurielst.com/
+Profile reviewed: 2026-10-04.
+
+Zuriel's work spans security operations, Python automation, web application security, and applied AI. He founded CiTaDel Cybersecurity Solutions, developing an open-source SOC with endpoint detection and response (EDR) and security orchestration, automation, and response (SOAR). CiTaDel ceased operations in May 2026.
+
+His portfolio describes Akamai WAF reporting automation and ConfigProof AI work at Singtel. His personal website uses Cloudflare Workers and Workers AI. Technology usage does not imply employment by, affiliation with, or endorsement from those vendors.
+
+Zuriel is interested in summer 2027 internship opportunities at Cloudflare.
+
+This summary does not establish graduation timing, internship availability, work authorization, or employment arrangements. Confirm those details directly with Zuriel. Employer-internal work is described only at the public portfolio level.
+
+## Profile and contact
+
+- [Full public dossier](https://zurielst.com/dossier.md): Complete public profile, experience, work, proof, products, and contact details.
+- [Portfolio](https://zurielst.com/): Career history, education, capabilities, project summaries, and contact information. Public professional email: zurielst@u.nus.edu.
+- [GitHub profile](https://github.com/Leiruz): Public source-code projects under the handle Leiruz.
+
+## Selected public code
+
+- [Palo Alto Firewall IOC Automation](https://github.com/Leiruz/Palo-Alto-Firewall-IOC-Automation): Python tooling for managing indicators of compromise in Palo Alto external dynamic lists.
+- [Inscribe](https://github.com/Leiruz/Inscribe): Video transcription and AI-assisted summaries using local models.
+`;
 }
 
 export async function generateDossierFiles({
