@@ -486,9 +486,9 @@ function validateDesktopMeasurement(measurement) {
     measurement.shellLeft,
     Math.max(
       measurement.navGutter + measurement.shellPaddingLeft,
-      (measurement.viewportWidth - measurement.shellWidth) / 2,
+      (measurement.viewportWidth - measurement.shellWidth) / 2 - 48,
     ),
-    `${measurement.viewportWidth}px shell is not viewport-centered with nav clearance`,
+    `${measurement.viewportWidth}px shell does not retain its left bias with nav clearance`,
   );
   assert.ok(
     measurement.shellLeft + measurement.shellPaddingLeft > measurement.navRight,
