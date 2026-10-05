@@ -303,6 +303,16 @@ canvas {
   }
 }
 
+/* Ease the laptop inset without changing phones or wide desktop layouts. */
+@media (min-width: 80rem) and (max-width: 114rem) {
+  .dossier-page .dossier-shell {
+    margin-left: max(
+      calc(var(--section-line-nav-gutter) + var(--dossier-shell-padding) - 2rem),
+      calc((100% - 80rem) / 2 - 3rem)
+    );
+  }
+}
+
 .dossier-section {
   position: relative;
   padding-block: clamp(4rem, 8vw, 7rem);

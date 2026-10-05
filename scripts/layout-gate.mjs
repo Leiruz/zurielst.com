@@ -9,7 +9,7 @@ import puppeteer from "puppeteer-core";
 import { createStaticServer } from "./perf-gate.mjs";
 
 const HOST = "127.0.0.1";
-const DESKTOP_VIEWPORT_WIDTHS = [1280, 1440, 1600, 1920, 2560];
+const DESKTOP_VIEWPORT_WIDTHS = [1280, 1366, 1440, 1600, 1728, 1792, 1824, 1920, 2560];
 const GREETING_VIEWPORT_WIDTHS = [375, 768, 1280, 1920];
 const LONGEST_GREETING = "Good afternoon";
 const MOBILE_VIEWPORT_WIDTH = 375;
@@ -485,13 +485,14 @@ function validateDesktopMeasurement(measurement) {
   assertClose(
     measurement.shellLeft,
     Math.max(
-      measurement.navGutter + measurement.shellPaddingLeft,
+      measurement.navGutter + measurement.shellPaddingLeft -
+        (measurement.viewportWidth <= 1824 ? 32 : 0),
       (measurement.viewportWidth - measurement.shellWidth) / 2 - 48,
     ),
     `${measurement.viewportWidth}px shell does not retain its left bias with nav clearance`,
   );
   assert.ok(
-    measurement.shellLeft + measurement.shellPaddingLeft > measurement.navRight,
+    measurement.shellLeft + measurement.shellPaddingLeft - measurement.navRight >= 64,
     `${measurement.viewportWidth}px content overlaps the line nav`,
   );
   assertClose(
