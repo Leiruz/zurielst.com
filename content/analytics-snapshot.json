@@ -1,46 +1,10 @@
 {
-  "generated_at": "2026-09-29T13:53:42.890Z",
+  "generated_at": "2026-10-05T10:23:32.614Z",
   "range": {
-    "from": "2026-08-30",
-    "to": "2026-09-28"
+    "from": "2026-09-05",
+    "to": "2026-10-04"
   },
   "days": [
-    {
-      "date": "2026-08-30",
-      "views": 60,
-      "visits": 40,
-      "sampled": true
-    },
-    {
-      "date": "2026-08-31",
-      "views": 180,
-      "visits": 20,
-      "sampled": true
-    },
-    {
-      "date": "2026-09-01",
-      "views": 0,
-      "visits": 0,
-      "sampled": false
-    },
-    {
-      "date": "2026-09-02",
-      "views": 0,
-      "visits": 0,
-      "sampled": false
-    },
-    {
-      "date": "2026-09-03",
-      "views": 10,
-      "visits": 10,
-      "sampled": true
-    },
-    {
-      "date": "2026-09-04",
-      "views": 10,
-      "visits": 10,
-      "sampled": true
-    },
     {
       "date": "2026-09-05",
       "views": 0,
@@ -181,6 +145,42 @@
     },
     {
       "date": "2026-09-28",
+      "views": 0,
+      "visits": 0,
+      "sampled": false
+    },
+    {
+      "date": "2026-09-29",
+      "views": 0,
+      "visits": 0,
+      "sampled": false
+    },
+    {
+      "date": "2026-09-30",
+      "views": 0,
+      "visits": 0,
+      "sampled": false
+    },
+    {
+      "date": "2026-10-01",
+      "views": 0,
+      "visits": 0,
+      "sampled": false
+    },
+    {
+      "date": "2026-10-02",
+      "views": 0,
+      "visits": 0,
+      "sampled": false
+    },
+    {
+      "date": "2026-10-03",
+      "views": 0,
+      "visits": 0,
+      "sampled": false
+    },
+    {
+      "date": "2026-10-04",
       "views": 0,
       "visits": 0,
       "sampled": false
