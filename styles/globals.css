@@ -307,7 +307,7 @@ canvas {
 @media (min-width: 80rem) and (max-width: 114rem) {
   .dossier-page .dossier-shell {
     margin-left: max(
-      calc(var(--section-line-nav-gutter) + var(--dossier-shell-padding) - 2rem),
+      calc(var(--section-line-nav-gutter) + var(--dossier-shell-padding) - 2.5rem),
       calc((100% - 80rem) / 2 - 3rem)
     );
   }
