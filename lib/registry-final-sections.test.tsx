@@ -174,7 +174,7 @@ describe('final registry sections', () => {
 
   it('limits the smaller laptop inset to the sidebar-visible laptop range', () => {
     expect(styles).toMatch(
-      /@media\s*\(min-width:\s*80rem\)\s*and\s*\(max-width:\s*114rem\)\s*\{\s*\.dossier-page\s+\.dossier-shell\s*\{\s*margin-left:\s*max\(\s*calc\(var\(--section-line-nav-gutter\)\s*\+\s*var\(--dossier-shell-padding\)\s*-\s*2\.5rem\)/,
+      /@media\s*\(min-width:\s*80rem\)\s*and\s*\(max-width:\s*114rem\)\s*\{\s*\.dossier-page\s+\.dossier-shell\s*\{\s*margin-left:\s*max\(\s*calc\(var\(--section-line-nav-gutter\)\s*\+\s*var\(--dossier-shell-padding\)\s*-\s*3rem\)/,
     );
   });
 
@@ -196,16 +196,16 @@ describe('final registry sections', () => {
         (viewportWidth - shellWidth) / 2 - 48,
       );
       const shellLeft = Math.max(
-        navGutter + shellPadding - (viewportWidth <= 1824 ? 40 : 0),
+        navGutter + shellPadding - (viewportWidth <= 1824 ? 48 : 0),
         (viewportWidth - shellWidth) / 2 - 48,
       );
       const shellRightGap = viewportWidth - shellLeft - shellWidth;
 
       expect(shellRightGap).toBeGreaterThanOrEqual(shellPadding);
       expect(shellWidth).toBeLessThanOrEqual(maxShellWidth);
-      expect(shellLeft + shellPadding - navRight).toBeGreaterThanOrEqual(56);
+      expect(shellLeft + shellPadding - navRight).toBeGreaterThanOrEqual(48);
       if (viewportWidth <= 1728) {
-        expect(previousShellLeft - shellLeft).toBe(40);
+        expect(previousShellLeft - shellLeft).toBe(48);
       } else if (viewportWidth >= 1824) {
         expect(shellLeft).toBe(previousShellLeft);
       }
